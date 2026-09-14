@@ -1,7 +1,7 @@
 workflows:
   vnf-android-debug:
     name: VNF Android Debug APK
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     max_build_duration: 120
 
     environment:
@@ -23,8 +23,11 @@ workflows:
       - name: Set Android SDK location
         script: |
           set -e
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          if [ -n "$ANDROID_SDK_ROOT" ]; then
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
+          elif [ -n "$ANDROID_HOME" ]; then
+            echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"
+          fi
           java -version
 
       - name: Build VNF debug APK
@@ -38,17 +41,18 @@ workflows:
             ./gradlew :app:assembleDebug --stacktrace
           else
             echo "Gradle wrapper is missing. Using official Gradle ${GRADLE_VERSION} distribution."
-            DIST_DIR="$HOME/.vnf-gradle/gradle-${GRADLE_VERSION}"
-            ZIP_FILE="$HOME/.vnf-gradle/gradle-${GRADLE_VERSION}-bin.zip"
+            DIST_ROOT="$HOME/.vnf-gradle"
+            DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"
+            ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"
 
-            mkdir -p "$HOME/.vnf-gradle"
+            mkdir -p "$DIST_ROOT"
 
             if [ ! -x "$DIST_DIR/bin/gradle" ]; then
               curl -fL --retry 3 --retry-delay 3 \
                 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
                 -o "$ZIP_FILE"
               rm -rf "$DIST_DIR"
-              unzip -q "$ZIP_FILE" -d "$HOME/.vnf-gradle"
+              unzip -q "$ZIP_FILE" -d "$DIST_ROOT"
             fi
 
             "$DIST_DIR/bin/gradle" --version
