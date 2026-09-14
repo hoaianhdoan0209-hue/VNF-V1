@@ -36,12 +36,17 @@ export default {
       if (!reply) return json({ error: "empty_ai_reply" }, 502);
 
       const response = { reply, model: MODEL };
+      const repairPlan = buildRepairPlan(playerText, context);
+      if (repairPlan) response.repairPlan = repairPlan;
+
       // IMPORTANT: manifest URL comes ONLY from trusted Worker environment, never from model text.
-      // When an operator publishes a signed runtime-content patch, set this env var to its HTTPS manifest URL.
-      if (env.VNF_CONTENT_PATCH_MANIFEST_URL && looksLikeWorldUpgradeRequest(playerText, context)) {
+      // A repair plan is descriptive. It becomes executable only when the operator/content pipeline
+      // has published a signed manifest at the trusted URL configured on the Worker.
+      if (env.VNF_CONTENT_PATCH_MANIFEST_URL && repairPlan?.requiresPatch) {
         response.contentPatch = {
           manifestUrl: String(env.VNF_CONTENT_PATCH_MANIFEST_URL),
           autoApply: String(env.VNF_CONTENT_PATCH_AUTO_APPLY || "true").toLowerCase() !== "false",
+          repairPlanId: repairPlan.id,
         };
       }
       return json(response);
@@ -50,6 +55,34 @@ export default {
     }
   },
 };
+
+function buildRepairPlan(text, context) {
+  if (!looksLikeWorldUpgradeRequest(text, context)) return null;
+  const q = text.toLowerCase();
+  const targets = [];
+  const push = x => { if (!targets.includes(x)) targets.push(x); };
+  if (q.includes("background") || q.includes("nền") || q.includes("nen")) {
+    const area = String(context?.worldAccess?.girlArea || context?.girlArea || "").toLowerCase();
+    if (["home","garden","lakeside","grove"].includes(area)) {
+      push(`${area}_distant`); push(`${area}_mid`); push(`${area}_ground`); push(`${area}_foreground`);
+    }
+  }
+  if (q.includes("nước") || q.includes("nuoc") || q.includes("water")) {
+    push("lakeside_water_0"); push("lakeside_water_1"); push("lakeside_water_2"); push("lakeside_water_3");
+  }
+  if (q.includes("cô gái") || q.includes("co gai") || q.includes("sprite") || q.includes("nhân vật") || q.includes("nhan vat")) {
+    push("girl_idle_right"); push("girl_idle_left"); push("girl_walk_right"); push("girl_walk_left");
+  }
+  const id = `god-repair-${Date.now()}`;
+  return {
+    id,
+    scope: "runtime-world-content",
+    reason: "Thần đã nhận yêu cầu sửa/nâng cấp phần world-content và lập kế hoạch an toàn trước khi áp dụng.",
+    targets: targets.slice(0, 16),
+    requiresPatch: true,
+    policy: "checkpoint -> verify signature/hash -> activate -> evaluate -> KEEP or automatic ROLLBACK"
+  };
+}
 
 function looksLikeWorldUpgradeRequest(text, context) {
   const q = text.toLowerCase();

@@ -159,11 +159,14 @@ public final class MainActivity extends Activity implements GameView.Host {
                         Toast.makeText(this,"Thần đang kiểm tra world-content patch đã ký…",Toast.LENGTH_SHORT).show();
                         RuntimeContentUpdater.applySignedManifestAsync(getApplicationContext(),result.contentPatchManifestUrl,patchResult->runOnUiThread(()->{
                             if(gameView!=null)gameView.postInvalidate();
-                            String message=result.reply+"\n\nWORLD CONTENT: "+patchResult.message;
-                            new AlertDialog.Builder(this).setTitle(patchResult.ok?"THẦN · ĐÃ NÂNG CẤP THẾ GIỚI":"THẦN · KHÔNG ÁP DỤNG PATCH").setMessage(message).setPositiveButton("Đóng",null).show();
+                            String plan=(result.repairPlan==null||result.repairPlan.summary().isEmpty())?"":("\n\nKẾ HOẠCH SỬA:\n"+result.repairPlan.summary());
+                            String message=result.reply+plan+"\n\nWORLD CONTENT: "+patchResult.message;
+                            new AlertDialog.Builder(this).setTitle(patchResult.ok?"THẦN · ĐÃ NÂNG CẤP THẾ GIỚI":"THẦN · PATCH BỊ TỪ CHỐI/ROLLBACK").setMessage(message).setPositiveButton("Đóng",null).show();
                         }));
                     }else{
-                        new AlertDialog.Builder(this).setTitle("THẦN").setMessage(result==null?"Thần không trả lời.":result.reply).setPositiveButton("Đóng",null).show();
+                        String msg=result==null?"Thần không trả lời.":result.reply;
+                        if(result!=null&&result.repairPlan!=null&&!result.repairPlan.summary().isEmpty()) msg += "\n\nKẾ HOẠCH SỬA:\n"+result.repairPlan.summary()+"\n\nChưa có world-content patch đã ký để áp dụng.";
+                        new AlertDialog.Builder(this).setTitle("THẦN").setMessage(msg).setPositiveButton("Đóng",null).show();
                     }
                 }));
             }).setNegativeButton("Đóng",null).show();

@@ -40,7 +40,12 @@ public final class RuntimeContentUpdater {
             if(cur.exists()&&!cur.renameTo(old))throw new IOException("Cannot checkpoint current content atomically");
             if(!stage.renameTo(cur)){if(old.exists())old.renameTo(cur);throw new IOException("Cannot activate staged content");}
             RuntimeContentStore.deleteTree(old);RuntimeContentStore.touchRevision(c);
-            return new Result(true,"Đã áp dụng world-content patch "+m.patchId+" ("+m.files.size()+" file). Checkpoint đã được tạo.");
+            RuntimeContentEvaluator.Verdict verdict=RuntimeContentEvaluator.evaluate(c,m);
+            if(!verdict.keep){
+                boolean rolledBack=RuntimeContentStore.rollbackLatest(c);
+                return new Result(false,"Patch "+m.patchId+" không qua đánh giá sau áp dụng ("+verdict.message+"). "+(rolledBack?"Đã tự rollback về checkpoint.":"Không thể rollback tự động."));
+            }
+            return new Result(true,"Đã áp dụng world-content patch "+m.patchId+" ("+m.files.size()+" file). Đánh giá sau áp dụng: KEEP. Checkpoint vẫn sẵn sàng để rollback.");
         }catch(Throwable t){if(stage!=null)RuntimeContentStore.deleteTree(stage);return new Result(false,"Không áp dụng patch: "+t.getClass().getSimpleName()+" — "+String.valueOf(t.getMessage()));}
     }
 
