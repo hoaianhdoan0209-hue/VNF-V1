@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+def endpointRaw = (project.findProperty('VNF_GOD_ENDPOINT') ?: System.getenv('VNF_GOD_ENDPOINT') ?: '').toString()
+def endpointEscaped = endpointRaw.replace('\\', '\\\\').replace('"', '\\"')
+
 android {
     namespace 'com.aicharacter.v3'
     compileSdk 35
@@ -12,6 +15,11 @@ android {
         targetSdk 35
         versionCode 100
         versionName '0.99C-foundation'
+        buildConfigField 'String', 'VNF_GOD_ENDPOINT', '"' + endpointEscaped + '"'
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {

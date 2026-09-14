@@ -3,10 +3,11 @@ package com.aicharacter.v3;
 public final class VnfOnlineConfig {
     private VnfOnlineConfig(){}
 
-    // Set this only after deploying the VNF God backend. Never put provider API keys in the APK.
-    public static final String GOD_ENDPOINT = "https://CHANGE-ME.example.workers.dev/god";
+    // Public backend URL only. Provider credentials must stay on the backend.
+    // Supply at build time with Gradle property or environment variable VNF_GOD_ENDPOINT.
+    public static final String GOD_ENDPOINT = BuildConfig.VNF_GOD_ENDPOINT == null ? "" : BuildConfig.VNF_GOD_ENDPOINT.trim();
 
     public static boolean godConfigured(){
-        return GOD_ENDPOINT.startsWith("https://") && !GOD_ENDPOINT.contains("CHANGE-ME");
+        return GOD_ENDPOINT.startsWith("https://") && GOD_ENDPOINT.length()>12;
     }
 }
