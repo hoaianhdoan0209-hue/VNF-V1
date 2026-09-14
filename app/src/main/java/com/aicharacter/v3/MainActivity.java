@@ -21,30 +21,65 @@ public final class MainActivity extends Activity implements GameView.Host {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        hideSystemUi();
+
+        // Show a real frame immediately. World loading/offline reconstruction may be
+        // expensive after a long absence and must never block Android's main thread.
+        showStartupScreen();
+
         try {
-            repository=new WorldRepository(this);
-            state=repository.loadOrCreate();
-            long now=System.currentTimeMillis();
-            LifeCycleEngine.apply(state,now);
-            StateInvariantChecker.repairOrReport(state,now);
-            // The cat remains a persistent world entity while the player is away.
-            if(!state.catState.awake) CatOfflineEngine.followAttachment(state);
-            String reconstructed=OfflineLifeEngine.reconstruct(state,now);
-            StateInvariantChecker.repairOrReport(state,now);
-            GirlCatSearchEngine.advance(state,now);
-            CatOfflineEngine.followAttachment(state);
-            CatOfflineEngine.wakeForPlayer(state,now);
-            if(!reconstructed.isEmpty()) ReunionEngine.process(state,now);
-            repository.save(state);
-            voice=new VoiceController(this,new VoiceController.Listener(){ public void onRecognized(String text){ respondToVoice(text); } public void onStatus(String text){ Toast.makeText(MainActivity.this,text,Toast.LENGTH_SHORT).show(); }});
-            gameView=new GameView(this,state,this);
-            setContentView(gameView);
-            if(!reconstructed.isEmpty()) Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
-            maybeAskNotificationPermission();
-        } catch (Throwable startupError) {
-            showStartupFailure(startupError);
-        }
+            hideSystemUi();
+        } catch (Throwable ignored) { }
+
+        final android.content.Context appContext=getApplicationContext();
+        new Thread(() -> {
+            try {
+                WorldRepository loadedRepository=new WorldRepository(appContext);
+                WorldState loadedState=loadedRepository.loadOrCreate();
+                long now=System.currentTimeMillis();
+
+                LifeCycleEngine.apply(loadedState,now);
+                StateInvariantChecker.repairOrReport(loadedState,now);
+                if(!loadedState.catState.awake) CatOfflineEngine.followAttachment(loadedState);
+
+                String reconstructed=OfflineLifeEngine.reconstruct(loadedState,now);
+
+                StateInvariantChecker.repairOrReport(loadedState,now);
+                GirlCatSearchEngine.advance(loadedState,now);
+                CatOfflineEngine.followAttachment(loadedState);
+                CatOfflineEngine.wakeForPlayer(loadedState,now);
+                if(!reconstructed.isEmpty()) ReunionEngine.process(loadedState,now);
+                loadedRepository.save(loadedState);
+
+                runOnUiThread(() -> {
+                    try {
+                        repository=loadedRepository;
+                        state=loadedState;
+                        voice=new VoiceController(this,new VoiceController.Listener(){
+                            public void onRecognized(String text){ respondToVoice(text); }
+                            public void onStatus(String text){ Toast.makeText(MainActivity.this,text,Toast.LENGTH_SHORT).show(); }
+                        });
+                        gameView=new GameView(this,state,this);
+                        setContentView(gameView);
+                        if(!reconstructed.isEmpty()) Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
+                        maybeAskNotificationPermission();
+                    } catch (Throwable uiStartupError) {
+                        showStartupFailure(uiStartupError);
+                    }
+                });
+            } catch (Throwable startupError) {
+                runOnUiThread(() -> showStartupFailure(startupError));
+            }
+        },"VNF-World-Startup").start();
+    }
+
+    private void showStartupScreen(){
+        TextView textView=new TextView(this);
+        textView.setText("VNF\n\nĐang đánh thức thế giới…");
+        textView.setGravity(android.view.Gravity.CENTER);
+        textView.setTextColor(Color.rgb(241,229,201));
+        textView.setBackgroundColor(Color.rgb(18,31,33));
+        textView.setTextSize(22);
+        setContentView(textView);
     }
 
     @Override protected void onResume(){
