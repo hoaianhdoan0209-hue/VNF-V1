@@ -117,15 +117,47 @@ public final class MainActivity extends Activity implements GameView.Host {
 
     @Override public void onGod() {
         final EditText input=new EditText(this);
-        input.setHint("Ví dụ: Tôi muốn gọi cô ấy là Mai");
-        input.setSingleLine(false); input.setMaxLines(3);
+        input.setHint("Nói với Thần…");
+        input.setSingleLine(false); input.setMaxLines(4);
         new AlertDialog.Builder(this).setTitle("LIÊN HỆ VỚI THẦN")
             .setMessage(godInboxSummary())
             .setView(input).setPositiveButton("Gửi",(d,w)->{
-                String out=GodContactController.handle(state,input.getText().toString());
-                repository.save(state);
-                new AlertDialog.Builder(this).setTitle("THẦN").setMessage(out).setPositiveButton("Đóng",null).show();
+                String raw=input.getText().toString().trim();
+                if(raw.isEmpty()) return;
+
+                // Privileged SYSTEM capabilities remain deterministic and local.
+                // Online God may advise, but never becomes the authority that mutates world state.
+                if(isLocalGodCapability(raw)){
+                    String out=GodContactController.handle(state,raw);
+                    repository.save(state);
+                    new AlertDialog.Builder(this).setTitle("THẦN · SYSTEM").setMessage(out).setPositiveButton("Đóng",null).show();
+                    return;
+                }
+
+                if(!VnfOnlineConfig.godConfigured()){
+                    new AlertDialog.Builder(this).setTitle("THẦN · OFFLINE")
+                        .setMessage("Thần online chưa được kết nối. Thế giới và cô gái vẫn tiếp tục sống hoàn toàn offline.\n\nCác capability cục bộ như đặt tên, trạng thái, bảo vệ và chẩn đoán vẫn dùng được.")
+                        .setPositiveButton("Đóng",null).show();
+                    return;
+                }
+
+                Toast.makeText(this,"Đang kết nối với Thần…",Toast.LENGTH_SHORT).show();
+                GodOnlineClient.ask(state,raw,(reply,error)->runOnUiThread(()->{
+                    if(error!=null){
+                        new AlertDialog.Builder(this).setTitle("THẦN · MẤT KẾT NỐI")
+                            .setMessage("Không thể liên hệ Thần online lúc này.\n\n"+error.getClass().getSimpleName()+"\n\nGame vẫn tiếp tục offline bình thường.")
+                            .setPositiveButton("Đóng",null).show();
+                    }else{
+                        new AlertDialog.Builder(this).setTitle("THẦN").setMessage(reply).setPositiveButton("Đóng",null).show();
+                    }
+                }));
             }).setNegativeButton("Đóng",null).show();
+    }
+
+    private boolean isLocalGodCapability(String raw){
+        String q=raw.toUpperCase(java.util.Locale.ROOT);
+        if(!DivineNamingEngine.extractProposal(raw).isEmpty()) return true;
+        return q.contains("TRẠNG THÁI")||q.contains("TRANG THAI")||q.contains("BẢO VỆ")||q.contains("BAO VE")||q.contains("ĐÁNH GIÁ")||q.contains("DANH GIA")||q.contains("CHẨN ĐOÁN")||q.contains("CHAN DOAN")||q.contains("TÊN")||q.contains("TEN");
     }
 
     @Override public void onConsole() {
@@ -137,7 +169,7 @@ public final class MainActivity extends Activity implements GameView.Host {
     }
 
 
-    private String godInboxSummary(){StringBuilder b=new StringBuilder("Kênh SYSTEM cục bộ. Không phải AI online.\n\nTIN TỪ THẦN:\n");int start=Math.max(0,state.godInbox.size()-5);for(int i=start;i<state.godInbox.size();i++){GodMessage m=state.godInbox.get(i);b.append(m.read?"· ":"• ").append(m.text).append('\n');m.read=true;}if(state.godInbox.isEmpty())b.append("(chưa có tin quan trọng)");return b.toString();}
+    private String godInboxSummary(){StringBuilder b=new StringBuilder("VNF chạy offline-first. Thần dùng kênh online khi được cấu hình; mất mạng không làm thế giới dừng.\n\nTIN TỪ THẦN:\n");int start=Math.max(0,state.godInbox.size()-5);for(int i=start;i<state.godInbox.size();i++){GodMessage m=state.godInbox.get(i);b.append(m.read?"· ":"• ").append(m.text).append('\n');m.read=true;}if(state.godInbox.isEmpty())b.append("(chưa có tin quan trọng)");return b.toString();}
 
     private void showStartupFailure(Throwable error){
         StringBuilder msg=new StringBuilder();

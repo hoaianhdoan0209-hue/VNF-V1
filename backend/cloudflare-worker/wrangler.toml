@@ -1,0 +1,7 @@
+name = "vnf-god"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Set secrets after deploy:
+#   npx wrangler secret put AI_API_KEY
+# Set AI_API_URL and AI_MODEL as environment variables in Cloudflare dashboard or here.
