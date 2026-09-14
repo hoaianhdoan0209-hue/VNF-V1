@@ -1,0 +1,5 @@
+package com.aicharacter.v3;
+public final class StateInvariantChecker{private StateInvariantChecker(){}
+ public static boolean valid(WorldState s){boolean attached="girl".equals(s.catState.attachedToEntity);WorldArea ca=s.world.areaAt(s.catState.x),ga=s.world.areaAt(s.haruX);if(attached&&(ca==null||ga==null||!ca.id.equals(ga.id)))return false;if(attached&&s.catTravel.active)return false;if(attached&&!s.catState.carryKnownByGirl)return false;if(attached&&s.catSearch.active)return false;if("APPROACHING_GIRL".equals(s.catState.sleepMode)&&attached)return false;if("HOME".equals(s.catState.sleepMode)&&attached)return false;return true;}
+ public static void repairOrReport(WorldState s,long now){if(valid(s))return;s.developerReports.add(new DeveloperReport(now,"PERSISTENT_LIFE_INVARIANT","ERROR","PersistentLife","Impossible cat/search/attachment combination detected.","state contradiction","saveVersion="+WorldState.SAVE_VERSION,"recover attachment/search coherence without world reset"));if("girl".equals(s.catState.attachedToEntity)){s.catTravel.active=false;s.catSearch.active=false;s.catState.carryKnownByGirl=true;CatOfflineEngine.followAttachment(s);}}
+}

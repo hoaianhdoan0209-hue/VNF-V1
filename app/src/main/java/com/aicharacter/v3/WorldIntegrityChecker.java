@@ -1,0 +1,4 @@
+package com.aicharacter.v3;import java.util.*;
+public final class WorldIntegrityChecker {private WorldIntegrityChecker(){}
+ public static List<String> check(WorldState s){List<String> r=new ArrayList<>();if(s.world==null){r.add("world missing");return r;}if(s.world.areaAt(s.haruX)==null)r.add("girl outside authored areas");if(s.world.area(s.catState.areaId)==null)r.add("cat area invalid");if("girl".equals(s.catState.attachedToEntity)){WorldArea g=s.world.areaAt(s.haruX);if(g==null||!g.id.equals(s.catState.areaId))r.add("attached cat different area");if(s.catTravel.active)r.add("attached cat independently travelling");if(s.catSearch.active)r.add("knowingly carried cat while search active");}if(s.girlTravel.active&&s.girlTravel.route!=null)for(String a:s.girlTravel.route)if(s.world.area(a)==null)r.add("travel route invalid area "+a);for(WorldObject o:s.world.objects)if(s.world.area(o.areaId)==null)r.add("object invalid area "+o.id);return r;}
+}
