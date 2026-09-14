@@ -40,7 +40,7 @@ public final class GodContextBuilder {
                 JSONObject j=new JSONObject();
                 j.put("type",e.type);
                 j.put("summary",e.summary);
-                j.put("timestamp",e.timestamp);
+                j.put("timestamp",e.time);
                 events.put(j);
             }
             root.put("recentWorldEvents",events);
