@@ -33,6 +33,19 @@ public final class LocalDialogueEngine {
                 return pick(s,raw,"Có. Hôm nay mình thấy nhẹ người hơn.","Ừ, khá vui. Không có lý do gì lớn, chỉ là thấy dễ chịu.");
             return pick(s,raw,"Bình thường thôi. Nhưng cũng không tệ.","Chưa hẳn vui lắm. Mình thấy yên hơn là vui.");
         }
+        if(containsAny(q,"ai là","là ai","biết gì về","cậu biết","có biết")){
+            if(s.thoughts!=null && !s.thoughts.isEmpty()){
+                ThoughtState t=s.thoughts.get(s.thoughts.size()-1);
+                if(t!=null && t.uncertainty>.45)
+                    return pick(s,raw,"Mình không chắc. Mình chỉ biết những gì mình từng thấy, nghe hoặc học được thôi.","Mình chưa biết đủ về chuyện đó. Nếu cậu biết thì kể mình nghe nhé.");
+            }
+            return pick(s,raw,"Mình có thể biết một chút, nhưng không muốn đoán bừa. Cậu đang hỏi phần nào?","Mình chưa chắc cậu muốn hỏi điều gì về nó. Nói cụ thể hơn được không?");
+        }
+        if(containsAny(q,"tại sao","vì sao","sao lại","why")){
+            if(s.currentIntention!=null && !s.currentIntention.isEmpty())
+                return pick(s,raw,"Mình có lý do của mình, nhưng chưa chắc mình hiểu hết nó. Lúc này mình đang muốn "+naturalizeActivity(s.currentIntention)+".","Chắc vì mấy chuyện vừa xảy ra cộng với cảm giác hiện tại. Mình chưa muốn biến nó thành một lý do quá chắc chắn.");
+        }
+
         if(containsAny(q,"đang làm gì","làm gì","doing")){
             String activity=(s.haruActivity==null||s.haruActivity.isEmpty())?"ngồi nhìn quanh":s.haruActivity;
             return "Mình đang "+naturalizeActivity(activity)+".";
