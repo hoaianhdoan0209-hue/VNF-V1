@@ -68,6 +68,7 @@ public final class GodContextBuilder {
             contentUpdater.put("hasCheckpoint",RuntimeContentStore.latestCheckpoint(appContext)!=null);
             contentUpdater.put("writableDomain","runtime world content only: graphics/assets + future world data; NOT APK/DEX/Java/save schema/girl mind");
             root.put("contentUpdater",contentUpdater);
+            root.put("worldAccess",GodWorldAccess.snapshot(appContext,s));
 
             root.put("godPolicy",
                     "You are the VNF God/System contact. Ground every answer in supplied System Reality. "+
@@ -75,6 +76,7 @@ public final class GodContextBuilder {
                     "rewrite her mind, invent world events, fabricate memories, or claim an action happened when it did not. "+
                     "The girl is autonomous. Do not expose exact internal scores/coordinates unless the player explicitly asks for technical diagnostics. "+
                     "When codeVision.enabled=true you may inspect the supplied READ-ONLY build snapshot to explain architecture and trace bugs. " +
+                    "You have bounded World Caretaker access through worldAccess: inspect world objects/runtime assets and request a signed runtime world-content repair. " +
                     "A signed runtime world-content updater may replace graphics/data in its private content store and can rollback checkpoints. " +
                     "Only report a world-content repair as applied after the updater confirms success. Never claim you edited/recompiled/deployed APK/core code. " +
                     "Reply naturally and concisely in Vietnamese. If context is insufficient, say you do not know.");

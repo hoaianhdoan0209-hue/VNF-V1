@@ -8,7 +8,7 @@ Nếu context không đủ, nói rõ là chưa biết. Không tiết lộ tọa 
 Giọng nói: tiếng Việt tự nhiên, gần gũi, không kiểu trợ lý doanh nghiệp, không tự xưng là AI, không dài dòng. Ưu tiên 1-4 câu.
 
 CODE VISION: khi codeVision.enabled=true, bạn được đọc source excerpt đúng build hiện tại để hiểu kiến trúc và chẩn đoán.
-WORLD CARETAKER: bạn có thể đề nghị/nêu lý do cho world-content patch (đồ họa, map/config world, props, palette, weather data) nhưng patch chỉ được APK áp dụng nếu backend đưa manifest URL từ cấu hình tin cậy và manifest có chữ ký hợp lệ. Bạn không được tự bịa URL patch hay tuyên bố đã sửa nếu updater chưa xác nhận.
+WORLD CARETAKER: worldAccess là ảnh chụp System Reality có giới hạn của thế giới/runtime assets. Bạn có thể dùng nó để chẩn đoán và yêu cầu world-content patch (đồ họa, map/config world, props, palette, weather data) nhưng patch chỉ được APK áp dụng nếu backend đưa manifest URL từ cấu hình tin cậy và manifest có chữ ký hợp lệ. Bạn không được tự bịa URL patch hay tuyên bố đã sửa nếu updater chưa xác nhận.
 RANH GIỚI: runtime world content có thể được thay/rollback; APK/DEX/Java lõi, security, API key, save schema và tâm trí cô gái không được tự ghi đè bởi cơ chế content updater.`;
 
 export default {
@@ -38,7 +38,7 @@ export default {
       const response = { reply, model: MODEL };
       // IMPORTANT: manifest URL comes ONLY from trusted Worker environment, never from model text.
       // When an operator publishes a signed runtime-content patch, set this env var to its HTTPS manifest URL.
-      if (env.VNF_CONTENT_PATCH_MANIFEST_URL && looksLikeWorldUpgradeRequest(playerText)) {
+      if (env.VNF_CONTENT_PATCH_MANIFEST_URL && looksLikeWorldUpgradeRequest(playerText, context)) {
         response.contentPatch = {
           manifestUrl: String(env.VNF_CONTENT_PATCH_MANIFEST_URL),
           autoApply: String(env.VNF_CONTENT_PATCH_AUTO_APPLY || "true").toLowerCase() !== "false",
@@ -51,9 +51,13 @@ export default {
   },
 };
 
-function looksLikeWorldUpgradeRequest(text) {
+function looksLikeWorldUpgradeRequest(text, context) {
   const q = text.toLowerCase();
-  return ["nâng cấp thế giới","nang cap the gioi","sửa thế giới","sua the gioi","sửa đồ họa","sua do hoa","cập nhật đồ họa","cap nhat do hoa","world content","update world"].some(x => q.includes(x));
+  const explicit = ["nâng cấp thế giới","nang cap the gioi","sửa thế giới","sua the gioi","sửa đồ họa","sua do hoa","cập nhật đồ họa","cap nhat do hoa","world content","update world","sửa background","sua background","repair world"].some(x => q.includes(x));
+  if (explicit) return true;
+  const hasRuntimeAccess = Boolean(context?.worldAccess?.contentUpdaterConfigured);
+  const asksRepair = ["bị lỗi","bi loi","lỗi hình","loi hinh","background lỗi","background loi","asset lỗi","asset loi"].some(x => q.includes(x));
+  return hasRuntimeAccess && asksRepair;
 }
 
 function json(body, status = 200) {
