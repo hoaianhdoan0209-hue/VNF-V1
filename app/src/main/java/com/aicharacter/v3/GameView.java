@@ -14,11 +14,11 @@ public final class GameView extends View{
   // Lakeside uses a safe procedural sky; no legacy sky bitmap is loaded.
   // This procedural sky is deliberately simple and stable until God installs a signed runtime replacement.
   if("lakeside".equals(area)){
-   p.setShader(null);p.setColor(Color.rgb(126,190,210));c.drawRect(0,0,2400,1080,p);
-   p.setColor(Color.rgb(153,207,220));c.drawRect(0,0,2400,360,p);
-   p.setColor(Color.argb(180,235,238,213));
+   WorldVisualProfile v=WorldVisualProfile.lakeside(getContext());p.setShader(null);p.setColor(v.skyBottom);c.drawRect(0,0,2400,1080,p);
+   p.setColor(v.skyTop);c.drawRect(0,0,2400,360,p);
+   if(v.clouds){p.setColor(v.cloud);p.setAlpha(180);
    c.drawRect(180,170,520,222,p);c.drawRect(360,145,640,205,p);
-   c.drawRect(1480,210,1770,254,p);c.drawRect(1630,182,1940,238,p);
+   c.drawRect(1480,210,1770,254,p);c.drawRect(1630,182,1940,238,p);p.setAlpha(255);}
    return;
   }
   drawLayer(c,area+"_sky",cam,.02f);

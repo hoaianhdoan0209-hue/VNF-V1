@@ -22,7 +22,7 @@ public final class RuntimeContentStore {
     }
 
     public static synchronized File checkpoint(Context c,String label)throws IOException{
-        File cur=current(c); if(!cur.exists())return null;
+        File cur=current(c); if(!cur.exists()&&!cur.mkdirs())throw new IOException("Cannot initialize current content");
         checkpoints(c).mkdirs();
         String safe=(label==null?"checkpoint":label).replaceAll("[^A-Za-z0-9._-]","_");
         File out=new File(checkpoints(c),System.currentTimeMillis()+"_"+safe);

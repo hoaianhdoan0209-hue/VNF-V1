@@ -12,8 +12,8 @@ import java.nio.charset.StandardCharsets;
 /** Network client used only by the God channel. Girl/world offline cognition never depends on this class. */
 public final class GodOnlineClient {
     public static final class Result{
-        public final String reply,contentPatchManifestUrl; public final boolean autoApplyContentPatch; public final GodRepairPlan repairPlan;
-        Result(String r,String u,boolean a,GodRepairPlan p){reply=r;contentPatchManifestUrl=u;autoApplyContentPatch=a;repairPlan=p;}
+        public final String reply,contentPatchManifestUrl,godRecipePayload,godRecipeSignature; public final boolean autoApplyContentPatch; public final GodRepairPlan repairPlan;
+        Result(String r,String u,boolean a,GodRepairPlan p,String gp,String gs){reply=r;contentPatchManifestUrl=u;autoApplyContentPatch=a;repairPlan=p;godRecipePayload=gp;godRecipeSignature=gs;}
     }
     public interface Callback { void onResult(Result result, Throwable error); }
     private GodOnlineClient(){}
@@ -34,7 +34,7 @@ public final class GodOnlineClient {
                 JSONObject json=new JSONObject(sb.toString());String reply=json.optString("reply","").trim();if(reply.isEmpty())throw new IllegalStateException("God backend trả lời rỗng");if(reply.length()>3500)reply=reply.substring(0,3500).trim()+"…";
                 JSONObject patch=json.optJSONObject("contentPatch");String manifestUrl=patch==null?"":patch.optString("manifestUrl","").trim();boolean autoApply=patch!=null&&patch.optBoolean("autoApply",false);
                 GodRepairPlan repairPlan=GodRepairPlan.fromJson(json.optJSONObject("repairPlan"));
-                callback.onResult(new Result(reply,manifestUrl,autoApply,repairPlan),null);
+                JSONObject recipe=json.optJSONObject("signedWorldRecipe");String gp=recipe==null?"":recipe.optString("payloadBase64","");String gs=recipe==null?"":recipe.optString("signatureBase64","");callback.onResult(new Result(reply,manifestUrl,autoApply,repairPlan,gp,gs),null);
             }catch(Throwable t){callback.onResult(null,t);}finally{if(c!=null)c.disconnect();}
         },"VNF-God-Online").start();
     }

@@ -155,6 +155,10 @@ public final class MainActivity extends Activity implements GameView.Host {
                         new AlertDialog.Builder(this).setTitle("THẦN · MẤT KẾT NỐI")
                             .setMessage("Không thể liên hệ Thần online lúc này.\n\n"+error.getClass().getSimpleName()+"\n\nGame vẫn tiếp tục offline bình thường.")
                             .setPositiveButton("Đóng",null).show();
+                    }else if(result!=null && result.godRecipePayload!=null && !result.godRecipePayload.isEmpty()){
+                        RuntimeContentUpdater.Result rr=SignedGodWorldRecipe.apply(getApplicationContext(),result.godRecipePayload,result.godRecipeSignature);
+                        gameView.invalidate();
+                        new AlertDialog.Builder(this).setTitle(rr.ok?"THẦN · ĐÃ SỬA THẾ GIỚI":"THẦN · RECIPE BỊ TỪ CHỐI").setMessage(result.reply+"\n\n"+rr.message).setPositiveButton("Đóng",null).show();
                     }else if(result!=null && result.autoApplyContentPatch && !result.contentPatchManifestUrl.isEmpty()){
                         Toast.makeText(this,"Thần đang kiểm tra world-content patch đã ký…",Toast.LENGTH_SHORT).show();
                         RuntimeContentUpdater.applySignedManifestAsync(getApplicationContext(),result.contentPatchManifestUrl,patchResult->runOnUiThread(()->{
