@@ -5,6 +5,8 @@
         android:name=".VnfApplication"
         android:allowBackup="true"
         android:label="VNF"
+        android:icon="@drawable/ic_vnf_launcher"
+        android:roundIcon="@drawable/ic_vnf_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.VNF">
         <activity

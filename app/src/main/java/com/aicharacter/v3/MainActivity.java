@@ -9,6 +9,9 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.widget.ScrollView;
+import android.graphics.Color;
 
 public final class MainActivity extends Activity implements GameView.Host {
     private WorldRepository repository;
@@ -19,25 +22,29 @@ public final class MainActivity extends Activity implements GameView.Host {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         hideSystemUi();
-        repository=new WorldRepository(this);
-        state=repository.loadOrCreate();
-        long now=System.currentTimeMillis();
-        LifeCycleEngine.apply(state,now);
-        StateInvariantChecker.repairOrReport(state,now);
-        // The cat remains a persistent world entity while the player is away.
-        if(!state.catState.awake) CatOfflineEngine.followAttachment(state);
-        String reconstructed=OfflineLifeEngine.reconstruct(state,now);
-        StateInvariantChecker.repairOrReport(state,now);
-        GirlCatSearchEngine.advance(state,now);
-        CatOfflineEngine.followAttachment(state);
-        CatOfflineEngine.wakeForPlayer(state,now);
-        if(!reconstructed.isEmpty()) ReunionEngine.process(state,now);
-        repository.save(state);
-        voice=new VoiceController(this,new VoiceController.Listener(){ public void onRecognized(String text){ respondToVoice(text); } public void onStatus(String text){ Toast.makeText(MainActivity.this,text,Toast.LENGTH_SHORT).show(); }});
-        gameView=new GameView(this,state,this);
-        setContentView(gameView);
-        if(!reconstructed.isEmpty()) Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
-        maybeAskNotificationPermission();
+        try {
+            repository=new WorldRepository(this);
+            state=repository.loadOrCreate();
+            long now=System.currentTimeMillis();
+            LifeCycleEngine.apply(state,now);
+            StateInvariantChecker.repairOrReport(state,now);
+            // The cat remains a persistent world entity while the player is away.
+            if(!state.catState.awake) CatOfflineEngine.followAttachment(state);
+            String reconstructed=OfflineLifeEngine.reconstruct(state,now);
+            StateInvariantChecker.repairOrReport(state,now);
+            GirlCatSearchEngine.advance(state,now);
+            CatOfflineEngine.followAttachment(state);
+            CatOfflineEngine.wakeForPlayer(state,now);
+            if(!reconstructed.isEmpty()) ReunionEngine.process(state,now);
+            repository.save(state);
+            voice=new VoiceController(this,new VoiceController.Listener(){ public void onRecognized(String text){ respondToVoice(text); } public void onStatus(String text){ Toast.makeText(MainActivity.this,text,Toast.LENGTH_SHORT).show(); }});
+            gameView=new GameView(this,state,this);
+            setContentView(gameView);
+            if(!reconstructed.isEmpty()) Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
+            maybeAskNotificationPermission();
+        } catch (Throwable startupError) {
+            showStartupFailure(startupError);
+        }
     }
 
     @Override protected void onResume(){
@@ -96,6 +103,28 @@ public final class MainActivity extends Activity implements GameView.Host {
 
 
     private String godInboxSummary(){StringBuilder b=new StringBuilder("Kênh SYSTEM cục bộ. Không phải AI online.\n\nTIN TỪ THẦN:\n");int start=Math.max(0,state.godInbox.size()-5);for(int i=start;i<state.godInbox.size();i++){GodMessage m=state.godInbox.get(i);b.append(m.read?"· ":"• ").append(m.text).append('\n');m.read=true;}if(state.godInbox.isEmpty())b.append("(chưa có tin quan trọng)");return b.toString();}
+
+    private void showStartupFailure(Throwable error){
+        StringBuilder msg=new StringBuilder();
+        msg.append("VNF đã mở ở chế độ an toàn.\n\n");
+        msg.append("Thế giới chưa được chạy để tránh làm hỏng save.\n");
+        msg.append("Dữ liệu hiện tại không bị tự động xóa.\n\n");
+        msg.append("Lỗi khởi động: ").append(error.getClass().getSimpleName());
+        if(error.getMessage()!=null&&!error.getMessage().isEmpty()) msg.append("\n").append(error.getMessage());
+        msg.append("\n\nCrash log được lưu trong thư mục nội bộ diagnostics của VNF.");
+        TextView textView=new TextView(this);
+        textView.setText(msg.toString());
+        textView.setTextColor(Color.rgb(241,229,201));
+        textView.setBackgroundColor(Color.rgb(18,31,33));
+        textView.setTextSize(18);
+        int pad=(int)(24*getResources().getDisplayMetrics().density);
+        textView.setPadding(pad,pad,pad,pad);
+        ScrollView scroll=new ScrollView(this);
+        scroll.setBackgroundColor(Color.rgb(18,31,33));
+        scroll.addView(textView);
+        setContentView(scroll);
+        Toast.makeText(this,"VNF: chế độ an toàn — gửi ảnh màn hình này cho Móng.",Toast.LENGTH_LONG).show();
+    }
 
     private void maybeAskNotificationPermission(){
         if(android.os.Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},401);
