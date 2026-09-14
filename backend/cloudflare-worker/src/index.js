@@ -75,9 +75,9 @@ export default {
 async function createVisualRecipe(env, context, playerText) {
   const prompt = `Bạn đang tạo VISUAL RECIPE an toàn cho VNF. Chỉ trả JSON, không markdown.
 Schema bắt buộc:
-{"skyTop":"#RRGGBB","skyBottom":"#RRGGBB","cloud":"#RRGGBB","clouds":true}
+{"skyTop":"#RRGGBB","skyBottom":"#RRGGBB","cloud":"#RRGGBB","clouds":true,"mountain":"#RRGGBB","tree":"#RRGGBB","groundAccent":"#RRGGBB","treeCount":5,"rockCount":3}
 Mục tiêu: giữ phong cách cozy 2D pixel-art, dễ nhìn, không chói, không tạo nội dung nhạy cảm.
-Không được thêm field khác. Không tạo URL. Không tạo code.
+Không được thêm field khác. Không tạo URL. Không tạo code. treeCount là số nguyên 0..12, rockCount là số nguyên 0..8. Đây là lớp cảnh pixel procedural an toàn; chọn màu hài hòa với sky.
 Yêu cầu người chơi: ${playerText}
 Trạng thái khu vực: ${String(context?.worldAccess?.girlArea || context?.girlArea || "lakeside")}
 Thời tiết: ${String(context?.weather || context?.environment?.weather || "unknown")}`;
@@ -95,7 +95,7 @@ Thời tiết: ${String(context?.weather || context?.environment?.weather || "un
   if (!proposed) return null;
 
   return {
-    type: "visual-profile-v1",
+    type: "world-scene-v2",
     createdAt: new Date().toISOString(),
     source: "god-world-caretaker",
     lakeside: {
@@ -103,6 +103,11 @@ Thời tiết: ${String(context?.weather || context?.environment?.weather || "un
       skyBottom: safeColor(proposed.skyBottom, "#7EBED2"),
       cloud: safeColor(proposed.cloud, "#EBEED5"),
       clouds: proposed.clouds !== false,
+      mountain: safeColor(proposed.mountain, "#6E8F8B"),
+      tree: safeColor(proposed.tree, "#315F52"),
+      groundAccent: safeColor(proposed.groundAccent, "#6E7960"),
+      treeCount: safeInt(proposed.treeCount, 5, 0, 12),
+      rockCount: safeInt(proposed.rockCount, 3, 0, 8),
     },
   };
 }
@@ -194,6 +199,11 @@ function parseJsonObject(raw) {
 function safeColor(value, fallback) {
   const x = String(value || "").trim().toUpperCase();
   return /^#[0-9A-F]{6}$/.test(x) ? x : fallback;
+}
+
+function safeInt(value, fallback, min, max) {
+  const n = Number.isInteger(value) ? value : fallback;
+  return Math.max(min, Math.min(max, n));
 }
 
 function bytesToBase64(bytes) {
