@@ -11,6 +11,7 @@ public final class LifeCycleEngine {
                 s.age = a;
                 s.brainGrowth = 5.0 + (a - 15) * 0.5;
                 s.pendingBirthdayLearning = true;
+                AgeDevelopmentEngine.onBirthday(s,a,now);
                 s.memories.add(new MemoryEntry(now, "birthday", "She reached age " + a + " without losing the life that came before it.", 1.0));
             }
         }

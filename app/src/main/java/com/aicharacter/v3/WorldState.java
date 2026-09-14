@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class WorldState {
-    public static final int SAVE_VERSION = 15;
+    public static final int SAVE_VERSION = 16;
     public long createdAt;
     public long lastSavedAt;
     public long lastOpenedAt;
@@ -22,6 +22,10 @@ public final class WorldState {
     public int age;
     public double brainGrowth;
     public boolean pendingBirthdayLearning;
+    // Growth is persistent: God may teach, but never directly rewrites personality or decisions.
+    public final Map<String,Double> skills = new LinkedHashMap<>();
+    public final java.util.Set<String> learnedActions = new java.util.LinkedHashSet<>();
+    public long lastDevelopmentAt=0L;
     public boolean proactiveEnabled;
     public int quietStartHour;
     public int quietEndHour;
@@ -91,7 +95,7 @@ public final class WorldState {
     public JSONObject toJson() throws JSONException {
         JSONObject j=new JSONObject(); j.put("saveVersion",SAVE_VERSION); j.put("createdAt",createdAt); j.put("lastSavedAt",lastSavedAt);
         j.put("lastOpenedAt",lastOpenedAt); j.put("lastSimulatedAt",lastSimulatedAt); j.put("worldMinutes",worldMinutes); j.put("catX",catX); j.put("haruX",haruX);
-        j.put("acceptedName",acceptedName); j.put("age",age); j.put("brainGrowth",brainGrowth); j.put("pendingBirthdayLearning",pendingBirthdayLearning);
+        j.put("acceptedName",acceptedName); j.put("age",age); j.put("brainGrowth",brainGrowth); j.put("pendingBirthdayLearning",pendingBirthdayLearning); j.put("lastDevelopmentAt",lastDevelopmentAt); JSONObject sk=new JSONObject(); for(Map.Entry<String,Double> e:skills.entrySet())sk.put(e.getKey(),e.getValue()); j.put("skills",sk); JSONArray la=new JSONArray(); for(String a:learnedActions)la.put(a); j.put("learnedActions",la);
         j.put("proactiveEnabled",proactiveEnabled); j.put("quietStartHour",quietStartHour); j.put("quietEndHour",quietEndHour);
         j.put("haruMood",haruMood); j.put("haruActivity",haruActivity); j.put("body",body.toJson()); j.put("relationship",relationship.toJson());
         JSONArray m=new JSONArray(); for(MemoryEntry e:memories)m.put(e.toJson()); j.put("memories",m);
@@ -104,7 +108,7 @@ public final class WorldState {
         int version=j.optInt("saveVersion",1); if(version> SAVE_VERSION) throw new JSONException("Unsupported save version "+version);
         WorldState s=new WorldState(); s.createdAt=j.optLong("createdAt",System.currentTimeMillis()); s.lastSavedAt=j.optLong("lastSavedAt",s.createdAt);
         s.lastOpenedAt=j.optLong("lastOpenedAt",s.lastSavedAt); s.lastSimulatedAt=j.optLong("lastSimulatedAt",s.lastOpenedAt); s.worldMinutes=j.optDouble("worldMinutes",500); s.catX=(float)j.optDouble("catX",320); s.haruX=(float)j.optDouble("haruX",960);
-        s.acceptedName=j.optString("acceptedName",""); s.age=j.optInt("age",15); s.brainGrowth=j.optDouble("brainGrowth",5.0); s.pendingBirthdayLearning=j.optBoolean("pendingBirthdayLearning",false);
+        s.acceptedName=j.optString("acceptedName",""); s.age=j.optInt("age",15); s.brainGrowth=j.optDouble("brainGrowth",5.0); s.pendingBirthdayLearning=j.optBoolean("pendingBirthdayLearning",false); s.lastDevelopmentAt=j.optLong("lastDevelopmentAt",s.createdAt); JSONObject sk=j.optJSONObject("skills"); if(sk!=null){java.util.Iterator<String> sit=sk.keys();while(sit.hasNext()){String key=sit.next();s.skills.put(key,sk.optDouble(key,0));}} JSONArray la=j.optJSONArray("learnedActions");if(la!=null)for(int i=0;i<la.length();i++)s.learnedActions.add(la.optString(i));
         s.proactiveEnabled=j.optBoolean("proactiveEnabled",true); s.quietStartHour=j.optInt("quietStartHour",23); s.quietEndHour=j.optInt("quietEndHour",7);
         s.haruMood=j.optString("haruMood","curious"); s.haruActivity=j.optString("haruActivity","walking");
         s.body=BodyState.fromJson(j.optJSONObject("body")); s.relationship=RelationshipState.fromJson(j.optJSONObject("relationship"));

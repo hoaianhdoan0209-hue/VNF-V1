@@ -5,6 +5,7 @@ public final class GodContactController {
  public static String handle(WorldState s,String input){
   String raw=input==null?"":input.trim();String q=raw.toUpperCase(Locale.ROOT);
   String proposed=DivineNamingEngine.extractProposal(raw);
+  if(GodTeachingGateway.looksLikeTeaching(raw))return GodTeachingGateway.teach(s,raw,System.currentTimeMillis());
   if(!proposed.isEmpty())return DivineNamingEngine.grant(s,proposed,System.currentTimeMillis()).message;
   if(q.contains("TÊN")||q.contains("TEN"))return s.nameState.isNamed()?"Tên đã được ban là "+s.nameState.officialName+".":"Cô gái hiện chưa có tên chính thức. Bạn có thể đề nghị: “Tôi muốn gọi cô ấy là Mai.”";
   if(q.contains("TRẠNG THÁI")||q.contains("TRANG THAI"))return WorldSnapshot.observe(s).summary();

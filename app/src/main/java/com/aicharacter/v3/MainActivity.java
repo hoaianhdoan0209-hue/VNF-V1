@@ -38,6 +38,7 @@ public final class MainActivity extends Activity implements GameView.Host {
                 long now=System.currentTimeMillis();
 
                 LifeCycleEngine.apply(loadedState,now);
+                AgeDevelopmentEngine.apply(loadedState,now);
                 StateInvariantChecker.repairOrReport(loadedState,now);
                 if(!loadedState.catState.awake) CatOfflineEngine.followAttachment(loadedState);
 
@@ -157,6 +158,7 @@ public final class MainActivity extends Activity implements GameView.Host {
     private boolean isLocalGodCapability(String raw){
         String q=raw.toUpperCase(java.util.Locale.ROOT);
         if(!DivineNamingEngine.extractProposal(raw).isEmpty()) return true;
+        if(GodTeachingGateway.looksLikeTeaching(raw)) return true;
         return q.contains("TRẠNG THÁI")||q.contains("TRANG THAI")||q.contains("BẢO VỆ")||q.contains("BAO VE")||q.contains("ĐÁNH GIÁ")||q.contains("DANH GIA")||q.contains("CHẨN ĐOÁN")||q.contains("CHAN DOAN")||q.contains("TÊN")||q.contains("TEN");
     }
 
