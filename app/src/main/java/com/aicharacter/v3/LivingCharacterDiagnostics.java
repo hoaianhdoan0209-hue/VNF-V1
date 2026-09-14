@@ -1,0 +1,6 @@
+package com.aicharacter.v3;import java.util.*;
+public final class LivingCharacterDiagnostics{private LivingCharacterDiagnostics(){}
+ public static String memoryGraph(WorldState s){StringBuilder b=new StringBuilder("MEMORY GRAPH\n");for(MemoryEntry m:MemoryRetrievalEngine.retrieve(s,HaruPerception.currentPlaceId(s),null,null,8))b.append(m.memoryId).append(" -> place:").append(m.location).append(" tags:").append(m.tags).append(" valence:").append(m.valence).append('\n');return b.toString();}
+ public static String beliefs(WorldState s){StringBuilder x=new StringBuilder("BELIEF DIAGNOSTIC V2\n");for(BeliefState b:s.beliefStates.values()){int sup=0,opp=0;for(BeliefEvidence e:b.evidence)if(e.polarity>=0)sup++;else opp++;x.append(b.subject).append('=').append(b.value).append(" confidence=").append(b.confidence).append(" support=").append(sup).append(" oppose=").append(opp).append(" evidence=");for(BeliefEvidence e:b.evidence)x.append(e.evidenceId).append('/').append(e.sourceMemoryId).append(' ');x.append('\n');}return x.toString();}
+ public static String relationship(WorldState s){RelationshipState r=s.relationship;return String.format(Locale.US,"RELATIONSHIP\n affection=%.2f trust=%.2f attachment=%.2f comfort=%.2f gratitude=%.2f irritation=%.2f hurt=%.2f",r.affection,r.trust,r.attachment,r.comfort,r.gratitude,r.irritation,r.hurt);}
+}

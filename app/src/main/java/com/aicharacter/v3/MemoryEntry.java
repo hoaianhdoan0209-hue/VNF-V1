@@ -1,0 +1,12 @@
+package com.aicharacter.v3;
+import org.json.*;import java.util.*;
+public final class MemoryEntry {
+ public final String memoryId; public long time; public String kind,summary; public double importance,valence,confidence; public String location; public final List<String> participants=new ArrayList<>(),tags=new ArrayList<>();
+ public MemoryEntry(long time,String kind,String summary,double importance){this(IdFactory.next("memory"),time,kind,summary,importance,0,.8,"lakeside",null,null);}
+ public MemoryEntry(long time,String kind,String summary,double importance,double valence,double confidence,String location,List<String> participants,List<String> tags){this(IdFactory.next("memory"),time,kind,summary,importance,valence,confidence,location,participants,tags);}
+ public MemoryEntry(String id,long time,String kind,String summary,double importance,double valence,double confidence,String location,List<String> participants,List<String> tags){memoryId=(id==null||id.isEmpty())?IdFactory.next("memory"):id;this.time=time;this.kind=kind;this.summary=summary;this.importance=clamp(importance,-1,1);this.valence=clamp(valence,-1,1);this.confidence=clamp(confidence,0,1);this.location=location==null?"":location;if(participants!=null)this.participants.addAll(participants);if(tags!=null)this.tags.addAll(tags);}
+ public double retrievalWeight(long now){double days=Math.max(0,(now-time)/86400000.0);return importance*(.35+.65*Math.exp(-days/28.0))*confidence;} public boolean hasTag(String t){return tags.contains(t);}
+ public JSONObject toJson()throws JSONException{JSONObject j=new JSONObject();j.put("memoryId",memoryId);j.put("time",time);j.put("kind",kind);j.put("summary",summary);j.put("importance",importance);j.put("valence",valence);j.put("confidence",confidence);j.put("location",location);j.put("participants",new JSONArray(participants));j.put("tags",new JSONArray(tags));return j;}
+ public static MemoryEntry fromJson(JSONObject j){List<String>p=new ArrayList<>(),t=new ArrayList<>();JSONArray a=j.optJSONArray("participants");if(a!=null)for(int i=0;i<a.length();i++)p.add(a.optString(i));a=j.optJSONArray("tags");if(a!=null)for(int i=0;i<a.length();i++)t.add(a.optString(i));return new MemoryEntry(j.optString("memoryId",IdFactory.next("memory")),j.optLong("time"),j.optString("kind"),j.optString("summary"),j.optDouble("importance",.5),j.optDouble("valence"),j.optDouble("confidence",.8),j.optString("location","lakeside"),p,t);}
+ private static double clamp(double v,double a,double b){return Math.max(a,Math.min(b,v));}
+}

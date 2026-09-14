@@ -1,0 +1,879 @@
+{
+  "version": 3,
+  "milestone": "V0.99A",
+  "logicalViewport": [
+    2400,
+    1080
+  ],
+  "pixelFiltering": "nearest",
+  "girl": {
+    "states": {
+      "idle": {
+        "asset": "girl_idle_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "walk_left": {
+        "asset": "girl_walk_left",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 7,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "walk_right": {
+        "asset": "girl_walk_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 7,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "sit": {
+        "asset": "girl_sit_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "crouch": {
+        "asset": "girl_crouch_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "sleep": {
+        "asset": "girl_sleep_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.82
+        ]
+      },
+      "thinking": {
+        "asset": "girl_think_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "reaction": {
+        "asset": "girl_react_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 2.0,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "search_right": {
+        "asset": "girl_search_right",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 3.2,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      },
+      "search_left": {
+        "asset": "girl_search_left",
+        "frames": 12,
+        "frameSize": [
+          192,
+          288
+        ],
+        "fps": 3.2,
+        "anchor": [
+          0.5,
+          0.94
+        ]
+      }
+    }
+  },
+  "waterFrames": [
+    "lakeside_water_0",
+    "lakeside_water_1",
+    "lakeside_water_2",
+    "lakeside_water_3"
+  ],
+  "rainLayers": [
+    "rain_layer_0",
+    "rain_layer_1",
+    "rain_layer_2"
+  ],
+  "lighting": [
+    "light_evening",
+    "light_night",
+    "light_rain",
+    "home_warm_light"
+  ],
+  "creatureStates": [
+    "reedling_idle",
+    "reedling_move",
+    "reedling_forage",
+    "reedling_rest",
+    "reedling_alert"
+  ],
+  "ui": [
+    "ui_panel_chat",
+    "ui_panel_god",
+    "ui_button",
+    "icon_voice",
+    "icon_god",
+    "icon_close",
+    "icon_inbox"
+  ],
+  "variantPool": [
+    "prop_variant_00",
+    "prop_variant_01",
+    "prop_variant_02",
+    "prop_variant_03",
+    "prop_variant_04",
+    "prop_variant_05"
+  ],
+  "assets": [
+    {
+      "id": "bench_wood_01",
+      "path": "app/src/main/res/drawable-nodpi/bench_wood_01.png",
+      "dimensions": [
+        360,
+        220
+      ],
+      "bytes": 1130,
+      "decodedBytes": 316800,
+      "sha256": "ef1e708f166a1034761606d4a909e2f3f068184388d5f6be5a38cf5478c8533f"
+    },
+    {
+      "id": "garden_distant",
+      "path": "app/src/main/res/drawable-nodpi/garden_distant.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 13288,
+      "decodedBytes": 4608000,
+      "sha256": "9f4522dc1e1be89114edd2008bcb83cda82b3f20d9ffbed10e94e1dbae9bb1f4"
+    },
+    {
+      "id": "garden_foreground",
+      "path": "app/src/main/res/drawable-nodpi/garden_foreground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9771,
+      "decodedBytes": 4608000,
+      "sha256": "fea7ac7c25cfbb98a9add759ae1e5aeccf408d3790a502e8d21e0fb2637e0225"
+    },
+    {
+      "id": "garden_ground",
+      "path": "app/src/main/res/drawable-nodpi/garden_ground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 11403,
+      "decodedBytes": 4608000,
+      "sha256": "58ac60833afd0f73195a4ba813b1babc04d74dea82cfbd3c33ceda5a5210f2a1"
+    },
+    {
+      "id": "garden_mid",
+      "path": "app/src/main/res/drawable-nodpi/garden_mid.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 12227,
+      "decodedBytes": 4608000,
+      "sha256": "29ddab393a12806d8827c40f408997a0c2a4179942f845defe233a0e6cd729b2"
+    },
+    {
+      "id": "garden_sky",
+      "path": "app/src/main/res/drawable-nodpi/garden_sky.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7481,
+      "decodedBytes": 4608000,
+      "sha256": "0822f60a403ca73b96ccfee02530bd1ec640821ed373997c76d751777235eefd"
+    },
+    {
+      "id": "girl_crouch_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_crouch_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 7933,
+      "decodedBytes": 2654208,
+      "sha256": "c0873bb1f5f3ce32fbc966e9022313ed6643c373477f2d1804820c9cfb4f22ee"
+    },
+    {
+      "id": "girl_idle_left",
+      "path": "app/src/main/res/drawable-nodpi/girl_idle_left.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 8690,
+      "decodedBytes": 2654208,
+      "sha256": "b283d0ccd89dbdb89b2e45f5366df80ceb9e87f85bf7e9f7c7999a68e0be52a4"
+    },
+    {
+      "id": "girl_idle_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_idle_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 8695,
+      "decodedBytes": 2654208,
+      "sha256": "f454a30b4614c0b3dbac21ba166387edc821e65bc19735a275b1b5153249f7cb"
+    },
+    {
+      "id": "girl_react_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_react_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 9206,
+      "decodedBytes": 2654208,
+      "sha256": "ad7d3c098ab179bb6860581ba5a586ba4617b7ab736a08d9e58f4dcbfa854eb7"
+    },
+    {
+      "id": "girl_search_left",
+      "path": "app/src/main/res/drawable-nodpi/girl_search_left.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 8713,
+      "decodedBytes": 2654208,
+      "sha256": "0597724566ac263ef6013060323f1c9cae062dff97e2d7671ccee6bee6dac4c7"
+    },
+    {
+      "id": "girl_search_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_search_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 9215,
+      "decodedBytes": 2654208,
+      "sha256": "f6cd374a8c8e12e8bdba034026ead627cfed548d5192838b9fabb678693abc5e"
+    },
+    {
+      "id": "girl_sit_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_sit_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 7026,
+      "decodedBytes": 2654208,
+      "sha256": "75d52faf2797debe4d48348965c5f327b4809792ebef22d4bcb935fa48bd53b0"
+    },
+    {
+      "id": "girl_sleep_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_sleep_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 6731,
+      "decodedBytes": 2654208,
+      "sha256": "8046f7e7550d334e5590df1df59f24693e1e52f27a2a1eec9b18033b5986ef94"
+    },
+    {
+      "id": "girl_think_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_think_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 7757,
+      "decodedBytes": 2654208,
+      "sha256": "ef039a45c87485a97831e0ea2ba234d18eb34960452c1f108ed5cc09253eb87d"
+    },
+    {
+      "id": "girl_walk_left",
+      "path": "app/src/main/res/drawable-nodpi/girl_walk_left.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 10682,
+      "decodedBytes": 2654208,
+      "sha256": "de9f4f9708e252b1759da92022da8f56e918f4454018c636aad4240f3d9ed5e2"
+    },
+    {
+      "id": "girl_walk_right",
+      "path": "app/src/main/res/drawable-nodpi/girl_walk_right.png",
+      "dimensions": [
+        2304,
+        288
+      ],
+      "bytes": 10809,
+      "decodedBytes": 2654208,
+      "sha256": "aacc5fe7a19a98164005ff67eb94f153bab6b85a1b2a6369aa545341251079ad"
+    },
+    {
+      "id": "grove_distant",
+      "path": "app/src/main/res/drawable-nodpi/grove_distant.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 13533,
+      "decodedBytes": 4608000,
+      "sha256": "092e4d44a4749e51c347240507b67197b8ab18dd3c83bc749f15a08e59dd16de"
+    },
+    {
+      "id": "grove_foreground",
+      "path": "app/src/main/res/drawable-nodpi/grove_foreground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9131,
+      "decodedBytes": 4608000,
+      "sha256": "042ebeeeadba9d3bec4cd7f2bd99157f0b3dedd25fed3660ee7f0f2ac3c53200"
+    },
+    {
+      "id": "grove_ground",
+      "path": "app/src/main/res/drawable-nodpi/grove_ground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 11394,
+      "decodedBytes": 4608000,
+      "sha256": "3b1dc0f8208f4bf1d8acbd64cfe14f6913c57cc24be618d992f6975e3fd6ed54"
+    },
+    {
+      "id": "grove_mid",
+      "path": "app/src/main/res/drawable-nodpi/grove_mid.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 17849,
+      "decodedBytes": 4608000,
+      "sha256": "65d0e903b70c472e8062460da9a84825dd5325d20fef4741acbbd0a784410789"
+    },
+    {
+      "id": "grove_sky",
+      "path": "app/src/main/res/drawable-nodpi/grove_sky.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7452,
+      "decodedBytes": 4608000,
+      "sha256": "0ae2c851c75d76c92a578313db3e1efba1819258d0806e801f838c95ec3158a9"
+    },
+    {
+      "id": "home_distant",
+      "path": "app/src/main/res/drawable-nodpi/home_distant.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 13477,
+      "decodedBytes": 4608000,
+      "sha256": "b183429d2a7f2a87a50e7eee0f9259feea33fb2147937ed710dcbf64272c4245"
+    },
+    {
+      "id": "home_foreground",
+      "path": "app/src/main/res/drawable-nodpi/home_foreground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9131,
+      "decodedBytes": 4608000,
+      "sha256": "30378ee3cd6f4e9ef4a5051f95a8af3b1da1344c63b7f5b6ff54866983d0cc2e"
+    },
+    {
+      "id": "home_ground",
+      "path": "app/src/main/res/drawable-nodpi/home_ground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 11342,
+      "decodedBytes": 4608000,
+      "sha256": "003de3f2da33ecb524a0fa1b2f4eb0b788e87d4e6da5cb5334f2064f8f9f1c3f"
+    },
+    {
+      "id": "home_mid",
+      "path": "app/src/main/res/drawable-nodpi/home_mid.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 13711,
+      "decodedBytes": 4608000,
+      "sha256": "3cd54f44c3f98b036381d87329381322b06d1c88165c748879114efb07b648f9"
+    },
+    {
+      "id": "home_sky",
+      "path": "app/src/main/res/drawable-nodpi/home_sky.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7475,
+      "decodedBytes": 4608000,
+      "sha256": "c30a5df6cb315ecc9207299e4ee35173069bb5ab70c0aba6bb4e47d3dd3b974f"
+    },
+    {
+      "id": "home_warm_light",
+      "path": "app/src/main/res/drawable-nodpi/home_warm_light.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 4906,
+      "decodedBytes": 4608000,
+      "sha256": "fbb3b4021db31355f244b2a8139ee119b9503dc48e5e9d5f1c03e3dd5aead860"
+    },
+    {
+      "id": "icon_close",
+      "path": "app/src/main/res/drawable-nodpi/icon_close.png",
+      "dimensions": [
+        64,
+        64
+      ],
+      "bytes": 467,
+      "decodedBytes": 16384,
+      "sha256": "19b22e0d9e04417e411d673a9e924c2030eae5bfab9f07db01c7d5f581d5c675"
+    },
+    {
+      "id": "icon_god",
+      "path": "app/src/main/res/drawable-nodpi/icon_god.png",
+      "dimensions": [
+        64,
+        64
+      ],
+      "bytes": 436,
+      "decodedBytes": 16384,
+      "sha256": "639bf76eae0ab2f37d46d460d99c34c9fffac0f2f88daeb61b925571fa747397"
+    },
+    {
+      "id": "icon_inbox",
+      "path": "app/src/main/res/drawable-nodpi/icon_inbox.png",
+      "dimensions": [
+        64,
+        64
+      ],
+      "bytes": 433,
+      "decodedBytes": 16384,
+      "sha256": "624f7169cd8dec90468108db2c9fe4940afc994c919edadce7fee29bc2a80370"
+    },
+    {
+      "id": "icon_voice",
+      "path": "app/src/main/res/drawable-nodpi/icon_voice.png",
+      "dimensions": [
+        64,
+        64
+      ],
+      "bytes": 429,
+      "decodedBytes": 16384,
+      "sha256": "467eee62869bba93a6b79f812996f16dc6570688f8caac5e352b42326b44b1af"
+    },
+    {
+      "id": "lakeside_distant",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_distant.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 13434,
+      "decodedBytes": 4608000,
+      "sha256": "ac6620a1ce9139cb0841eaac868e68aa3bf86c72aadaa4c439f06a4831dfd6a5"
+    },
+    {
+      "id": "lakeside_foreground",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_foreground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9140,
+      "decodedBytes": 4608000,
+      "sha256": "b512dc353aee933685eb56459c2057ccf50796d8038578e9e0d416cc47daaaf9"
+    },
+    {
+      "id": "lakeside_ground",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_ground.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 11362,
+      "decodedBytes": 4608000,
+      "sha256": "116844e7cd775a039d3730703db682c6674163e42f6fa2fa1835230a664ae81f"
+    },
+    {
+      "id": "lakeside_mid",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_mid.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 10364,
+      "decodedBytes": 4608000,
+      "sha256": "366a63dee2dac83c103c070a7ee9927d0083cde6f335ba8743a5bf9b6d9af1bd"
+    },
+    {
+      "id": "lakeside_sky",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_sky.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7536,
+      "decodedBytes": 4608000,
+      "sha256": "5d08eccd72528a77ad58a927e26b127d280c15d24af74e90adc38bb75b5c136a"
+    },
+    {
+      "id": "lakeside_water_0",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_water_0.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7057,
+      "decodedBytes": 4608000,
+      "sha256": "1ba104a7ff32fce416ba7615f81bda1f21184546e0175b59b26b3ab111c07738"
+    },
+    {
+      "id": "lakeside_water_1",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_water_1.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7097,
+      "decodedBytes": 4608000,
+      "sha256": "95aa7e7cba16f477f100328a7b3125329668be886c7a693f8280398b6bf8c1fa"
+    },
+    {
+      "id": "lakeside_water_2",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_water_2.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7029,
+      "decodedBytes": 4608000,
+      "sha256": "260fbdd4aa1ce3f51ed5be31b329fec3eaee6e28af2c60d3fdd93b52247efdb8"
+    },
+    {
+      "id": "lakeside_water_3",
+      "path": "app/src/main/res/drawable-nodpi/lakeside_water_3.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 7074,
+      "decodedBytes": 4608000,
+      "sha256": "d3edb2170072a2b1a57038cf54a3713a73a584c42d0a9963de06ec8d0998a7a4"
+    },
+    {
+      "id": "light_evening",
+      "path": "app/src/main/res/drawable-nodpi/light_evening.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 6535,
+      "decodedBytes": 4608000,
+      "sha256": "4a0097c9ee3f31d5afd04c4f3a578bb168311977bf8d3728cba9dabd296c6eae"
+    },
+    {
+      "id": "light_night",
+      "path": "app/src/main/res/drawable-nodpi/light_night.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 6377,
+      "decodedBytes": 4608000,
+      "sha256": "e300ebc225c564a60a5e5fb0aefd99721ffdeb26e1e97d28745dc6042f1ab179"
+    },
+    {
+      "id": "light_rain",
+      "path": "app/src/main/res/drawable-nodpi/light_rain.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 6335,
+      "decodedBytes": 4608000,
+      "sha256": "c49064f1c54e4cc3cccd46067c2f1ab25cd256b154185a7508f41238eeaf7c21"
+    },
+    {
+      "id": "prop_variant_00",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_00.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 550,
+      "decodedBytes": 98304,
+      "sha256": "6867280270aab18a887181f3b7c9bb601d49a1499811d5dab4eb73e29e88328f"
+    },
+    {
+      "id": "prop_variant_01",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_01.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 549,
+      "decodedBytes": 98304,
+      "sha256": "3f76836dfc06340d0af09fda26a7091dcf5b51b4c8b9914b64319e643567aef6"
+    },
+    {
+      "id": "prop_variant_02",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_02.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 395,
+      "decodedBytes": 98304,
+      "sha256": "3f36207fd203f7f6d5fcf4094c3a28bffe6c7aff0c88d59f7e12ea4f82ce0084"
+    },
+    {
+      "id": "prop_variant_03",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_03.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 394,
+      "decodedBytes": 98304,
+      "sha256": "431d842606e4ff9013705b3bf52cebd7f27c5eb1e884b865dc721802679dd0ca"
+    },
+    {
+      "id": "prop_variant_04",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_04.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 502,
+      "decodedBytes": 98304,
+      "sha256": "4d2505af776df855552fb8d8a1c129dfa2131dfdb091e430f98a94c1bf7fa33f"
+    },
+    {
+      "id": "prop_variant_05",
+      "path": "app/src/main/res/drawable-nodpi/prop_variant_05.png",
+      "dimensions": [
+        192,
+        128
+      ],
+      "bytes": 588,
+      "decodedBytes": 98304,
+      "sha256": "0ab385758dd5b6ec348ffb57493b21efe9f09992acdca28dbde3133110c99b86"
+    },
+    {
+      "id": "rain_layer_0",
+      "path": "app/src/main/res/drawable-nodpi/rain_layer_0.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9866,
+      "decodedBytes": 4608000,
+      "sha256": "63bd05b0ad1f138c24721f91ea51aab9e4170e478f9486652858e268ae8995a1"
+    },
+    {
+      "id": "rain_layer_1",
+      "path": "app/src/main/res/drawable-nodpi/rain_layer_1.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 10230,
+      "decodedBytes": 4608000,
+      "sha256": "991075cd135dd0d410ce43958a113012f65e1803139ecd2a16d887b81bf66712"
+    },
+    {
+      "id": "rain_layer_2",
+      "path": "app/src/main/res/drawable-nodpi/rain_layer_2.png",
+      "dimensions": [
+        1600,
+        720
+      ],
+      "bytes": 9429,
+      "decodedBytes": 4608000,
+      "sha256": "60691a7369b0a75d8133d3772d3ea2dc53d2dd2af7869d8d3b7374f994af2bd9"
+    },
+    {
+      "id": "reedling_alert",
+      "path": "app/src/main/res/drawable-nodpi/reedling_alert.png",
+      "dimensions": [
+        1024,
+        96
+      ],
+      "bytes": 1734,
+      "decodedBytes": 393216,
+      "sha256": "cab67e69a61bdfa27c4ac7666346c77883a0be19180d125db1affd380993d132"
+    },
+    {
+      "id": "reedling_forage",
+      "path": "app/src/main/res/drawable-nodpi/reedling_forage.png",
+      "dimensions": [
+        1024,
+        96
+      ],
+      "bytes": 1932,
+      "decodedBytes": 393216,
+      "sha256": "b39575346100699df5f073f95e0000105756fd3d9c2e5a1421c0fd5faa6432f5"
+    },
+    {
+      "id": "reedling_idle",
+      "path": "app/src/main/res/drawable-nodpi/reedling_idle.png",
+      "dimensions": [
+        1024,
+        96
+      ],
+      "bytes": 1924,
+      "decodedBytes": 393216,
+      "sha256": "b852b799a212dcc8dc916192a013db68ba8658d8eb7760ff2be31014f923a77c"
+    },
+    {
+      "id": "reedling_move",
+      "path": "app/src/main/res/drawable-nodpi/reedling_move.png",
+      "dimensions": [
+        1024,
+        96
+      ],
+      "bytes": 2284,
+      "decodedBytes": 393216,
+      "sha256": "4ed599d28853d3cfed1e50af988ab5ab24e1685f304c034176d63ea95c43390a"
+    },
+    {
+      "id": "reedling_rest",
+      "path": "app/src/main/res/drawable-nodpi/reedling_rest.png",
+      "dimensions": [
+        1024,
+        96
+      ],
+      "bytes": 1663,
+      "decodedBytes": 393216,
+      "sha256": "7ac513fc31ad0203276cdf7924dad6ec18c1529792ca67c2d57de57db8964ea6"
+    },
+    {
+      "id": "shelter_wood",
+      "path": "app/src/main/res/drawable-nodpi/shelter_wood.png",
+      "dimensions": [
+        560,
+        400
+      ],
+      "bytes": 4126,
+      "decodedBytes": 896000,
+      "sha256": "05cfe4a2d4e2e551ec8d2e17c937b741e5dc13d701c4294f43524c8fa6967bd5"
+    },
+    {
+      "id": "tree_autumn_02",
+      "path": "app/src/main/res/drawable-nodpi/tree_autumn_02.png",
+      "dimensions": [
+        420,
+        520
+      ],
+      "bytes": 3467,
+      "decodedBytes": 873600,
+      "sha256": "c90765130bc1d32650b33d6c7e5339f24540c39efc622e873f062eb9146aa9af"
+    },
+    {
+      "id": "ui_button",
+      "path": "app/src/main/res/drawable-nodpi/ui_button.png",
+      "dimensions": [
+        160,
+        64
+      ],
+      "bytes": 391,
+      "decodedBytes": 40960,
+      "sha256": "a240b71c699dbba97e9079db41a1a564b5ef40762491431b9028b2dea6f0ab3e"
+    },
+    {
+      "id": "ui_panel_chat",
+      "path": "app/src/main/res/drawable-nodpi/ui_panel_chat.png",
+      "dimensions": [
+        420,
+        180
+      ],
+      "bytes": 824,
+      "decodedBytes": 302400,
+      "sha256": "3b7d9fd6326d3f62f36b7a5bce7f406d7e99cc6cf06162d90c80cd8f170ce031"
+    },
+    {
+      "id": "ui_panel_god",
+      "path": "app/src/main/res/drawable-nodpi/ui_panel_god.png",
+      "dimensions": [
+        420,
+        180
+      ],
+      "bytes": 1090,
+      "decodedBytes": 302400,
+      "sha256": "f830ce30ef5aa74626736e4953c0d76c2d98fba82f809fc8fed7191e77363b22"
+    }
+  ]
+}

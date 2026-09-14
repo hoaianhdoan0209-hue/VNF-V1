@@ -1,0 +1,2 @@
+package com.aicharacter.v3;import java.util.*;
+public final class LifeDecision {public final Intention intention;public final LinkedHashMap<String,Double> reasons=new LinkedHashMap<>();public LifeDecision(Intention i){intention=i;}public LifeDecision reason(String k,double v){reasons.put(k,v);return this;}public String explain(){StringBuilder b=new StringBuilder(intention.id+" -> "+intention.targetId);for(Map.Entry<String,Double>e:reasons.entrySet())b.append(" | ").append(e.getKey()).append(String.format(Locale.US," %+.2f",e.getValue()));return b.toString();}}

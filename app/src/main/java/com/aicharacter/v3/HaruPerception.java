@@ -1,0 +1,2 @@
+package com.aicharacter.v3;
+public final class HaruPerception {private HaruPerception(){}public static String describe(WorldState s,WorldObject o){if(o==null||!o.enabled)return"không có gì đáng chú ý";PerceivedObject p=PerceptionBoundary.perceive(s,o);return p.description+" "+p.relativeLocation;}public static String currentPlace(WorldState s){WorldArea a=s.world.areaAt(s.haruX);return a==null?"một nơi khó xác định":a.haruName;}public static String currentPlaceId(WorldState s){WorldArea a=s.world.areaAt(s.haruX);return a==null?"unknown":a.id;}}

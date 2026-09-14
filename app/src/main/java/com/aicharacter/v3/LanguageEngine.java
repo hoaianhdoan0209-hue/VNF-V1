@@ -1,0 +1,2 @@
+package com.aicharacter.v3;
+public final class LanguageEngine {private LanguageEngine(){}public static String reunion(WorldState s,long away,double attach,double hurt){if(hurt>.22)return"Mình thấy cậu về rồi. Mình vẫn cần một chút khoảng riêng.";if(away>1440&&attach>.3)return"Cậu về rồi à… Mình đã có những lúc nhớ tới cậu trong mấy ngày vừa rồi.";if(away>360&&attach>.2)return"À, cậu về rồi. Mình đã để ý là cậu vắng khá lâu.";return"Ừ, mình thấy cậu rồi.";}}

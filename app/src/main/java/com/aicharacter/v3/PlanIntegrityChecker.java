@@ -1,0 +1,5 @@
+package com.aicharacter.v3;
+/** Recovers legacy/stalled ACTIVE plans without teleporting or repeatedly clearing them. */
+public final class PlanIntegrityChecker{private PlanIntegrityChecker(){}
+ public static String check(WorldState s,long now){PlanState p=s.planState;if(p==null||!"ACTIVE".equals(p.status))return "OK";if(s.girlTravel.active)return "TRAVELLING";WorldArea here=s.world.areaAt(s.haruX);boolean atDestination=here!=null&&here.id.equals(p.destination);if(atDestination&&!p.plannedAction.isEmpty()){PlanExecutor.executeAction(s,now);return "RECOVERED_PENDING_ACTION";}if(now-p.lastProgressAt>180000&&!p.destination.isEmpty()){if(TravelEngine.start(s,s.girlTravel,"girl",p.destination,p.planId,now)){p.lastReason="watchdog restarted physical travel";p.lastProgressAt=now;return "REPLANNED";}p.status="FAILED";p.lastOutcome="watchdog: destination unreachable";s.developerReports.add(new DeveloperReport(now,"PLAN_INTEGRITY","MEDIUM","PlanIntegrityChecker",p.lastOutcome,"invalid route","plan="+p.planId,"failed safely; no teleport"));return "FAILED";}return "WAITING";}
+}

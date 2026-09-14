@@ -1,0 +1,194 @@
+{
+  "worldDefinitionVersion": 2,
+  "worldId": "vnf_lakeside_home_v1",
+  "areas": [
+    {
+      "id": "home_shelter",
+      "systemName": "Shelter/Home",
+      "haruName": "chỗ trú nhỏ",
+      "left": 80,
+      "right": 570,
+      "ground": 846,
+      "weatherExposed": false,
+      "tags": "shelter,quiet,rest,sleep",
+      "connections": [
+        "garden_path"
+      ],
+      "visual": {
+        "sky": "home_sky",
+        "distant": "home_distant",
+        "midground": "home_mid",
+        "ground": "home_ground",
+        "foreground": "home_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      }
+    },
+    {
+      "id": "garden_path",
+      "systemName": "Garden Path",
+      "haruName": "lối đi cạnh cỏ",
+      "left": 570,
+      "right": 1050,
+      "ground": 842,
+      "weatherExposed": true,
+      "tags": "path,vegetation",
+      "connections": [
+        "home_shelter",
+        "lakeside"
+      ],
+      "visual": {
+        "sky": "garden_sky",
+        "distant": "garden_distant",
+        "midground": "garden_mid",
+        "ground": "garden_ground",
+        "foreground": "garden_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      }
+    },
+    {
+      "id": "lakeside",
+      "systemName": "Lakeside",
+      "haruName": "bờ hồ",
+      "left": 1050,
+      "right": 1900,
+      "ground": 850,
+      "weatherExposed": true,
+      "tags": "lake,reflect,open",
+      "connections": [
+        "garden_path",
+        "quiet_grove"
+      ],
+      "visual": {
+        "sky": "lakeside_sky",
+        "distant": "lakeside_distant",
+        "midground": "lakeside_mid",
+        "ground": "lakeside_ground",
+        "foreground": "lakeside_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      }
+    },
+    {
+      "id": "quiet_grove",
+      "systemName": "Vegetation Zone",
+      "haruName": "khoảng cây yên tĩnh",
+      "left": 1900,
+      "right": 2320,
+      "ground": 844,
+      "weatherExposed": true,
+      "tags": "quiet,vegetation",
+      "connections": [
+        "lakeside"
+      ],
+      "visual": {
+        "sky": "grove_sky",
+        "distant": "grove_distant",
+        "midground": "grove_mid",
+        "ground": "grove_ground",
+        "foreground": "grove_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "shelter_01",
+      "type": "shelter",
+      "areaId": "home_shelter",
+      "assetRef": "shelter_wood",
+      "haruDescription": "mái trú nhỏ",
+      "x": 300,
+      "ground": 846,
+      "width": 300,
+      "height": 214,
+      "tags": "rest,dry,safe,sleep",
+      "interactable": true,
+      "collision": true,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1.0,
+      "zOrder": 4,
+      "interactionX": 300,
+      "interactionRadius": 70
+    },
+    {
+      "id": "bench_lake_01",
+      "type": "bench",
+      "areaId": "lakeside",
+      "assetRef": "bench_wood_01",
+      "haruDescription": "chiếc ghế cạnh hồ",
+      "x": 1430,
+      "ground": 850,
+      "width": 220,
+      "height": 135,
+      "tags": "rest,reflect,landmark,sit",
+      "interactable": true,
+      "collision": false,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1.0,
+      "zOrder": 4,
+      "interactionX": 1430,
+      "interactionRadius": 70,
+      "visualSeatOffsetY": 70
+    },
+    {
+      "id": "lake_tree_03",
+      "type": "tree",
+      "areaId": "quiet_grove",
+      "assetRef": "tree_autumn_02",
+      "haruDescription": "cái cây cạnh hồ",
+      "x": 2070,
+      "ground": 844,
+      "width": 180,
+      "height": 300,
+      "tags": "vegetation,landmark,quiet,observe",
+      "interactable": true,
+      "collision": true,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1.0,
+      "zOrder": 4,
+      "interactionX": 2070,
+      "interactionRadius": 60
+    },
+    {
+      "id": "reedling_01",
+      "type": "creature",
+      "areaId": "lakeside",
+      "assetRef": "reedling_idle",
+      "haruDescription": "sinh vật nhỏ bên bờ cỏ",
+      "x": 1730,
+      "ground": 850,
+      "width": 55,
+      "height": 60,
+      "tags": "creature,lake,vegetation",
+      "interactable": false,
+      "collision": false,
+      "renderLayer": "ACTORS",
+      "habitat": "lake,vegetation",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1.0,
+      "zOrder": 5,
+      "interactionX": 1730,
+      "interactionRadius": 60
+    }
+  ],
+  "visualProfile": {
+    "logicalViewport": "2400x1080",
+    "style": "cozy layered pixel-art",
+    "layers": [
+      "SKY",
+      "DISTANT",
+      "MIDGROUND",
+      "GROUND",
+      "WORLD_PROPS",
+      "ACTORS",
+      "FOREGROUND",
+      "ATMOSPHERE"
+    ]
+  }
+}

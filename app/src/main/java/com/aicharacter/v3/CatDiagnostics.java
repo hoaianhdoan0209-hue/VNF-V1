@@ -1,0 +1,7 @@
+package com.aicharacter.v3;
+public final class CatDiagnostics{
+ private CatDiagnostics(){}
+ public static String sleep(WorldState s){StringBuilder b=new StringBuilder("CAT SLEEP TRACE\nstart x=").append((int)s.catState.x).append(" area=").append(s.catState.areaId).append('\n');for(CatSleepPlanner.Plan p:CatSleepPlanner.candidates(s))b.append(p.mode).append(" score=").append(String.format(java.util.Locale.US,"%.2f",p.score)).append(" · ").append(p.reason).append('\n');b.append("current=").append(s.catState.sleepMode).append(" final=").append(s.catState.sleepAreaId).append(" attached=").append(s.catState.attachedToEntity);return b.toString();}
+ public static String find(WorldState s){GirlCatSearchEngine.SearchState q=s.catSearch;return"FIND CAT TRACE\nactive="+q.active+" found="+q.found+"\nreason="+q.reason+"\ncandidates="+q.candidates+"\nvisited="+q.visited+"\nPlanning source: memory/habit only; catX is used only by perception proximity test.";}
+ public static String name(WorldState s){return"NAME STATE\ninternal codename="+NameState.DEVELOPER_CODENAME+"\nofficial="+(s.nameState.isNamed()?s.nameState.officialName:"<unnamed>")+"\nevent="+s.nameState.namingEventId+"\ngrantedAt="+s.nameState.grantedAt;}
+}
