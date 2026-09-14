@@ -126,8 +126,15 @@ public final class MainActivity extends Activity implements GameView.Host {
                 String raw=input.getText().toString().trim();
                 if(raw.isEmpty()) return;
 
-                // Privileged SYSTEM capabilities remain deterministic and local.
-                // Online God may advise, but never becomes the authority that mutates world state.
+                if(looksLikeContentRollback(raw)){
+                    RuntimeContentUpdater.Result rr=RuntimeContentUpdater.rollback(getApplicationContext());
+                    if(gameView!=null)gameView.postInvalidate();
+                    new AlertDialog.Builder(this).setTitle("THẦN · ROLLBACK WORLD CONTENT").setMessage(rr.message).setPositiveButton("Đóng",null).show();
+                    return;
+                }
+
+                // Deterministic local capabilities stay local. Online God may offer only
+                // signed runtime world-content patches; APK/core cognition remain immutable here.
                 if(isLocalGodCapability(raw)){
                     String out=GodContactController.handle(state,raw);
                     repository.save(state);
@@ -143,16 +150,28 @@ public final class MainActivity extends Activity implements GameView.Host {
                 }
 
                 Toast.makeText(this,"Đang kết nối với Thần…",Toast.LENGTH_SHORT).show();
-                GodOnlineClient.ask(state,raw,(reply,error)->runOnUiThread(()->{
+                GodOnlineClient.ask(getApplicationContext(),state,raw,(result,error)->runOnUiThread(()->{
                     if(error!=null){
                         new AlertDialog.Builder(this).setTitle("THẦN · MẤT KẾT NỐI")
                             .setMessage("Không thể liên hệ Thần online lúc này.\n\n"+error.getClass().getSimpleName()+"\n\nGame vẫn tiếp tục offline bình thường.")
                             .setPositiveButton("Đóng",null).show();
+                    }else if(result!=null && result.autoApplyContentPatch && !result.contentPatchManifestUrl.isEmpty()){
+                        Toast.makeText(this,"Thần đang kiểm tra world-content patch đã ký…",Toast.LENGTH_SHORT).show();
+                        RuntimeContentUpdater.applySignedManifestAsync(getApplicationContext(),result.contentPatchManifestUrl,patchResult->runOnUiThread(()->{
+                            if(gameView!=null)gameView.postInvalidate();
+                            String message=result.reply+"\n\nWORLD CONTENT: "+patchResult.message;
+                            new AlertDialog.Builder(this).setTitle(patchResult.ok?"THẦN · ĐÃ NÂNG CẤP THẾ GIỚI":"THẦN · KHÔNG ÁP DỤNG PATCH").setMessage(message).setPositiveButton("Đóng",null).show();
+                        }));
                     }else{
-                        new AlertDialog.Builder(this).setTitle("THẦN").setMessage(reply).setPositiveButton("Đóng",null).show();
+                        new AlertDialog.Builder(this).setTitle("THẦN").setMessage(result==null?"Thần không trả lời.":result.reply).setPositiveButton("Đóng",null).show();
                     }
                 }));
             }).setNegativeButton("Đóng",null).show();
+    }
+
+    private boolean looksLikeContentRollback(String raw){
+        String q=raw.toUpperCase(java.util.Locale.ROOT);
+        return q.contains("ROLLBACK CONTENT")||q.contains("HOÀN TÁC ĐỒ HỌA")||q.contains("HOAN TAC DO HOA")||q.contains("KHÔI PHỤC WORLD CONTENT")||q.contains("KHOI PHUC WORLD CONTENT");
     }
 
     private boolean isLocalGodCapability(String raw){

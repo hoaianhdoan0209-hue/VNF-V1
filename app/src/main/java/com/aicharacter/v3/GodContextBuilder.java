@@ -1,5 +1,6 @@
 package com.aicharacter.v3;
 
+import android.content.Context;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -7,10 +8,10 @@ import org.json.JSONObject;
 public final class GodContextBuilder {
     private GodContextBuilder(){}
 
-    public static JSONObject build(WorldState s, String playerText){
+    public static JSONObject build(Context appContext, WorldState s, String playerText){
         JSONObject root=new JSONObject();
         try{
-            root.put("protocolVersion",2);
+            root.put("protocolVersion",3);
             root.put("playerText", playerText==null?"":playerText.trim());
             root.put("girlDisplayName", DisplayNames.girl(s));
             root.put("girlOfficiallyNamed", s.nameState!=null && s.nameState.isNamed());
@@ -57,11 +58,25 @@ public final class GodContextBuilder {
             for(int i=gi;i<s.godInbox.size();i++) godInbox.put(s.godInbox.get(i).text);
             root.put("recentGodMessages",godInbox);
 
+            // God may inspect a bounded, read-only snapshot of the exact world/game code
+            // compiled into this APK, but ONLY for technical/code questions.
+            root.put("codeVision", GodCodeVision.build(appContext, playerText));
+
+            JSONObject contentUpdater=new JSONObject();
+            contentUpdater.put("configured",VnfOnlineConfig.contentUpdaterConfigured());
+            contentUpdater.put("runtimeRevision",RuntimeContentStore.revision(appContext));
+            contentUpdater.put("hasCheckpoint",RuntimeContentStore.latestCheckpoint(appContext)!=null);
+            contentUpdater.put("writableDomain","runtime world content only: graphics/assets + future world data; NOT APK/DEX/Java/save schema/girl mind");
+            root.put("contentUpdater",contentUpdater);
+
             root.put("godPolicy",
                     "You are the VNF God/System contact. Ground every answer in supplied System Reality. "+
                     "You may observe, explain, warn, diagnose and suggest. Never directly control the girl, "+
                     "rewrite her mind, invent world events, fabricate memories, or claim an action happened when it did not. "+
                     "The girl is autonomous. Do not expose exact internal scores/coordinates unless the player explicitly asks for technical diagnostics. "+
+                    "When codeVision.enabled=true you may inspect the supplied READ-ONLY build snapshot to explain architecture and trace bugs. " +
+                    "A signed runtime world-content updater may replace graphics/data in its private content store and can rollback checkpoints. " +
+                    "Only report a world-content repair as applied after the updater confirms success. Never claim you edited/recompiled/deployed APK/core code. " +
                     "Reply naturally and concisely in Vietnamese. If context is insufficient, say you do not know.");
         }catch(Exception ignored){}
         return root;

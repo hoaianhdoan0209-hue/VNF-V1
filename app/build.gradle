@@ -5,6 +5,11 @@ plugins {
 def endpointRaw = (project.findProperty('VNF_GOD_ENDPOINT') ?: System.getenv('VNF_GOD_ENDPOINT') ?: '').toString()
 def endpointEscaped = endpointRaw.replace('\\', '\\\\').replace('"', '\\"')
 
+def contentOriginRaw = (project.findProperty('VNF_CONTENT_ORIGIN') ?: System.getenv('VNF_CONTENT_ORIGIN') ?: '').toString()
+def contentOriginEscaped = contentOriginRaw.replace('\\', '\\\\').replace('"', '\\"')
+def contentPublicKeyRaw = (project.findProperty('VNF_CONTENT_PUBLIC_KEY') ?: System.getenv('VNF_CONTENT_PUBLIC_KEY') ?: '').toString()
+def contentPublicKeyEscaped = contentPublicKeyRaw.replace('\\', '\\\\').replace('"', '\\"').replaceAll('\\s+', '')
+
 android {
     namespace 'com.aicharacter.v3'
     compileSdk 35
@@ -16,6 +21,8 @@ android {
         versionCode 100
         versionName '0.99C-foundation'
         buildConfigField 'String', 'VNF_GOD_ENDPOINT', '"' + endpointEscaped + '"'
+        buildConfigField 'String', 'VNF_CONTENT_ORIGIN', '"' + contentOriginEscaped + '"'
+        buildConfigField 'String', 'VNF_CONTENT_PUBLIC_KEY', '"' + contentPublicKeyEscaped + '"'
     }
 
     buildFeatures {
@@ -32,5 +39,38 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+
+// Read-only source snapshot for the online God technical-diagnostics channel.
+// The snapshot is generated from THIS build's world/game Java sources, so God never
+// relies on an old handwritten code summary. No secret/API key should live in src/main/java.
+def vnfGodCodeAssetsDir = file("$buildDir/generated/vnfGodCodeAssets")
+def generateVnfGodCodeSnapshot = tasks.register("generateVnfGodCodeSnapshot") {
+    def sourceTree = fileTree("src/main/java/com/aicharacter/v3") { include "**/*.java" }
+    inputs.files(sourceTree)
+    outputs.file(file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt"))
+    doLast {
+        def output = file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt")
+        output.parentFile.mkdirs()
+        output.withWriter("UTF-8") { writer ->
+            writer << "VNF GOD CODE VISION SNAPSHOT v1\n"
+            writer << "MODE=READ_ONLY_BUILD_SNAPSHOT\n"
+            writer << "Generated from the exact Java sources compiled into this APK.\n\n"
+            sourceTree.files.sort { a, b -> a.name <=> b.name }.each { f ->
+                writer << "===== FILE: ${f.name} =====\n"
+                writer << f.getText("UTF-8")
+                writer << "\n\n"
+            }
+        }
+    }
+}
+
+android.sourceSets.main.assets.srcDir(vnfGodCodeAssetsDir)
+
+afterEvaluate {
+    tasks.matching { t -> t.name.startsWith("merge") && t.name.endsWith("Assets") }.configureEach {
+        dependsOn(generateVnfGodCodeSnapshot)
     }
 }
