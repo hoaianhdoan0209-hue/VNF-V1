@@ -23,13 +23,11 @@ dependencies { implementation 'androidx.core:core:1.15.0' }
 def vnfGodCodeAssetsDir=file("$buildDir/generated/vnfGodCodeAssets")
 def generateVnfGodCodeSnapshot=tasks.register('generateVnfGodCodeSnapshot'){def sourceTree=fileTree('src/main/java/com/aicharacter/v3'){include '**/*.java'};inputs.files(sourceTree);outputs.file(file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt"));doLast{def output=file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt");output.parentFile.mkdirs();output.withWriter('UTF-8'){writer->writer<<'VNF GOD CODE VISION SNAPSHOT v1\nMODE=READ_ONLY_BUILD_SNAPSHOT\nGenerated from the exact Java sources compiled into this APK.\n\n';sourceTree.files.sort{a,b->a.name<=>b.name}.each{f->writer<<"===== FILE: ${f.name} =====\n"<<f.getText('UTF-8')<<'\n\n'}}}}
 android.sourceSets.main.assets.srcDir(vnfGodCodeAssetsDir)
-// Every consumer of the generated assets must depend on the producer. This includes
-// release lint model tasks in Gradle 8.14+, not only merge*Assets packaging tasks.
+// The generated directory is part of the main assets source set, so every Android
+// task that analyzes or packages assets must wait for the snapshot producer.
 afterEvaluate {
     tasks.matching { t ->
-        (t.name.startsWith('merge') && t.name.endsWith('Assets')) ||
-        t.name == 'generateReleaseLintVitalReportModel' ||
-        t.name == 'generateDebugLintReportModel' ||
-        t.name == 'generateReleaseLintReportModel'
+        def n=t.name.toLowerCase()
+        (n.contains('assets') || n.contains('lint')) && n != 'generatevnfgodcodesnapshot'
     }.configureEach { dependsOn(generateVnfGodCodeSnapshot) }
 }
