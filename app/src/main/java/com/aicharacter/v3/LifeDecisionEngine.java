@@ -12,7 +12,9 @@ public final class LifeDecisionEngine {private LifeDecisionEngine(){}
   LifeDecision find=add(c,new Intention("find_cat",0,"connection",rememberedCatPlace(s),"find cat",.65,now+14400000),"absence",Math.min(25,away*2.2),"returns_belief",-belief*7,"loneliness",s.mood.loneliness*18,"known_carried",(s.catState.carryKnownByGirl&&"girl".equals(s.catState.attachedToEntity))?-1000:0);
   psychological(s,find,find.intention.targetId,"find_cat","RAIN".equals(s.environment.weather),now);world(s,find,find.intention.targetId,true);
   for(LifeDecision d:c)d.intention.utility=sum(d.reasons)+(d.intention.id.equals(s.currentIntention)?5:0);
+  DeliberationEngine.apply(s,c,now);
   c.sort((a,b)->Double.compare(b.intention.utility,a.intention.utility));LifeDecision selected=c.get(0);
+  DeliberationEngine.recordThought(s,c,selected,now);
   if(s.planState!=null&&!"IDLE".equals(s.planState.status)){LifeDecision current=null;for(LifeDecision d:c)if(d.intention.id.equals(s.planState.intentionId))current=d;if(current!=null&&selected.intention.utility-current.intention.utility<5+12*s.planState.commitment)selected=current;}
   s.lastDecisionTrace=trace(c,selected,s);return selected;}
  private static void world(WorldState s,LifeDecision d,String areaId,boolean urgent){WorldArea a=s.world==null?null:s.world.area(areaId);if(a==null)return;d.reason("world_comfort",WorldSemantics.comfort(s,a)*10);d.reason("visibility",urgent?(s.visibility-.5)*4:(s.visibility-.5)*2);}
