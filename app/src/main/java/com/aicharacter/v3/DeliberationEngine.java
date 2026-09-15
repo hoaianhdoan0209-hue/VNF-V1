@@ -1,6 +1,6 @@
 package com.aicharacter.v3;
 import java.util.*;
-/** Offline deliberation layer. It does not script destinations: it lets memory, beliefs, uncertainty and near-tie variation modify already grounded candidate intentions. */
+/** Offline deliberation: lived memory, revisable beliefs, learned preferences and slowly developed personality. */
 public final class DeliberationEngine {
  private DeliberationEngine(){}
  public static void apply(WorldState s,List<LifeDecision> candidates,long now){
@@ -12,10 +12,10 @@ public final class DeliberationEngine {
    if(learned!=null)d.reason("learned_outcome",learned.value*12);
    double remembered=memoryFor(s,id,here,now);if(Math.abs(remembered)>.01)d.reason("recalled_outcomes",remembered);
    double belief=beliefSupport(s,id);if(Math.abs(belief)>.01)d.reason("belief_model",belief);
+   double personal=PersonalDevelopmentEngine.expression(s,id);if(Math.abs(personal)>.01)d.reason("developed_personality",personal);
    double uncertainty=uncertainty(s,id);d.reason("uncertainty",-uncertainty*(4+6*s.personality.caution));
    d.intention.utility=sum(d.reasons)+(id.equals(s.currentIntention)?5:0);
   }
-  // Only near-equal options receive small deterministic variation. Randomness can never replace causality.
   double best=-Double.MAX_VALUE;for(LifeDecision d:candidates)best=Math.max(best,d.intention.utility);
   for(LifeDecision d:candidates)if(best-d.intention.utility<=4.5){double v=tieVariation(s,d.intention.id,now);d.reason("near_tie_variation",v);d.intention.utility+=v;}
  }
