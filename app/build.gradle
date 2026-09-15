@@ -1,76 +1,33 @@
-plugins {
-    id 'com.android.application'
-}
+plugins { id 'com.android.application' }
 
-def endpointRaw = (project.findProperty('VNF_GOD_ENDPOINT') ?: System.getenv('VNF_GOD_ENDPOINT') ?: 'https://vnf-god-gemini-production.up.railway.app/god').toString()
-def endpointEscaped = endpointRaw.replace('\\', '\\\\').replace('"', '\\"')
-
-def contentOriginRaw = (project.findProperty('VNF_CONTENT_ORIGIN') ?: System.getenv('VNF_CONTENT_ORIGIN') ?: '').toString()
-def contentOriginEscaped = contentOriginRaw.replace('\\', '\\\\').replace('"', '\\"')
-def contentPublicKeyRaw = (project.findProperty('VNF_CONTENT_PUBLIC_KEY') ?: System.getenv('VNF_CONTENT_PUBLIC_KEY') ?: '').toString()
-def contentPublicKeyEscaped = contentPublicKeyRaw.replace('\\', '\\\\').replace('"', '\\"').replaceAll('\\s+', '')
+def endpointRaw=(project.findProperty('VNF_GOD_ENDPOINT')?:System.getenv('VNF_GOD_ENDPOINT')?:'https://vnf-god-gemini-production.up.railway.app/god').toString(); def endpointEscaped=endpointRaw.replace('\\','\\\\').replace('"','\\"')
+def contentOriginRaw=(project.findProperty('VNF_CONTENT_ORIGIN')?:System.getenv('VNF_CONTENT_ORIGIN')?:'').toString(); def contentOriginEscaped=contentOriginRaw.replace('\\','\\\\').replace('"','\\"')
+def contentPublicKeyRaw=(project.findProperty('VNF_CONTENT_PUBLIC_KEY')?:System.getenv('VNF_CONTENT_PUBLIC_KEY')?:'').toString(); def contentPublicKeyEscaped=contentPublicKeyRaw.replace('\\','\\\\').replace('"','\\"').replaceAll('\\s+','')
+def updateManifestRaw=(project.findProperty('VNF_UPDATE_MANIFEST')?:System.getenv('VNF_UPDATE_MANIFEST')?:'https://vnf-god-gemini-production.up.railway.app/update/manifest').toString(); def updateManifestEscaped=updateManifestRaw.replace('\\','\\\\').replace('"','\\"')
+def releaseStore=(System.getenv('CM_KEYSTORE_PATH')?:System.getenv('VNF_RELEASE_STORE_FILE')); def releaseStorePassword=(System.getenv('CM_KEYSTORE_PASSWORD')?:System.getenv('VNF_KEYSTORE_PASSWORD')); def releaseAlias=(System.getenv('CM_KEY_ALIAS')?:System.getenv('VNF_KEY_ALIAS')); def releaseKeyPassword=(System.getenv('CM_KEY_PASSWORD')?:System.getenv('VNF_KEY_PASSWORD')); def releaseSigningConfigured=releaseStore&&releaseStorePassword&&releaseAlias&&releaseKeyPassword
 
 android {
-    namespace 'com.aicharacter.v3'
-    compileSdk 35
-
-    defaultConfig {
-        applicationId 'com.aicharacter.v3'
-        minSdk 26
-        targetSdk 35
-        versionCode 100
-        versionName '0.99C-foundation'
-        buildConfigField 'String', 'VNF_GOD_ENDPOINT', '"' + endpointEscaped + '"'
-        buildConfigField 'String', 'VNF_CONTENT_ORIGIN', '"' + contentOriginEscaped + '"'
-        buildConfigField 'String', 'VNF_CONTENT_PUBLIC_KEY', '"' + contentPublicKeyEscaped + '"'
-    }
-
-    buildFeatures {
-        buildConfig true
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
+    namespace 'com.aicharacter.v3'; compileSdk 35
+    defaultConfig { applicationId 'com.aicharacter.v3'; minSdk 26; targetSdk 35; versionCode 101; versionName '0.99C-stable-update-test.1'; buildConfigField 'String','VNF_GOD_ENDPOINT','"'+endpointEscaped+'"'; buildConfigField 'String','VNF_CONTENT_ORIGIN','"'+contentOriginEscaped+'"'; buildConfigField 'String','VNF_CONTENT_PUBLIC_KEY','"'+contentPublicKeyEscaped+'"'; buildConfigField 'String','VNF_UPDATE_MANIFEST','"'+updateManifestEscaped+'"' }
+    buildFeatures { buildConfig true }
+    signingConfigs { if(releaseSigningConfigured){ vnfRelease { storeFile file(releaseStore); storePassword releaseStorePassword; keyAlias releaseAlias; keyPassword releaseKeyPassword } } }
+    buildTypes { release { minifyEnabled false; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'; if(releaseSigningConfigured) signingConfig signingConfigs.vnfRelease } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
+
+dependencies { implementation 'androidx.core:core:1.15.0' }
 
 // Read-only source snapshot for the online God technical-diagnostics channel.
-// The snapshot is generated from THIS build's world/game Java sources, so God never
-// relies on an old handwritten code summary. No secret/API key should live in src/main/java.
-def vnfGodCodeAssetsDir = file("$buildDir/generated/vnfGodCodeAssets")
-def generateVnfGodCodeSnapshot = tasks.register("generateVnfGodCodeSnapshot") {
-    def sourceTree = fileTree("src/main/java/com/aicharacter/v3") { include "**/*.java" }
-    inputs.files(sourceTree)
-    outputs.file(file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt"))
-    doLast {
-        def output = file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt")
-        output.parentFile.mkdirs()
-        output.withWriter("UTF-8") { writer ->
-            writer << "VNF GOD CODE VISION SNAPSHOT v1\n"
-            writer << "MODE=READ_ONLY_BUILD_SNAPSHOT\n"
-            writer << "Generated from the exact Java sources compiled into this APK.\n\n"
-            sourceTree.files.sort { a, b -> a.name <=> b.name }.each { f ->
-                writer << "===== FILE: ${f.name} =====\n"
-                writer << f.getText("UTF-8")
-                writer << "\n\n"
-            }
-        }
-    }
-}
-
+def vnfGodCodeAssetsDir=file("$buildDir/generated/vnfGodCodeAssets")
+def generateVnfGodCodeSnapshot=tasks.register('generateVnfGodCodeSnapshot'){def sourceTree=fileTree('src/main/java/com/aicharacter/v3'){include '**/*.java'};inputs.files(sourceTree);outputs.file(file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt"));doLast{def output=file("$vnfGodCodeAssetsDir/god_world_source_snapshot.txt");output.parentFile.mkdirs();output.withWriter('UTF-8'){writer->writer<<'VNF GOD CODE VISION SNAPSHOT v1\nMODE=READ_ONLY_BUILD_SNAPSHOT\nGenerated from the exact Java sources compiled into this APK.\n\n';sourceTree.files.sort{a,b->a.name<=>b.name}.each{f->writer<<"===== FILE: ${f.name} =====\n"<<f.getText('UTF-8')<<'\n\n'}}}}
 android.sourceSets.main.assets.srcDir(vnfGodCodeAssetsDir)
-
+// The generated directory is part of the main assets source set, so every Android
+// task that analyzes or packages assets must wait for the snapshot producer.
 afterEvaluate {
-    tasks.matching { t -> t.name.startsWith("merge") && t.name.endsWith("Assets") }.configureEach {
-        dependsOn(generateVnfGodCodeSnapshot)
-    }
+    tasks.matching { t ->
+        def n=t.name.toLowerCase()
+        (n.contains('assets') || n.contains('lint')) && n != 'generatevnfgodcodesnapshot'
+    }.configureEach { dependsOn(generateVnfGodCodeSnapshot) }
 }
