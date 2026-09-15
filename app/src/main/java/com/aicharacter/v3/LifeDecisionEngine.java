@@ -1,5 +1,5 @@
 package com.aicharacter.v3;import java.util.*;
-/** V0.97 shared causal choice. History/personality/belief/relationship alter scores; clock never maps to a destination. */
+/** Shared causal choice. History/personality/belief/relationship alter scores; clock never maps to a destination. */
 public final class LifeDecisionEngine {private LifeDecisionEngine(){}
  public static LifeDecision choose(WorldState s,long now){NeedState n=NeedState.evaluate(s);double hour=s.worldMinutes/60.0;List<LifeDecision> c=new ArrayList<>();
   add(c,new Intention("sleep",0,"rest","shelter_01","sleep",.9,now+10800000),"sleepiness",n.rest,"night_context",(hour>=22||hour<6)?18:0,"pain",s.body.pain*.6);
@@ -12,10 +12,10 @@ public final class LifeDecisionEngine {private LifeDecisionEngine(){}
   LifeDecision find=add(c,new Intention("find_cat",0,"connection",rememberedCatPlace(s),"find cat",.65,now+14400000),"absence",Math.min(25,away*2.2),"returns_belief",-belief*7,"loneliness",s.mood.loneliness*18,"known_carried",(s.catState.carryKnownByGirl&&"girl".equals(s.catState.attachedToEntity))?-1000:0);
   psychological(s,find,find.intention.targetId,"find_cat","RAIN".equals(s.environment.weather),now);world(s,find,find.intention.targetId,true);
   for(LifeDecision d:c)d.intention.utility=sum(d.reasons)+(d.intention.id.equals(s.currentIntention)?5:0);
-  DeliberationEngine.apply(s,c,now);
-  c.sort((a,b)->Double.compare(b.intention.utility,a.intention.utility));LifeDecision selected=c.get(0);
+  DeliberationEngine.apply(s,c,now);c.sort((a,b)->Double.compare(b.intention.utility,a.intention.utility));LifeDecision selected=c.get(0);
+  if(s.planState!=null&&s.planState.active()){LifeDecision current=null;for(LifeDecision d:c)if(d.intention.id.equals(s.planState.intentionId)){current=d;break;}if(current!=null&&selected.intention.utility-current.intention.utility<5+12*s.planState.commitment)selected=current;}
+  // Thought must describe the FINAL intention after commitment/inertia, not the provisional challenger.
   DeliberationEngine.recordThought(s,c,selected,now);
-  if(s.planState!=null&&!"IDLE".equals(s.planState.status)){LifeDecision current=null;for(LifeDecision d:c)if(d.intention.id.equals(s.planState.intentionId))current=d;if(current!=null&&selected.intention.utility-current.intention.utility<5+12*s.planState.commitment)selected=current;}
   s.lastDecisionTrace=trace(c,selected,s);return selected;}
  private static void world(WorldState s,LifeDecision d,String areaId,boolean urgent){WorldArea a=s.world==null?null:s.world.area(areaId);if(a==null)return;d.reason("world_comfort",WorldSemantics.comfort(s,a)*10);d.reason("visibility",urgent?(s.visibility-.5)*4:(s.visibility-.5)*2);}
  private static void psychological(WorldState s,LifeDecision d,String place,String action,boolean risk,long now){HistoryDecisionEngine.place(s,place,now,d.reasons);HistoryDecisionEngine.personality(s,action,risk,d.reasons);HistoryDecisionEngine.habit(s,action,place,d.reasons);HistoryDecisionEngine.relationship(s,action,d.reasons);}
