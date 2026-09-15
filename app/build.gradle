@@ -4,7 +4,7 @@ def endpointRaw=(project.findProperty('VNF_GOD_ENDPOINT')?:System.getenv('VNF_GO
 def contentOriginRaw=(project.findProperty('VNF_CONTENT_ORIGIN')?:System.getenv('VNF_CONTENT_ORIGIN')?:'').toString(); def contentOriginEscaped=contentOriginRaw.replace('\\','\\\\').replace('"','\\"')
 def contentPublicKeyRaw=(project.findProperty('VNF_CONTENT_PUBLIC_KEY')?:System.getenv('VNF_CONTENT_PUBLIC_KEY')?:'').toString(); def contentPublicKeyEscaped=contentPublicKeyRaw.replace('\\','\\\\').replace('"','\\"').replaceAll('\\s+','')
 def updateManifestRaw=(project.findProperty('VNF_UPDATE_MANIFEST')?:System.getenv('VNF_UPDATE_MANIFEST')?:'https://vnf-god-gemini-production.up.railway.app/update/manifest').toString(); def updateManifestEscaped=updateManifestRaw.replace('\\','\\\\').replace('"','\\"')
-def releaseStore=System.getenv('VNF_RELEASE_STORE_FILE'); def releaseStorePassword=System.getenv('VNF_KEYSTORE_PASSWORD'); def releaseAlias=System.getenv('VNF_KEY_ALIAS'); def releaseKeyPassword=System.getenv('VNF_KEY_PASSWORD'); def releaseSigningConfigured=releaseStore&&releaseStorePassword&&releaseAlias&&releaseKeyPassword
+def releaseStore=(System.getenv('CM_KEYSTORE_PATH')?:System.getenv('VNF_RELEASE_STORE_FILE')); def releaseStorePassword=(System.getenv('CM_KEYSTORE_PASSWORD')?:System.getenv('VNF_KEYSTORE_PASSWORD')); def releaseAlias=(System.getenv('CM_KEY_ALIAS')?:System.getenv('VNF_KEY_ALIAS')); def releaseKeyPassword=(System.getenv('CM_KEY_PASSWORD')?:System.getenv('VNF_KEY_PASSWORD')); def releaseSigningConfigured=releaseStore&&releaseStorePassword&&releaseAlias&&releaseKeyPassword
 
 android {
     namespace 'com.aicharacter.v3'; compileSdk 35
