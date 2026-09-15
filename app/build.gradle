@@ -10,6 +10,9 @@ def contentOriginEscaped = contentOriginRaw.replace('\\', '\\\\').replace('"', '
 def contentPublicKeyRaw = (project.findProperty('VNF_CONTENT_PUBLIC_KEY') ?: System.getenv('VNF_CONTENT_PUBLIC_KEY') ?: '').toString()
 def contentPublicKeyEscaped = contentPublicKeyRaw.replace('\\', '\\\\').replace('"', '\\"').replaceAll('\\s+', '')
 
+def updateManifestRaw = (project.findProperty('VNF_UPDATE_MANIFEST') ?: System.getenv('VNF_UPDATE_MANIFEST') ?: '').toString()
+def updateManifestEscaped = updateManifestRaw.replace('\\', '\\\\').replace('"', '\\"')
+
 android {
     namespace 'com.aicharacter.v3'
     compileSdk 35
@@ -23,11 +26,10 @@ android {
         buildConfigField 'String', 'VNF_GOD_ENDPOINT', '"' + endpointEscaped + '"'
         buildConfigField 'String', 'VNF_CONTENT_ORIGIN', '"' + contentOriginEscaped + '"'
         buildConfigField 'String', 'VNF_CONTENT_PUBLIC_KEY', '"' + contentPublicKeyEscaped + '"'
+        buildConfigField 'String', 'VNF_UPDATE_MANIFEST', '"' + updateManifestEscaped + '"'
     }
 
-    buildFeatures {
-        buildConfig true
-    }
+    buildFeatures { buildConfig true }
 
     buildTypes {
         release {
@@ -42,10 +44,7 @@ android {
     }
 }
 
-
 // Read-only source snapshot for the online God technical-diagnostics channel.
-// The snapshot is generated from THIS build's world/game Java sources, so God never
-// relies on an old handwritten code summary. No secret/API key should live in src/main/java.
 def vnfGodCodeAssetsDir = file("$buildDir/generated/vnfGodCodeAssets")
 def generateVnfGodCodeSnapshot = tasks.register("generateVnfGodCodeSnapshot") {
     def sourceTree = fileTree("src/main/java/com/aicharacter/v3") { include "**/*.java" }
@@ -68,9 +67,6 @@ def generateVnfGodCodeSnapshot = tasks.register("generateVnfGodCodeSnapshot") {
 }
 
 android.sourceSets.main.assets.srcDir(vnfGodCodeAssetsDir)
-
 afterEvaluate {
-    tasks.matching { t -> t.name.startsWith("merge") && t.name.endsWith("Assets") }.configureEach {
-        dependsOn(generateVnfGodCodeSnapshot)
-    }
+    tasks.matching { t -> t.name.startsWith("merge") && t.name.endsWith("Assets") }.configureEach { dependsOn(generateVnfGodCodeSnapshot) }
 }
