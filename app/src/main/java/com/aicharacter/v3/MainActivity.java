@@ -137,6 +137,8 @@ public final class MainActivity extends Activity implements GameView.Host {
                 // signed runtime world-content patches; APK/core cognition remain immutable here.
                 if(isLocalGodCapability(raw)){
                     String out=GodContactController.handle(state,raw);
+                    if(state.godMemory==null)state.godMemory=new GodMemory();
+                    state.godMemory.remember(raw,out,System.currentTimeMillis());
                     repository.save(state);
                     new AlertDialog.Builder(this).setTitle("THẦN · SYSTEM").setMessage(out).setPositiveButton("Đóng",null).show();
                     return;
@@ -155,7 +157,17 @@ public final class MainActivity extends Activity implements GameView.Host {
                         new AlertDialog.Builder(this).setTitle("THẦN · MẤT KẾT NỐI")
                             .setMessage("Không thể liên hệ Thần online lúc này.\n\n"+error.getClass().getSimpleName()+"\n\nGame vẫn tiếp tục offline bình thường.")
                             .setPositiveButton("Đóng",null).show();
-                    }else if(result!=null && result.godRecipePayload!=null && !result.godRecipePayload.isEmpty()){
+                        return;
+                    }else {
+                        // A successful online exchange becomes persistent God memory before any
+                        // optional signed world-content action is handled.
+                        if(result!=null){
+                            if(state.godMemory==null)state.godMemory=new GodMemory();
+                            state.godMemory.remember(raw,result.reply,System.currentTimeMillis());
+                            repository.save(state);
+                        }
+                    }
+                    if(error==null && result!=null && result.godRecipePayload!=null && !result.godRecipePayload.isEmpty()){
                         RuntimeContentUpdater.Result rr=SignedGodWorldRecipe.apply(getApplicationContext(),result.godRecipePayload,result.godRecipeSignature);
                         gameView.invalidate();
                         new AlertDialog.Builder(this).setTitle(rr.ok?"THẦN · ĐÃ SỬA THẾ GIỚI":"THẦN · RECIPE BỊ TỪ CHỐI").setMessage(result.reply+"\n\n"+rr.message).setPositiveButton("Đóng",null).show();

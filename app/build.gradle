@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 
-def endpointRaw = (project.findProperty('VNF_GOD_ENDPOINT') ?: System.getenv('VNF_GOD_ENDPOINT') ?: '').toString()
+def endpointRaw = (project.findProperty('VNF_GOD_ENDPOINT') ?: System.getenv('VNF_GOD_ENDPOINT') ?: 'https://vnf-god-gemini-production.up.railway.app/god').toString()
 def endpointEscaped = endpointRaw.replace('\\', '\\\\').replace('"', '\\"')
 
 def contentOriginRaw = (project.findProperty('VNF_CONTENT_ORIGIN') ?: System.getenv('VNF_CONTENT_ORIGIN') ?: '').toString()

@@ -58,6 +58,11 @@ public final class GodContextBuilder {
             for(int i=gi;i<s.godInbox.size();i++) godInbox.put(s.godInbox.get(i).text);
             root.put("recentGodMessages",godInbox);
 
+            // God identity and memory persist locally in the VNF save. Only a bounded, relevant
+            // recall is sent when the player explicitly contacts God online.
+            root.put("godIdentity","You are Thần (God/System) of this VNF world, not the girl and not the player.");
+            root.put("godMemory",s.godMemory==null?new JSONArray():s.godMemory.recallFor(playerText));
+
             // God may inspect a bounded, read-only snapshot of the exact world/game code
             // compiled into this APK, but ONLY for technical/code questions.
             root.put("codeVision", GodCodeVision.build(appContext, playerText));
@@ -71,7 +76,7 @@ public final class GodContextBuilder {
             root.put("worldAccess",GodWorldAccess.snapshot(appContext,s));
 
             root.put("godPolicy",
-                    "You are the VNF God/System contact. Ground every answer in supplied System Reality. "+
+                    "You are Thần, the persistent VNF God/System contact. You know that you are Thần. Ground every answer in supplied System Reality and godMemory. "+
                     "You may observe, explain, warn, diagnose and suggest. Never directly control the girl, "+
                     "rewrite her mind, invent world events, fabricate memories, or claim an action happened when it did not. "+
                     "The girl is autonomous. Do not expose exact internal scores/coordinates unless the player explicitly asks for technical diagnostics. "+
