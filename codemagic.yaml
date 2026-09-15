@@ -41,7 +41,7 @@ workflows:
     environment:
       java: 17
       android_signing:
-        - vnf_release
+        - vnf-release
       vars:
         PACKAGE_NAME: "com.aicharacter.v3"
         GRADLE_VERSION: "8.14.1"
@@ -49,10 +49,10 @@ workflows:
       - name: Verify stable signing identity
         script: |
           set -eu
-          : "${CM_KEYSTORE_PATH:?Codemagic signing identity vnf_release did not provide CM_KEYSTORE_PATH}"
-          : "${CM_KEYSTORE_PASSWORD:?Codemagic signing identity vnf_release did not provide CM_KEYSTORE_PASSWORD}"
-          : "${CM_KEY_ALIAS:?Codemagic signing identity vnf_release did not provide CM_KEY_ALIAS}"
-          : "${CM_KEY_PASSWORD:?Codemagic signing identity vnf_release did not provide CM_KEY_PASSWORD}"
+          : "${CM_KEYSTORE_PATH:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PATH}"
+          : "${CM_KEYSTORE_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PASSWORD}"
+          : "${CM_KEY_ALIAS:?Codemagic signing identity vnf-release did not provide CM_KEY_ALIAS}"
+          : "${CM_KEY_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEY_PASSWORD}"
           test -s "$CM_KEYSTORE_PATH"
       - name: Set Android SDK location
         script: |
