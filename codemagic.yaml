@@ -3,66 +3,73 @@ workflows:
     name: VNF Android Debug APK
     instance_type: mac_mini_m2
     max_build_duration: 120
-
     environment:
       java: 17
       vars:
         PACKAGE_NAME: "com.aicharacter.v3"
         GRADLE_VERSION: "8.14.1"
-
     scripts:
       - name: Verify project
         script: |
           set -e
-          echo "Repository: $CM_BUILD_DIR"
           test -f "$CM_BUILD_DIR/settings.gradle"
           test -f "$CM_BUILD_DIR/build.gradle"
           test -f "$CM_BUILD_DIR/app/build.gradle"
-          echo "VNF project structure found."
-
       - name: Set Android SDK location
         script: |
           set -e
-          if [ -n "$ANDROID_SDK_ROOT" ]; then
-            echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-          elif [ -n "$ANDROID_HOME" ]; then
-            echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"
-          fi
+          if [ -n "$ANDROID_SDK_ROOT" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"; elif [ -n "$ANDROID_HOME" ]; then echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"; fi
           java -version
-
       - name: Build VNF debug APK
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
-          if [ -x "./gradlew" ]; then
-            echo "Using repository Gradle wrapper."
-            ./gradlew --version
-            ./gradlew :app:assembleDebug --stacktrace
-          else
-            echo "Gradle wrapper is missing. Using official Gradle ${GRADLE_VERSION} distribution."
-            DIST_ROOT="$HOME/.vnf-gradle"
-            DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"
-            ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"
-
-            mkdir -p "$DIST_ROOT"
-
-            if [ ! -x "$DIST_DIR/bin/gradle" ]; then
-              curl -fL --retry 3 --retry-delay 3 \
-                "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
-                -o "$ZIP_FILE"
-              rm -rf "$DIST_DIR"
-              unzip -q "$ZIP_FILE" -d "$DIST_ROOT"
-            fi
-
-            "$DIST_DIR/bin/gradle" --version
+          if [ -x "./gradlew" ]; then ./gradlew :app:assembleDebug --stacktrace; else
+            DIST_ROOT="$HOME/.vnf-gradle"; DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"; ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"; mkdir -p "$DIST_ROOT"
+            if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
             "$DIST_DIR/bin/gradle" :app:assembleDebug --stacktrace
           fi
-
           test -f "$CM_BUILD_DIR/app/build/outputs/apk/debug/app-debug.apk"
-          echo "APK BUILD SUCCESS: app/build/outputs/apk/debug/app-debug.apk"
-
     artifacts:
       - app/build/outputs/apk/debug/app-debug.apk
-      - app/build/outputs/**/*.apk
+      - app/build/reports/**
+
+  vnf-android-release:
+    name: VNF Stable Signed Release APK
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    environment:
+      java: 17
+      vars:
+        PACKAGE_NAME: "com.aicharacter.v3"
+        GRADLE_VERSION: "8.14.1"
+    scripts:
+      - name: Verify release signing secrets
+        script: |
+          set -eu
+          : "${VNF_KEYSTORE_BASE64:?Set VNF_KEYSTORE_BASE64 as a Codemagic secret}"
+          : "${VNF_KEYSTORE_PASSWORD:?Set VNF_KEYSTORE_PASSWORD as a Codemagic secret}"
+          : "${VNF_KEY_ALIAS:?Set VNF_KEY_ALIAS as a Codemagic secret}"
+          : "${VNF_KEY_PASSWORD:?Set VNF_KEY_PASSWORD as a Codemagic secret}"
+          echo "$VNF_KEYSTORE_BASE64" | base64 --decode > "$CM_BUILD_DIR/vnf-release.jks"
+          test -s "$CM_BUILD_DIR/vnf-release.jks"
+      - name: Set Android SDK location
+        script: |
+          set -e
+          if [ -n "$ANDROID_SDK_ROOT" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"; elif [ -n "$ANDROID_HOME" ]; then echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"; fi
+      - name: Build stable signed VNF release
+        script: |
+          set -eu
+          cd "$CM_BUILD_DIR"
+          export VNF_RELEASE_STORE_FILE="$CM_BUILD_DIR/vnf-release.jks"
+          if [ -x "./gradlew" ]; then GRADLE="./gradlew"; else
+            DIST_ROOT="$HOME/.vnf-gradle"; DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"; ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"; mkdir -p "$DIST_ROOT"
+            if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
+            GRADLE="$DIST_DIR/bin/gradle"
+          fi
+          "$GRADLE" :app:assembleRelease --stacktrace
+          test -f "$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          rm -f "$CM_BUILD_DIR/vnf-release.jks"
+    artifacts:
+      - app/build/outputs/apk/release/app-release.apk
       - app/build/reports/**
