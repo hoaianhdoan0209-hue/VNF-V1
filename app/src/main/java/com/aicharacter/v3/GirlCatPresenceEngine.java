@@ -3,6 +3,7 @@ package com.aicharacter.v3;
  * Offline perception-to-presence bridge for ordinary cat proximity.
  * It reacts only when the girl can locally perceive the cat; it never reads hidden
  * coordinates to choose a destination and never changes her high-level intention.
+ * Reunion/search resolution owns first contact after a meaningful absence.
  */
 public final class GirlCatPresenceEngine{
  private static long lastReactionAt=0;private static boolean previouslyPerceived=false;
@@ -11,6 +12,16 @@ public final class GirlCatPresenceEngine{
   if(s==null||s.catState==null)return;
   boolean perceived=s.catState.awake&&GirlCatSearchEngine.canPerceiveCat(s);
   if(!perceived){previouslyPerceived=false;return;}
+
+  long awayMinutes=Math.max(0,now-s.lastCatSeenAt)/60000L;
+  boolean meaningfulReturn=s.lastAbsenceMinutes>=45||awayMinutes>=45||s.catSearch.active||s.catSearch.found||!(s.reunionContext==null||s.reunionContext.isEmpty());
+  if(meaningfulReturn){
+   // Do not erase the old last-seen timestamp or overwrite the reunion/search presentation.
+   // ReunionEngine / GirlCatSearchEngine must resolve this first contact from lived history.
+   previouslyPerceived=true;
+   return;
+  }
+
   s.lastCatSeenAt=now;
   if(previouslyPerceived||now-lastReactionAt<12000)return;
   previouslyPerceived=true;lastReactionAt=now;
