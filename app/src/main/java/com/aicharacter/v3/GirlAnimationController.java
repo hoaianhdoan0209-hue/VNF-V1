@@ -17,6 +17,9 @@ public final class GirlAnimationController{
   if(s.girlTravel.active){float bodyFactor=s.body.pain>20||s.body.energy<25?.72f:1f;float speed=(float)Math.max(2.2,Math.min(8.5,(3.4+s.girlTravel.lastSpeed/80.0)*bodyFactor));return facingRight?v(State.WALK_RIGHT,"girl_walk_right",12,speed,.50f,.94f,"travel expressed through current body state"):v(State.WALK_LEFT,"girl_walk_left",12,speed,.50f,.94f,"travel expressed through current body state");}
   if(s.body.pain>20)return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"pain is visibly affecting movement");
   if(s.body.energy<22||s.body.sleepiness>78)return v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant");
+  if(a.contains("keeping some distance")||a.contains("unresolved hurt"))return v(State.IDLE,"girl_idle_right",12,1.35f,.50f,.94f,"distance expressed without exposing relationship scores");
+  if(a.contains("softening")||a.contains("familiar attention"))return v(State.REACT,"girl_react_right",12,2.15f,.50f,.94f,"warmth toward the cat becomes a small visible response");
+  if(a.contains("watching the cat")||a.contains("noticing the cat"))return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"local cat perception becomes visible attention");
   if(a.contains("hesitat")||a.contains("changing her mind")||a.contains("notice")||a.contains("reunion")||a.contains("wait"))return v(State.REACT,"girl_react_right",12,2.8f,.50f,.94f,"decision/reaction transition");
   ThoughtState thought=lastThought(s);if(thought!=null&&thought.uncertainty>.58)return v(State.THINK,"girl_think_right",12,1.75f,.50f,.94f,"current thought remains uncertain");
   if(a.contains("think")||a.contains("looking")||a.contains("observe")||a.contains("finishing a quiet thought"))return v(State.THINK,"girl_think_right",12,2.0f,.50f,.94f,"attention/thought transition");
