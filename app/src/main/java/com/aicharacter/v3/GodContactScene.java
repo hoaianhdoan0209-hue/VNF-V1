@@ -29,7 +29,7 @@ public final class GodContactScene{
  public void showApplying(){setPhase(DivineManifestationView.Phase.APPLYING);}
  public void showReply(String s){setPhase(DivineManifestationView.Phase.SPEAKING);finish(s,true);a.getWindow().getDecorView().postDelayed(()->{if(!sending&&!closing)setPhase(DivineManifestationView.Phase.PRESENT);},900);}
  public void showSystem(String s){showReply(s);}
- public void showError(String s){setPhase(DivineManifestationView.Phase.WARNING);finish("Sự hiện diện chợt mờ đi. "+s,true);}
+ public void showError(String s){setPhase(DivineManifestationView.Phase.WARNING);String detail=s==null?"":s.trim();finish(detail.isEmpty()?"Sự hiện diện chợt mờ đi.":"Sự hiện diện chợt mờ đi. "+detail,true);}
  public void showProgress(String s){setPhase(DivineManifestationView.Phase.APPLYING);finish(s,false);}
  public void dismiss(Runnable after){if(closing)return;closing=true;busy(true);setPhase(DivineManifestationView.Phase.DISAPPEARING);root.animate().alpha(0f).setDuration(430).withEndAction(()->{if(after!=null)after.run();}).start();}
  private void setPhase(DivineManifestationView.Phase p){a.runOnUiThread(()->manifestation.setPhase(p));}
