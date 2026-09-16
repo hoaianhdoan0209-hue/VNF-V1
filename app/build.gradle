@@ -8,7 +8,7 @@ def releaseStore=(System.getenv('CM_KEYSTORE_PATH')?:System.getenv('VNF_RELEASE_
 
 android {
     namespace 'com.aicharacter.v3'; compileSdk 35
-    defaultConfig { applicationId 'com.aicharacter.v3'; minSdk 26; targetSdk 35; versionCode 104; versionName '0.99C-update-verification.1'; buildConfigField 'String','VNF_GOD_ENDPOINT','"'+endpointEscaped+'"'; buildConfigField 'String','VNF_CONTENT_ORIGIN','"'+contentOriginEscaped+'"'; buildConfigField 'String','VNF_CONTENT_PUBLIC_KEY','"'+contentPublicKeyEscaped+'"'; buildConfigField 'String','VNF_UPDATE_MANIFEST','"'+updateManifestEscaped+'"' }
+    defaultConfig { applicationId 'com.aicharacter.v3'; minSdk 26; targetSdk 35; versionCode 105; versionName '0.99C-updater-redirect-fix.1'; buildConfigField 'String','VNF_GOD_ENDPOINT','"'+endpointEscaped+'"'; buildConfigField 'String','VNF_CONTENT_ORIGIN','"'+contentOriginEscaped+'"'; buildConfigField 'String','VNF_CONTENT_PUBLIC_KEY','"'+contentPublicKeyEscaped+'"'; buildConfigField 'String','VNF_UPDATE_MANIFEST','"'+updateManifestEscaped+'"' }
     buildFeatures { buildConfig true }
     signingConfigs { if(releaseSigningConfigured){ vnfRelease { storeFile file(releaseStore); storePassword releaseStorePassword; keyAlias releaseAlias; keyPassword releaseKeyPassword } } }
     buildTypes { release { minifyEnabled false; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'; if(releaseSigningConfigured) signingConfig signingConfigs.vnfRelease } }
