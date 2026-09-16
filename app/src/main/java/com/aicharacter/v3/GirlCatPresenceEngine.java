@@ -14,13 +14,22 @@ public final class GirlCatPresenceEngine{
   if(!perceived){previouslyPerceived=false;return;}
 
   long awayMinutes=Math.max(0,now-s.lastCatSeenAt)/60000L;
-  boolean meaningfulReturn=s.lastAbsenceMinutes>=45||awayMinutes>=45||s.catSearch.active||s.catSearch.found||!(s.reunionContext==null||s.reunionContext.isEmpty());
-  if(meaningfulReturn){
-   // Do not erase the old last-seen timestamp or overwrite the reunion/search presentation.
-   // ReunionEngine / GirlCatSearchEngine must resolve this first contact from lived history.
+  boolean reunionPending=!(s.reunionContext==null||s.reunionContext.isEmpty());
+  boolean searchOwnsContact=s.catSearch.active;
+  if(reunionPending||searchOwnsContact){
+   // Preserve first-contact history. Startup/resume reunion or the active search engine
+   // must resolve this encounter before ordinary proximity can turn it into a casual reaction.
    previouslyPerceived=true;
    return;
   }
+
+  // A completed search has already recorded the encounter and its own visible outcome.
+  // Do not immediately replace it with a generic nearby-cat reaction on the same presence run.
+  if(s.catSearch.found){s.lastCatSeenAt=now;previouslyPerceived=true;return;}
+
+  // If no explicit reunion context exists, a stale last-seen timestamp alone must not freeze
+  // ordinary active play forever. Offline reconstruction is the authority that creates reunionContext.
+  if(awayMinutes>=45&&s.lastAbsenceMinutes>=45){previouslyPerceived=true;return;}
 
   s.lastCatSeenAt=now;
   if(previouslyPerceived||now-lastReactionAt<12000)return;
