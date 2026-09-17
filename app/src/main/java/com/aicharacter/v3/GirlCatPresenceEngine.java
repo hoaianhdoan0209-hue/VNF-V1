@@ -1,22 +1,24 @@
 package com.aicharacter.v3;
 /** Offline perception-to-presence bridge for ordinary cat proximity. */
 public final class GirlCatPresenceEngine{
- private static long lastReactionAt=0;private static boolean previouslyPerceived=false;
+ private static final long REACTION_COOLDOWN_MS=12000L;
  private GirlCatPresenceEngine(){}
  public static void tick(WorldState s,long now){
   if(s==null||s.catState==null||s.catSearch==null)return;
   boolean perceived=s.catState.awake&&GirlCatSearchEngine.canPerceiveCat(s);
-  if(!perceived){previouslyPerceived=false;return;}
+  if(!perceived)return;
   boolean reunionPending=s.reunionContext!=null&&!s.reunionContext.isEmpty();
-  if(reunionPending||s.catSearch.active){previouslyPerceived=true;return;}
+  if(reunionPending||s.catSearch.active)return;
   if(s.catSearch.found){
    // Search owns exactly the first visible encounter. Once its wake/wait/search outcome has
    // been staged, release that transient flag so ordinary nearby-cat life can resume later.
-   s.lastCatSeenAt=now;s.catSearch.found=false;previouslyPerceived=true;return;
+   s.lastCatSeenAt=now;s.catSearch.found=false;return;
   }
+  long previousSeen=s.lastCatSeenAt;
   s.lastCatSeenAt=now;
-  if(previouslyPerceived||now-lastReactionAt<12000)return;
-  previouslyPerceived=true;lastReactionAt=now;
+  // lastCatSeenAt is durable world state, unlike process-static flags. A restart, Activity
+  // recreation or another WorldState therefore cannot manufacture a fresh proximity reaction.
+  if(previousSeen>0&&now-previousSeen<REACTION_COOLDOWN_MS)return;
   double tension=s.relationship==null?0:s.relationship.irritation+s.relationship.hurt;
   double warmth=s.relationship==null?0:s.relationship.trust*.35+s.relationship.comfort*.35+s.relationship.affection*.2+s.relationship.attachment*.1;
   if(tension>42){s.haruActivity="noticing the cat but keeping some distance";CognitionEngine.experience(s,"cat_nearby_tense","She noticed the cat nearby while unresolved hurt or irritation was still present.",-.04,.42,"cat","player","relationship");return;}
