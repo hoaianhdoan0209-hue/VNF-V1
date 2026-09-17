@@ -15,7 +15,21 @@ android {
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 
-tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
+def verifyUpdaterReleaseInvariant=tasks.register('verifyUpdaterReleaseInvariant'){
+    doLast {
+        def main=file('src/main/java/com/aicharacter/v3/MainActivity.java').getText('UTF-8')
+        def updater=file('src/main/java/com/aicharacter/v3/AppUpdateManager.java')
+        def manifest=file('src/main/AndroidManifest.xml').getText('UTF-8')
+        def paths=file('src/main/res/xml/update_file_paths.xml')
+        if(!updater.exists()) throw new GradleException('Release blocked: AppUpdateManager.java is missing.')
+        if(!main.contains('maybeCheckAppUpdate(true)') || !main.contains('maybeCheckAppUpdate(false)') || !main.contains('AppUpdateManager.checkAsync')) throw new GradleException('Release blocked: startup/resume updater check is not wired.')
+        if(!manifest.contains('android.permission.REQUEST_INSTALL_PACKAGES') || !manifest.contains('androidx.core.content.FileProvider') || !manifest.contains('.updatefiles')) throw new GradleException('Release blocked: updater manifest wiring is incomplete.')
+        if(!paths.exists() || !paths.getText('UTF-8').contains('vnf-updates/')) throw new GradleException('Release blocked: updater FileProvider path is missing.')
+        if(!updateManifestRaw.toLowerCase().startsWith('https://')) throw new GradleException('Release blocked: update manifest must use HTTPS.')
+    }
+}
+
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { dependsOn(verifyUpdaterReleaseInvariant); doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
 
 dependencies { implementation 'androidx.core:core:1.15.0' }
 
