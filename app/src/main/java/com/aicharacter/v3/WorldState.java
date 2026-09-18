@@ -124,8 +124,33 @@ public final class WorldState {
         s.catState=CatState.fromJson(j.optJSONObject("catState"),s.catX,s.lastOpenedAt);
         s.catSearch=GirlCatSearchEngine.SearchState.fromJson(j.optJSONObject("catSearch"));
         NotificationEventQueue.load(j.optJSONArray("notificationEvents"),s.notificationEvents);
-        s.girlTravel=TravelState.fromJson(j.optJSONObject("girlTravel"));s.catTravel=TravelState.fromJson(j.optJSONObject("catTravel"));s.planState=PlanState.fromJson(j.optJSONObject("planState"));s.routeRuntime=RouteRuntimeState.fromJson(j.optJSONObject("routeRuntime"));if(version<9&&"ACTIVE".equals(s.planState.status)){if(s.planState.destination.isEmpty()&&!s.girlTravel.destinationArea.isEmpty())s.planState.destination=s.girlTravel.destinationArea;if(s.planState.plannedAction.isEmpty())s.planState.plannedAction=("seek_shelter".equals(s.planState.intentionId)||"sleep".equals(s.planState.intentionId))?"REST_PROTECT":"reflect".equals(s.planState.intentionId)?"REFLECT":"find_cat".equals(s.planState.intentionId)?"SEARCH_LOCAL":"OBSERVE";s.planState.lastProgressAt=s.lastSavedAt;}JSONArray gi=j.optJSONArray("godInbox");if(gi!=null)for(int i=0;i<gi.length();i++)s.godInbox.add(GodMessage.fromJson(gi.optJSONObject(i))); s.godMemory=GodMemory.fromJson(j.optJSONObject("godMemory")); JSONArray pli=j.optJSONArray("processedLearningIds");if(pli!=null)for(int i=0;i<pli.length();i++)s.processedLearningIds.add(pli.optString(i));s.worldWetness=j.optDouble("worldWetness",0);s.visibility=j.optDouble("visibility",1.0);
+        s.girlTravel=TravelState.fromJson(j.optJSONObject("girlTravel"));s.catTravel=TravelState.fromJson(j.optJSONObject("catTravel"));s.planState=PlanState.fromJson(j.optJSONObject("planState"));s.routeRuntime=RouteRuntimeState.fromJson(j.optJSONObject("routeRuntime"));normalizePersistentMotion(s);if(version<9&&"ACTIVE".equals(s.planState.status)){if(s.planState.destination.isEmpty()&&!s.girlTravel.destinationArea.isEmpty())s.planState.destination=s.girlTravel.destinationArea;if(s.planState.plannedAction.isEmpty())s.planState.plannedAction=("seek_shelter".equals(s.planState.intentionId)||"sleep".equals(s.planState.intentionId))?"REST_PROTECT":"reflect".equals(s.planState.intentionId)?"REFLECT":"find_cat".equals(s.planState.intentionId)?"SEARCH_LOCAL":"OBSERVE";s.planState.lastProgressAt=s.lastSavedAt;}JSONArray gi=j.optJSONArray("godInbox");if(gi!=null)for(int i=0;i<gi.length();i++)s.godInbox.add(GodMessage.fromJson(gi.optJSONObject(i))); s.godMemory=GodMemory.fromJson(j.optJSONObject("godMemory")); JSONArray pli=j.optJSONArray("processedLearningIds");if(pli!=null)for(int i=0;i<pli.length();i++)s.processedLearningIds.add(pli.optString(i));s.worldWetness=j.optDouble("worldWetness",0);s.visibility=j.optDouble("visibility",1.0);
         if(s.memories.isEmpty())s.memories.add(new MemoryEntry(s.createdAt,"recovered","Some early memories are faint.",0.5));
         return s;
     }
+    private static void normalizePersistentMotion(WorldState s){
+        CatState c=s.catState;if(c==null){c=new CatState();s.catState=c;}
+        c.energy=Math.max(0,Math.min(100,c.energy));c.sleepiness=Math.max(0,Math.min(100,c.sleepiness));
+        if(c.awake){
+            c.actualSleepStartedAt=0;
+            if(c.sleepMode==null||c.sleepMode.isEmpty()||c.sleepMode.startsWith("TRAVELLING_TO_")||"APPROACHING_GIRL".equals(c.sleepMode)||"RESTING_WHERE_STRANDED".equals(c.sleepMode))c.sleepMode="AWAKE";
+            if(s.catTravel!=null)s.catTravel.active=false;
+        }else if("girl".equals(c.attachedToEntity)){
+            c.carryKnownByGirl=true;c.sleepMode="WITH_GIRL";c.actualSleepStartedAt=c.actualSleepStartedAt>0?c.actualSleepStartedAt:c.sleepStartedAt;
+            c.x=s.haruX;s.catX=s.haruX;c.areaId=areaAt(s,c.x);if(s.catTravel!=null)s.catTravel.active=false;
+        }else{
+            c.carryKnownByGirl=false;
+            if(c.actualSleepStartedAt>0&&(c.sleepMode==null||c.sleepMode.startsWith("TRAVELLING_TO_")||"APPROACHING_GIRL".equals(c.sleepMode)))c.actualSleepStartedAt=0;
+            s.catX=c.x;
+        }
+        normalizeTravel(s.girlTravel,"girl");normalizeTravel(s.catTravel,"cat");
+        if(s.girlTravel.active&&(s.planState==null||!s.planState.active()||!s.girlTravel.currentPlanId.equals(s.planState.planId)))s.girlTravel.active=false;
+    }
+    private static void normalizeTravel(TravelState t,String actor){
+        if(t==null)return;t.actor=actor;t.progress=Math.max(0,Math.min(1,t.progress));t.interactionRange=Math.max(0,t.interactionRange);t.distanceTravelled=Math.max(0,t.distanceTravelled);
+        if(!t.active)return;
+        boolean local="LOCAL".equals(t.travelMode),valid=local?Float.isFinite(t.segmentEndX):t.route.size()>1&&t.routeIndex>=0&&t.routeIndex<t.route.size()-1&&Float.isFinite(t.segmentEndX);
+        if(!valid){t.active=false;t.interruption="invalid persisted travel state";t.lastSpeed=0;t.lastDelta=0;}
+    }
+    private static String areaAt(WorldState s,float x){WorldArea a=s.world==null?null:s.world.areaAt(x);return a==null?(s.catState.areaId==null?"":s.catState.areaId):a.id;}
 }
