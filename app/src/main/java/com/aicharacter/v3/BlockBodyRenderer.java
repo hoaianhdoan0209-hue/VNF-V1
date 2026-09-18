@@ -16,5 +16,5 @@ public final class BlockBodyRenderer{private BlockBodyRenderer(){}
   p.setColor(Color.rgb(205,174,145));c.drawCircle(headX,headY,22,p);p.setStrokeWidth(9);line(c,p,shoulderX,shoulderY-8,headX,headY+18);
   p.setStrokeCap(Paint.Cap.BUTT);
  }
- private static double smooth(double a,double b,double k){return a+(b-a)*Math.max(.02,Math.min(.35,k));}\n private static void line(Canvas c,Paint p,float x1,float y1,float x2,float y2){c.drawLine(x1,y1,x2,y2,p);}
+ private static void line(Canvas c,Paint p,float x1,float y1,float x2,float y2){c.drawLine(x1,y1,x2,y2,p);}
 }
