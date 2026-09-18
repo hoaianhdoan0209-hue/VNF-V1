@@ -14,13 +14,13 @@ public final class BodyRhythmEngine {
    // Quiet protected rest helps gradually while awake, but is weaker than sleep.
    s.body.energy+=minutes*.035;
    s.body.sleepiness-=minutes*.025;
-   if(s.body.pain>0)s.body.pain-=minutes*(s.body.hasInjury()?.0012:.002);if(s.body.health<100)s.body.health+=minutes*(s.body.hasInjury()?.0010:.0018);
+   
   }else{
    // Awake baseline: roughly 3 energy points and 4 sleepiness points per real hour.
    s.body.energy-=minutes*.050;
    s.body.sleepiness+=minutes*.067;
   }
-  s.body.clamp();s.body.healInjuryIfRecovered();
+  s.body.clamp();
  }
  public static boolean isSleeping(WorldState s){return s!=null&&"sleeping".equals(s.haruActivity);}
  public static boolean isResting(WorldState s){if(s==null||s.haruActivity==null)return false;String a=s.haruActivity;return"resting".equals(a)||"taking a quiet rest".equals(a)||"settling after rest".equals(a)||"waking slowly".equals(a);}
