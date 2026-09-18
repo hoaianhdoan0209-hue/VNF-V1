@@ -15,5 +15,5 @@ public final class HistoryDecisionEngine {private HistoryDecisionEngine(){}
  public static double relationship(WorldState s,String intention,Map<String,Double>out){if(!"find_cat".equals(intention))return 0;double v=0;
   double[] vals={s.relationship.affection*.025,s.relationship.trust*.035,s.relationship.attachment*.20,s.relationship.comfort*.035,s.relationship.gratitude*.025,-s.relationship.irritation*.075,-s.relationship.hurt*.06};
   String[] k={"rel_affection","rel_trust","rel_attachment","rel_comfort","rel_gratitude","rel_irritation","rel_hurt"};for(int i=0;i<k.length;i++){out.put(k[i],vals[i]);v+=vals[i];}return v;}
- public static double habit(WorldState s,String action,String place,Map<String,Double>out){HabitState h=s.habits.get(action+"@"+place);double v=h==null?0:h.effectiveStrength(System.currentTimeMillis(),CognitionEngine.timeContext(s.worldMinutes))*11;out.put("habit",v);return v;}
+ public static double habit(WorldState s,String action,String place,long now,Map<String,Double>out){HabitState h=s.habits.get(action+"@"+place);double v=h==null?0:h.effectiveStrength(now,CognitionEngine.timeContext(s.worldMinutes))*11;out.put("habit",v);return v;}
 }
