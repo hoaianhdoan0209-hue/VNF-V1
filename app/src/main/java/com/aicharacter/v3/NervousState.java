@@ -1,0 +1,5 @@
+package com.aicharacter.v3;import org.json.JSONObject;
+/** Automatic sensorimotor state; it is not thought, mood or dialogue. */
+public final class NervousState{public double proprioceptiveError,balanceAlarm,protectiveReflex,motorCorrection;public long lastUpdatedAt;
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("proprioceptiveError",proprioceptiveError);j.put("balanceAlarm",balanceAlarm);j.put("protectiveReflex",protectiveReflex);j.put("motorCorrection",motorCorrection);j.put("lastUpdatedAt",lastUpdatedAt);}catch(Exception ignored){}return j;}
+ public static NervousState fromJson(JSONObject j){NervousState n=new NervousState();if(j==null)return n;n.proprioceptiveError=cl(j.optDouble("proprioceptiveError"));n.balanceAlarm=cl(j.optDouble("balanceAlarm"));n.protectiveReflex=cl(j.optDouble("protectiveReflex"));n.motorCorrection=cl(j.optDouble("motorCorrection"));n.lastUpdatedAt=j.optLong("lastUpdatedAt");return n;}private static double cl(double v){return Math.max(0,Math.min(1,v));}}
