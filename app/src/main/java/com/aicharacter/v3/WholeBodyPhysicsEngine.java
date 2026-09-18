@@ -7,6 +7,6 @@ public final class WholeBodyPhysicsEngine{private WholeBodyPhysicsEngine(){}publ
  public static boolean blockedBetween(WorldState s,String actor,double fromX,double desiredX){return Math.abs(limitHorizontalMove(s,actor,fromX,desiredX)-desiredX)>.01;}
  private static void setActorX(WorldState s,String actor,double x){if("cat".equals(actor)){s.catState.x=(float)x;s.catX=(float)x;WorldArea a=s.world==null?null:s.world.areaAt((float)x);if(a!=null)s.catState.areaId=a.id;}else{s.haruX=(float)x;CatOfflineEngine.followAttachment(s);}}
  private static double travelDirection(WorldState s,String actor){TravelState t="cat".equals(actor)?s.catTravel:s.girlTravel;if(t==null||!t.active||!Float.isFinite(t.segmentStartX)||!Float.isFinite(t.segmentEndX))return 0;return Math.signum(t.segmentEndX-t.segmentStartX);}
- private static double catCapability(WorldState s){if(s.catState==null)return 1;double fatigue=Math.max(s.catState.sleepiness/100.0,Math.max(0,(30-s.catState.energy)/30.0));return Math.max(.45,1-fatigue*.42);}
+ private static double catCapability(WorldState s){if(s.catState==null)return 1;double fatigue=Math.max(s.catState.sleepiness/100.0,Math.max(0,(30-s.catState.energy)/30.0));return Math.max(.30,(1-fatigue*.42)*CatNervousSystemEngine.locomotorConstraint(s));}
  private static double approach(double v,double t,double d){if(v<t)return Math.min(t,v+d);return Math.max(t,v-d);}
 }
