@@ -8,10 +8,13 @@ public final class BodyRhythmEngine {
    // Sustained sleep restores the body over real hours, not as a one-frame reward.
    s.body.energy+=minutes*.12;       // ~7.2 points/hour
    s.body.sleepiness-=minutes*.15;  // ~9 points/hour
+   if(s.body.pain>0)s.body.pain-=minutes*.006;
+   if(s.body.health<100)s.body.health+=minutes*.004;
   }else if(isResting(s)){
    // Quiet protected rest helps gradually while awake, but is weaker than sleep.
    s.body.energy+=minutes*.035;
    s.body.sleepiness-=minutes*.025;
+   if(s.body.pain>0)s.body.pain-=minutes*.002;
   }else{
    // Awake baseline: roughly 3 energy points and 4 sleepiness points per real hour.
    s.body.energy-=minutes*.050;
@@ -22,6 +25,7 @@ public final class BodyRhythmEngine {
  public static boolean isSleeping(WorldState s){return s!=null&&"sleeping".equals(s.haruActivity);}
  public static boolean isResting(WorldState s){if(s==null||s.haruActivity==null)return false;String a=s.haruActivity;return"resting".equals(a)||"taking a quiet rest".equals(a)||"settling after rest".equals(a);}
  /** A sleeping girl remains asleep until recovery is meaningful; this is pressure-based, not a fixed schedule. */
- public static boolean shouldRemainAsleep(WorldState s){return isSleeping(s)&&s.body!=null&&(s.body.energy<88||s.body.sleepiness>18);}
+ public static boolean shouldRemainAsleep(WorldState s){return isSleeping(s)&&s.body!=null&&(s.body.energy<88||s.body.sleepiness>18||s.body.pain>38||s.body.health<62);}
+ public static boolean needsRecoveryTransition(WorldState s){return s!=null&&s.body!=null&&(s.body.energy<28||s.body.sleepiness>72||s.body.pain>28||s.body.health<68);}
  public static void advanceSeconds(WorldState s,double seconds){advanceMinutes(s,seconds/60.0);}
 }
