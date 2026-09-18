@@ -9,21 +9,23 @@
       "left": 60,
       "right": 590,
       "ground": 846,
+      "blendLeft": true,
+      "blendRight": true,
       "weatherExposed": false,
       "tags": "shelter,home,interior,dry,quiet,rest,sleep",
       "connections": ["garden_path"],
       "visual": {"sky":"home_sky","distant":"home_distant","midground":"home_mid","ground":"home_ground","foreground":"home_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
     },
     {
-      "id":"garden_path","systemName":"Garden Path","haruName":"lối đi cạnh cỏ","left":590,"right":1050,"ground":842,"weatherExposed":true,"tags":"path,vegetation","connections":["home_shelter","lakeside"],
+      "id":"garden_path","systemName":"Garden Path","haruName":"lối đi cạnh cỏ","left":590,"right":1050,"ground":842,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"path,vegetation","connections":["home_shelter","lakeside"],
       "visual":{"sky":"garden_sky","distant":"garden_distant","midground":"garden_mid","ground":"garden_ground","foreground":"garden_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
     },
     {
-      "id":"lakeside","systemName":"Lakeside","haruName":"bờ hồ","left":1050,"right":1900,"ground":850,"weatherExposed":true,"tags":"lake,reflect,open","connections":["garden_path","quiet_grove"],
+      "id":"lakeside","systemName":"Lakeside","haruName":"bờ hồ","left":1050,"right":1900,"ground":850,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"lake,reflect,open","connections":["garden_path","quiet_grove"],
       "visual":{"sky":"lakeside_sky","distant":"lakeside_distant","midground":"lakeside_mid","ground":"lakeside_ground","foreground":"lakeside_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
     },
     {
-      "id":"quiet_grove","systemName":"Vegetation Zone","haruName":"khoảng cây yên tĩnh","left":1900,"right":2320,"ground":844,"weatherExposed":true,"tags":"quiet,vegetation","connections":["lakeside"],
+      "id":"quiet_grove","systemName":"Vegetation Zone","haruName":"khoảng cây yên tĩnh","left":1900,"right":2320,"ground":844,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"quiet,vegetation","connections":["lakeside"],
       "visual":{"sky":"grove_sky","distant":"grove_distant","midground":"grove_mid","ground":"grove_ground","foreground":"grove_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
     }
   ],
