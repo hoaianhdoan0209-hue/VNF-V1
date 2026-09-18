@@ -31,7 +31,7 @@
   ],
   "objects": [
     {
-      "id":"shelter_01","type":"home","areaId":"home_shelter","assetRef":"shelter_wood","haruDescription":"ngôi nhà nhỏ khô ráo có cửa để trú mưa và nghỉ ngơi","x":315,"ground":846,"width":470,"height":360,"tags":"home,shelter,interior,door,rest,dry,safe,sleep","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":360,"colliderSegments":[[-180,-32],[88,180]],"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":355,"interactionRadius":105
+      "id":"shelter_01","type":"home","areaId":"home_shelter","assetRef":"shelter_wood","haruDescription":"ngôi nhà nhỏ khô ráo có cửa để trú mưa và nghỉ ngơi","x":315,"ground":846,"width":470,"height":360,"tags":"home,shelter,interior,door,rest,dry,safe,sleep","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":360,"colliderSegments":[[-180,-32],[88,180]],"interiorLeftOffset":-30,"interiorRightOffset":86,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":355,"interactionRadius":105
     },
     {
       "id":"bench_lake_01","type":"bench","areaId":"lakeside","assetRef":"bench_wood_01","haruDescription":"chiếc ghế cạnh hồ","x":1430,"ground":850,"width":220,"height":135,"tags":"rest,reflect,landmark,sit","interactable":true,"collision":false,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":1430,"interactionRadius":70,"visualSeatOffsetY":70
