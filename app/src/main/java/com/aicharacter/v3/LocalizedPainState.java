@@ -1,0 +1,5 @@
+package com.aicharacter.v3;import org.json.JSONObject;
+/** Regional nociceptive load used by mechanics; aggregate BodyState.pain remains the coarse whole-body consequence. */
+public final class LocalizedPainState{public double leftLeg,rightLeg,core,leftArm,rightArm,head;public long lastUpdatedAt;
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("leftLeg",leftLeg);j.put("rightLeg",rightLeg);j.put("core",core);j.put("leftArm",leftArm);j.put("rightArm",rightArm);j.put("head",head);j.put("lastUpdatedAt",lastUpdatedAt);}catch(Exception ignored){}return j;}
+ public static LocalizedPainState fromJson(JSONObject j){LocalizedPainState p=new LocalizedPainState();if(j==null)return p;p.leftLeg=c(j.optDouble("leftLeg"));p.rightLeg=c(j.optDouble("rightLeg"));p.core=c(j.optDouble("core"));p.leftArm=c(j.optDouble("leftArm"));p.rightArm=c(j.optDouble("rightArm"));p.head=c(j.optDouble("head"));p.lastUpdatedAt=j.optLong("lastUpdatedAt");return p;}private static double c(double v){return Math.max(0,Math.min(1,v));}}
