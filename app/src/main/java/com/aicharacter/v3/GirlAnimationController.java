@@ -10,7 +10,7 @@ public final class GirlAnimationController{
  private GirlAnimationController(){}
  public static Visual select(WorldState s){
   String a=s.haruActivity==null?"":s.haruActivity.toLowerCase();
-  boolean facingRight=!s.girlTravel.active||Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX;
+  if(s.girlPhysics!=null&&s.girlPhysics.falling)return v(State.REACT,"girl_react_right",12,2.4f,.50f,.94f,"whole body lost physical support");\n  boolean facingRight=!s.girlTravel.active||Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX;
   if(a.contains("sleep"))return v(State.SLEEP,"girl_sleep_right",12,1.8f,.50f,.82f,"body/activity sleeping");
   if(a.contains("crouch")||a.contains("lean"))return v(State.CROUCH,"girl_crouch_right",12,2.5f,.50f,.94f,"real close interaction");
   if("find_cat".equals(s.currentIntention)||s.catSearch.active)return facingRight?v(State.SEARCH_RIGHT,"girl_search_right",12,3.2f,.50f,.94f,"active search plan"):v(State.SEARCH_LEFT,"girl_search_left",12,3.2f,.50f,.94f,"active search plan");
