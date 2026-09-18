@@ -6,12 +6,13 @@ public final class PersonalDevelopmentEngine {
  public static void learn(WorldState s,MemoryEntry m){
   if(s==null||m==null)return;
   double sig=Math.max(.15,m.importance),v=m.valence;
-  if(m.hasTag("explore")||m.hasTag("novel"))develop(s,"explore",v>=-.1?1:-1,sig);
+  if(hasAny(m,"explore","explore_garden","observe","observe_lake","observe_creature","watch_reedling","novel"))develop(s,"explore",v>=-.1?1:-1,sig);
   if(m.hasTag("danger")||m.hasTag("failure")||m.hasTag("failed_search"))develop(s,"danger",1,sig);
   if(m.hasTag("social")||m.hasTag("reunion"))develop(s,"social",v>=0?1:-1,sig);
-  if(m.hasTag("solitude")||m.hasTag("alone"))develop(s,"alone",v>=0?1:-1,sig);
+  if(hasAny(m,"solitude","alone","seek_solitude","quiet_pause"))develop(s,"alone",v>=0?1:-1,sig);
   if(m.hasTag("wait")||m.hasTag("reconsidered"))develop(s,"wait",v>=-.1?1:-1,sig);
  }
+ private static boolean hasAny(MemoryEntry m,String...tags){for(String t:tags)if(m.hasTag(t))return true;return false;}
  private static void develop(WorldState s,String axis,double direction,double sig){
   s.personality.slowlyLearn(axis,direction,Math.min(1.5,sig));
  }
