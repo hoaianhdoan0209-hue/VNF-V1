@@ -2,7 +2,7 @@ package com.aicharacter.v3;
 /** Evolves a committed atmospheric cause on the one-way causal timeline. No girl state is written here. */
 public final class AtmosphereEvolutionEngine{
  private AtmosphereEvolutionEngine(){}
- public static void advance(WorldState s,long now){
+ public static void advance(WorldState s,long now){advanceNatural(s,now);
   if(s==null||s.environment==null)return;AtmospherePerturbation a=s.atmospherePerturbation;if(a==null||!a.active)return;
   double force=a.influenceAt(now);double age=(now-a.startedAt)/60000.0;if(age>=a.durationMinutes){a.active=false;WorldEventBus.publishId(s,now,"atmo_end_"+a.id,"ATMOSPHERIC_PERTURBATION_ENDED","environment","The atmospheric disturbance dissipated.");return;}
   // Small causes alter continuous fields first; named weather is only a thresholded downstream state.
