@@ -1,0 +1,11 @@
+package com.aicharacter.v3;
+import org.json.JSONObject;
+/** Bounded God request for a future/current world condition. A proposal is not a historical fact. */
+public final class GodWorldEventProposal{
+ public final String id,type,areaId,reason;public final double intensity;public final long requestedAt;
+ private GodWorldEventProposal(String id,String type,String areaId,double intensity,String reason,long requestedAt){this.id=id;this.type=type;this.areaId=areaId;this.intensity=intensity;this.reason=reason;this.requestedAt=requestedAt;}
+ public static GodWorldEventProposal fromJson(JSONObject j,long now){if(j==null)return null;String id=safe(j.optString("id","god_event"),80),type=safe(j.optString("type",""),40).toUpperCase(java.util.Locale.ROOT),area=safe(j.optString("areaId",""),80),reason=safe(j.optString("reason",""),240);double intensity=Math.max(0,Math.min(1,j.optDouble("intensity",.5)));long requested=j.optLong("requestedAt",now);if(requested<now)requested=now;return type.isEmpty()?null:new GodWorldEventProposal(id,type,area,intensity,reason,requested);}
+ public static Result validate(WorldState s,GodWorldEventProposal p,long now){if(s==null||p==null)return new Result(false,"missing proposal");if(p.requestedAt<now)return new Result(false,"past-dated God event rejected");if(!("WEATHER_CLEAR".equals(p.type)||"WEATHER_CLOUDY".equals(p.type)||"WEATHER_RAIN".equals(p.type)))return new Result(false,"unsupported God world event");if(!p.areaId.isEmpty()&&(s.world==null||s.world.area(p.areaId)==null))return new Result(false,"unknown world area");return new Result(true,"bounded environment event");}
+ public static final class Result{public final boolean ok;public final String reason;Result(boolean ok,String reason){this.ok=ok;this.reason=reason;}}
+ private static String safe(String s,int n){if(s==null)return"";s=s.replace('\n',' ').replace('\r',' ').trim();return s.length()>n?s.substring(0,n):s;}
+}
