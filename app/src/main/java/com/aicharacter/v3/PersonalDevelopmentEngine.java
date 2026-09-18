@@ -18,10 +18,10 @@ public final class PersonalDevelopmentEngine {
  public static double expression(WorldState s,String intentionId){
   if(s==null||s.personality==null)return 0;
   PersonalityState p=s.personality; String id=intentionId==null?"":intentionId;
-  if("explore".equals(id)||"observe".equals(id))return (p.curiosity-.5)*7;
-  if("seek_solitude".equals(id))return (p.independence-.5)*7;
+  if("explore".equals(id)||"explore_garden".equals(id)||"observe".equals(id)||"observe_lake".equals(id)||"observe_creature".equals(id)||"watch_reedling".equals(id))return (p.curiosity-.5)*7;
+  if("seek_solitude".equals(id)||"quiet_pause".equals(id))return (p.independence-.5)*7;
   if("find_cat".equals(id))return (p.sociability-.5)*5+(p.patience-.5)*2;
-  if("seek_shelter".equals(id)||"sleep".equals(id))return (p.caution-.5)*5;
+  if("seek_shelter".equals(id)||"sleep".equals(id)||"recover".equals(id))return (p.caution-.5)*5;
   if("reflect".equals(id))return (p.patience-.5)*5;
   return 0;
  }
