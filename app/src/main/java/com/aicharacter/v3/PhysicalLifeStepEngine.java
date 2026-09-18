@@ -1,0 +1,5 @@
+package com.aicharacter.v3;
+/** Interleaves locomotion and body feedback on one causal timeline. */
+public final class PhysicalLifeStepEngine{private PhysicalLifeStepEngine(){}
+ public static void advance(WorldState s,double seconds,long now,boolean advanceGirlTravel,boolean advanceCatTravel){if(s==null||seconds<=0)return;double remain=seconds,elapsed=0;long start=Math.max(0L,now-(long)(seconds*1000.0));int guard=0;while(remain>1e-6&&guard++<200000){boolean moving=(advanceGirlTravel&&s.girlTravel!=null&&s.girlTravel.active)||(advanceCatTravel&&s.catTravel!=null&&s.catTravel.active);boolean falling=(s.girlPhysics!=null&&!s.girlPhysics.grounded)||(s.catPhysics!=null&&!s.catPhysics.grounded);double dt=Math.min(remain,(moving||falling)?.25:Math.min(60,remain));long subNow=Math.min(now,start+(long)((elapsed+dt)*1000.0));BiomechanicsStepEngine.advance(s,dt,subNow);if(advanceGirlTravel&&s.girlTravel!=null&&s.girlTravel.active)TravelEngine.advanceSeconds(s,s.girlTravel,dt,subNow);if(advanceCatTravel&&s.catTravel!=null&&s.catTravel.active)TravelEngine.advanceSeconds(s,s.catTravel,dt,subNow);remain-=dt;elapsed+=dt;}}
+}
