@@ -1,8 +1,10 @@
 package com.aicharacter.v3;
-/** Range gate shared by planned object actions. Interaction is evaluated from an actor-reachable contact point, not visual sprite center. */
+/** Range/goal gate shared by planned object actions. Action semantics choose the physical goal; geometry decides whether the body can reach it. */
 public final class PhysicalInteraction{private PhysicalInteraction(){}
  public static float range(WorldObject o){return o==null?0:(o.interactionRadius>0?o.interactionRadius:Math.max(28,Math.min(72,o.width*.35f+20)));}
- public static float reachableTargetX(WorldState s,WorldObject o,String actor,float actorX){return o==null?actorX:o.nearestReachableInteractionX(s,actor,actorX);}
- public static boolean inRange(WorldState s,WorldObject o){if(s==null||o==null||s.world==null)return false;WorldArea a=s.world.areaAt(s.haruX);if(a==null||!a.id.equals(o.areaId))return false;float tx=reachableTargetX(s,o,"girl",s.haruX);return !WholeBodyPhysicsEngine.blockedBetween(s,"girl",s.haruX,tx)&&Math.abs(s.haruX-tx)<=range(o);}
+ public static float reachableTargetX(WorldState s,WorldObject o,String actor,float actorX){return targetXForAction(s,o,actor,actorX,"");}
+ public static float targetXForAction(WorldState s,WorldObject o,String actor,float actorX,String action){if(o==null)return actorX;if("REST_PROTECT".equals(action)&&o.tags.contains("shelter")&&o.hasInteriorZone()){float left=o.x+o.interiorLeftOffset,right=o.x+o.interiorRightOffset,desired=Math.max(left+2,Math.min(right-2,o.interactionX==0?o.x:o.interactionX));if(!WholeBodyPhysicsEngine.blockedBetween(s,actor,actorX,desired))return desired;}return o.nearestReachableInteractionX(s,actor,actorX);}
+ public static boolean inRange(WorldState s,WorldObject o){return inRangeForAction(s,o,"");}
+ public static boolean inRangeForAction(WorldState s,WorldObject o,String action){if(s==null||o==null||s.world==null)return false;WorldArea a=s.world.areaAt(s.haruX);if(a==null||!a.id.equals(o.areaId))return false;if("REST_PROTECT".equals(action)&&o.tags.contains("shelter")&&o.hasInteriorZone())return o.containsInterior(s.haruX);float tx=targetXForAction(s,o,"girl",s.haruX,action);return !WholeBodyPhysicsEngine.blockedBetween(s,"girl",s.haruX,tx)&&Math.abs(s.haruX-tx)<=range(o);}
  public static String trace(WorldState s,WorldObject o){if(s==null||o==null)return"target=<null> execute=false";float tx=reachableTargetX(s,o,"girl",s.haruX),d=Math.abs(s.haruX-tx),r=range(o);boolean clear=!WholeBodyPhysicsEngine.blockedBetween(s,"girl",s.haruX,tx);return"target="+o.id+" reachableX="+(int)tx+" currentX="+(int)s.haruX+" distance="+(int)d+" range="+(int)r+" clear="+clear+" execute="+(clear&&d<=r);}
 }
