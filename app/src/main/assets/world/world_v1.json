@@ -31,13 +31,13 @@
   ],
   "objects": [
     {
-      "id":"shelter_01","type":"home","areaId":"home_shelter","assetRef":"shelter_wood","haruDescription":"ngôi nhà nhỏ khô ráo có cửa để trú mưa và nghỉ ngơi","x":315,"ground":846,"width":470,"height":360,"tags":"home,shelter,interior,door,rest,dry,safe,sleep","interactable":true,"collision":true,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":355,"interactionRadius":105
+      "id":"shelter_01","type":"home","areaId":"home_shelter","assetRef":"shelter_wood","haruDescription":"ngôi nhà nhỏ khô ráo có cửa để trú mưa và nghỉ ngơi","x":315,"ground":846,"width":470,"height":360,"tags":"home,shelter,interior,door,rest,dry,safe,sleep","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":360,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":355,"interactionRadius":105
     },
     {
       "id":"bench_lake_01","type":"bench","areaId":"lakeside","assetRef":"bench_wood_01","haruDescription":"chiếc ghế cạnh hồ","x":1430,"ground":850,"width":220,"height":135,"tags":"rest,reflect,landmark,sit","interactable":true,"collision":false,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":1430,"interactionRadius":70,"visualSeatOffsetY":70
     },
     {
-      "id":"lake_tree_03","type":"tree","areaId":"quiet_grove","assetRef":"tree_autumn_02","haruDescription":"cái cây cạnh hồ","x":2070,"ground":844,"width":180,"height":300,"tags":"vegetation,landmark,quiet,observe","interactable":true,"collision":true,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":2070,"interactionRadius":60
+      "id":"lake_tree_03","type":"tree","areaId":"quiet_grove","assetRef":"tree_autumn_02","haruDescription":"cái cây cạnh hồ","x":2070,"ground":844,"width":180,"height":300,"tags":"vegetation,landmark,quiet,observe","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":54,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":2070,"interactionRadius":60
     },
     {
       "id":"reedling_01","type":"creature","areaId":"lakeside","assetRef":"reedling_idle","haruDescription":"sinh vật nhỏ bên bờ cỏ","x":1730,"ground":850,"width":55,"height":60,"tags":"creature,lake,vegetation","interactable":false,"collision":false,"renderLayer":"ACTORS","habitat":"lake,vegetation","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":5,"interactionX":1730,"interactionRadius":60
