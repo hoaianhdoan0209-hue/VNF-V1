@@ -133,7 +133,7 @@ public final class WorldState {
         c.energy=Math.max(0,Math.min(100,c.energy));c.sleepiness=Math.max(0,Math.min(100,c.sleepiness));
         if(c.awake){
             c.actualSleepStartedAt=0;
-            if(c.sleepMode==null||c.sleepMode.isEmpty()||c.sleepMode.startsWith("TRAVELLING_TO_")||"APPROACHING_GIRL".equals(c.sleepMode)||"RESTING_WHERE_STRANDED".equals(c.sleepMode))c.sleepMode="AWAKE";
+            if("girl".equals(c.attachedToEntity)){c.carryKnownByGirl=true;c.sleepMode="WITH_GIRL_AWAKE";c.x=s.haruX;s.catX=s.haruX;c.areaId=areaAt(s,c.x);}else if(c.sleepMode==null||c.sleepMode.isEmpty()||c.sleepMode.startsWith("TRAVELLING_TO_")||"APPROACHING_GIRL".equals(c.sleepMode)||"RESTING_WHERE_STRANDED".equals(c.sleepMode))c.sleepMode="AWAKE";
             if(s.catTravel!=null)s.catTravel.active=false;
         }else if("girl".equals(c.attachedToEntity)){
             c.carryKnownByGirl=true;c.sleepMode="WITH_GIRL";c.actualSleepStartedAt=c.actualSleepStartedAt>0?c.actualSleepStartedAt:c.sleepStartedAt;
