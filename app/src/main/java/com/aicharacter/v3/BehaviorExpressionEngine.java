@@ -26,9 +26,8 @@ public final class BehaviorExpressionEngine {
    if(s.relationship.hurt+s.relationship.irritation>32)attention="Khi nghe mèo, cô ấy không quay lại ngay.";
    else if(s.relationship.comfort+s.relationship.trust>85)attention="Nghe tiếng mèo, ánh mắt cô ấy dịu đi một chút.";
   }
-  ThoughtState t=lastThought(s);
-  if(t!=null&&t.uncertainty>.58)hesitation="Cô ấy ngập ngừng một nhịp như vẫn đang cân nhắc.";
-  MemoryEntry m=relatedMemory(s,t);
+  ThoughtState t=lastThought(s);boolean currentThought=t!=null&&(t.createdAt<=0||now-t.createdAt<=180000L);if(currentThought&&t.uncertainty>.58){if(t.emotionalWeight>.62)hesitation="Cô ấy khựng lại một chút, như đang cân nhắc điều có ý nghĩa với mình.";else hesitation="Cô ấy ngập ngừng một nhịp như vẫn đang cân nhắc.";}else if(currentThought&&t.uncertainty>.38&&s.planState!=null&&s.planState.active())hesitation="Ánh mắt cô ấy chậm lại một nhịp trước khi tiếp tục việc đang làm.";
+  MemoryEntry m=currentThought?relatedMemory(s,t):null;
   if(m!=null&&m.importance>.48)memory=m.summary==null?"":m.summary;
   return new Snapshot(posture,attention,hesitation,memory);
  }
