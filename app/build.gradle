@@ -8,14 +8,32 @@ def releaseStore=(System.getenv('CM_KEYSTORE_PATH')?:System.getenv('VNF_RELEASE_
 
 android {
     namespace 'com.aicharacter.v3'; compileSdk 35
-    defaultConfig { applicationId 'com.aicharacter.v3'; minSdk 26; targetSdk 35; versionCode 101; versionName '0.99C-stable-update-test.1'; buildConfigField 'String','VNF_GOD_ENDPOINT','"'+endpointEscaped+'"'; buildConfigField 'String','VNF_CONTENT_ORIGIN','"'+contentOriginEscaped+'"'; buildConfigField 'String','VNF_CONTENT_PUBLIC_KEY','"'+contentPublicKeyEscaped+'"'; buildConfigField 'String','VNF_UPDATE_MANIFEST','"'+updateManifestEscaped+'"' }
+    defaultConfig { applicationId 'com.aicharacter.v3'; minSdk 26; targetSdk 35; versionCode 113; versionName '0.99.113'; buildConfigField 'String','VNF_GOD_ENDPOINT','"'+endpointEscaped+'"'; buildConfigField 'String','VNF_CONTENT_ORIGIN','"'+contentOriginEscaped+'"'; buildConfigField 'String','VNF_CONTENT_PUBLIC_KEY','"'+contentPublicKeyEscaped+'"'; buildConfigField 'String','VNF_UPDATE_MANIFEST','"'+updateManifestEscaped+'"' }
     buildFeatures { buildConfig true }
     signingConfigs { if(releaseSigningConfigured){ vnfRelease { storeFile file(releaseStore); storePassword releaseStorePassword; keyAlias releaseAlias; keyPassword releaseKeyPassword } } }
     buildTypes { release { minifyEnabled false; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),'proguard-rules.pro'; if(releaseSigningConfigured) signingConfig signingConfigs.vnfRelease } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 
-tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
+def verifyUpdaterReleaseInvariant=tasks.register('verifyUpdaterReleaseInvariant'){
+    doLast {
+        def mainFile=file('src/main/java/com/aicharacter/v3/MainActivity.java')
+        def updater=file('src/main/java/com/aicharacter/v3/AppUpdateManager.java')
+        def manifestFile=file('src/main/AndroidManifest.xml')
+        def paths=file('src/main/res/xml/update_file_paths.xml')
+        if(!mainFile.exists() || !updater.exists() || !manifestFile.exists()) throw new GradleException('Release blocked: updater source or manifest is missing.')
+        def main=mainFile.getText('UTF-8')
+        def updaterText=updater.getText('UTF-8')
+        def manifest=manifestFile.getText('UTF-8')
+        if(!main.contains('maybeCheckAppUpdate(true)') || !main.contains('maybeCheckAppUpdate(false)') || !main.contains('AppUpdateManager.checkAsync')) throw new GradleException('Release blocked: startup/resume updater check is not wired.')
+        if(!updaterText.contains('downloadAndVerify') || !updaterText.contains('verifyPackageAndSigner') || !updaterText.contains('launchInstaller')) throw new GradleException('Release blocked: updater download/verification/install chain is incomplete.')
+        if(!manifest.contains('android.permission.INTERNET') || !manifest.contains('android.permission.REQUEST_INSTALL_PACKAGES') || !manifest.contains('androidx.core.content.FileProvider') || !manifest.contains('.updatefiles')) throw new GradleException('Release blocked: updater manifest wiring is incomplete.')
+        if(!paths.exists() || !paths.getText('UTF-8').contains('vnf-updates/')) throw new GradleException('Release blocked: updater FileProvider path is missing.')
+        if(!updateManifestRaw.toLowerCase().startsWith('https://')) throw new GradleException('Release blocked: update manifest must use HTTPS.')
+    }
+}
+
+tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { dependsOn(verifyUpdaterReleaseInvariant); doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
 
 dependencies { implementation 'androidx.core:core:1.15.0' }
 

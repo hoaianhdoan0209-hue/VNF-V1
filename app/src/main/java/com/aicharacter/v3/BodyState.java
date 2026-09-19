@@ -14,6 +14,9 @@ public final class BodyState {
         health = clamp01x100(health); energy = clamp01x100(energy);
         sleepiness = clamp01x100(sleepiness); pain = clamp01x100(pain);
     }
+    public boolean hasInjury(){return injury!=null&&!injury.trim().isEmpty();}
+    public double injuryBurden(){if(!hasInjury())return 0;return Math.min(1.0,.18+pain/100.0*.72+(100-health)/100.0*.45);}
+    public void healInjuryIfRecovered(){if(hasInjury()&&pain<4&&health>92)injury="";}
     private double clamp01x100(double v) { return Math.max(0, Math.min(100, v)); }
     public JSONObject toJson() throws JSONException {
         JSONObject j = new JSONObject();

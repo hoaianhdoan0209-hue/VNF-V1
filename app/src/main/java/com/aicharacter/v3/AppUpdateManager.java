@@ -23,6 +23,7 @@ public final class AppUpdateManager {
         Update(long c,String n,String u,String h,long s,String notes){versionCode=c;versionName=n;apkUrl=u;sha256=h;size=s;this.notes=notes;}
     }
     private static final long MAX_APK=150L*1024L*1024L;
+    private static final int MAX_REDIRECTS=5;
     private AppUpdateManager(){}
 
     public static void checkAsync(Context context, Callback callback){
@@ -39,7 +40,7 @@ public final class AppUpdateManager {
         String hash=j.optString("sha256","").trim().toLowerCase(Locale.ROOT), notes=j.optString("notes","").trim();
         if(vc<=currentVersion(context))return null;
         if(size<=0||size>MAX_APK)throw new SecurityException("Kích thước APK cập nhật không hợp lệ");
-        if(!url.startsWith("https://"))throw new SecurityException("APK update phải dùng HTTPS");
+        requireHttps(url,"APK update phải dùng HTTPS");
         if(!hash.matches("[0-9a-f]{64}"))throw new SecurityException("SHA-256 update không hợp lệ");
         return new Update(vc,vn,url,hash,size,notes.length()>1200?notes.substring(0,1200):notes);
     }
@@ -47,8 +48,7 @@ public final class AppUpdateManager {
     public static File downloadAndVerify(Context context,Update u)throws Exception{
         File dir=new File(context.getCacheDir(),"vnf-updates"); if(!dir.exists()&&!dir.mkdirs())throw new IOException("Không tạo được thư mục update");
         File out=new File(dir,"vnf-update-"+u.versionCode+".apk"), tmp=new File(dir,out.getName()+".part");
-        HttpURLConnection c=(HttpURLConnection)new URL(u.apkUrl).openConnection();
-        c.setConnectTimeout(10000);c.setReadTimeout(30000);c.setInstanceFollowRedirects(false);c.setRequestProperty("Accept","application/vnd.android.package-archive");
+        HttpURLConnection c=openHttpsFollowingRedirects(u.apkUrl,"application/vnd.android.package-archive");
         try{
             int code=c.getResponseCode(); if(code<200||code>=300)throw new IOException("Tải update thất bại HTTP "+code);
             long declared=c.getContentLengthLong(); if(declared>MAX_APK||declared>0&&declared!=u.size)throw new SecurityException("Kích thước APK không khớp manifest");
@@ -86,7 +86,39 @@ public final class AppUpdateManager {
         else sig=p.signatures;
         if(sig==null||sig.length==0)return""; return hex(MessageDigest.getInstance("SHA-256").digest(sig[0].toByteArray()));
     }
+
+    private static HttpURLConnection openHttpsFollowingRedirects(String initial,String accept)throws Exception{
+        String current=initial;
+        for(int hop=0;hop<=MAX_REDIRECTS;hop++){
+            requireHttps(current,"Update redirect phải dùng HTTPS");
+            HttpURLConnection c=(HttpURLConnection)new URL(current).openConnection();
+            c.setConnectTimeout(10000);c.setReadTimeout(30000);c.setInstanceFollowRedirects(false);
+            if(accept!=null&&!accept.isEmpty())c.setRequestProperty("Accept",accept);
+            int code=c.getResponseCode();
+            if(code==301||code==302||code==303||code==307||code==308){
+                String location=c.getHeaderField("Location");
+                if(location==null||location.trim().isEmpty()){c.disconnect();throw new IOException("Update redirect thiếu Location");}
+                URL next=new URL(new URL(current),location.trim());
+                String nextUrl=next.toString();
+                c.disconnect();
+                requireHttps(nextUrl,"Từ chối update redirect không phải HTTPS");
+                current=nextUrl;
+                continue;
+            }
+            return c;
+        }
+        throw new IOException("Update redirect quá nhiều lần");
+    }
+
+    private static void requireHttps(String url,String message)throws Exception{
+        URL u=new URL(url);
+        if(!"https".equalsIgnoreCase(u.getProtocol()))throw new SecurityException(message);
+    }
+
     private static long currentVersion(Context c)throws Exception{PackageInfo p=c.getPackageManager().getPackageInfo(c.getPackageName(),0);return Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode;}
-    private static String getHttps(String url,int max)throws Exception{if(!url.startsWith("https://"))throw new SecurityException("Update manifest phải dùng HTTPS");HttpURLConnection c=(HttpURLConnection)new URL(url).openConnection();c.setConnectTimeout(8000);c.setReadTimeout(12000);c.setInstanceFollowRedirects(false);try{int code=c.getResponseCode();if(code<200||code>=300)throw new IOException("Update manifest HTTP "+code);try(InputStream in=c.getInputStream()){ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[8192];int n,total=0;while((n=in.read(b))!=-1){total+=n;if(total>max)throw new IOException("Update manifest quá lớn");out.write(b,0,n);}return out.toString(StandardCharsets.UTF_8.name());}}finally{c.disconnect();}}
+    private static String getHttps(String url,int max)throws Exception{
+        HttpURLConnection c=openHttpsFollowingRedirects(url,"application/json");
+        try{int code=c.getResponseCode();if(code<200||code>=300)throw new IOException("Update manifest HTTP "+code);try(InputStream in=c.getInputStream()){ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[8192];int n,total=0;while((n=in.read(b))!=-1){total+=n;if(total>max)throw new IOException("Update manifest quá lớn");out.write(b,0,n);}return out.toString(StandardCharsets.UTF_8.name());}}finally{c.disconnect();}
+    }
     private static String hex(byte[] x){StringBuilder s=new StringBuilder();for(byte b:x)s.append(String.format(Locale.ROOT,"%02x",b&255));return s.toString();}
 }

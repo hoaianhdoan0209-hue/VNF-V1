@@ -1,28 +1,10 @@
 package com.aicharacter.v3;
-/** Adds bounded lived context to offline speech without exposing raw engine values. */
+/** Adds bounded lived context to offline speech without exposing raw engine values or developer prose. */
 public final class OfflineSpeechContext {
  private OfflineSpeechContext(){}
- public static String enrich(WorldState s,String speech,long now){
-  if(speech==null||speech.isEmpty())return speech;
-  String mem=BehaviorExpressionEngine.rememberedContext(s,now);
-  if(mem.isEmpty()||!shouldSurface(s,speech))return speech;
-  String hint=humanMemory(mem);
-  if(hint.isEmpty())return speech;
-  return speech+" "+hint;
- }
- private static boolean shouldSurface(WorldState s,String speech){
-  if(s==null||s.thoughts==null||s.thoughts.isEmpty())return false;
-  ThoughtState t=s.thoughts.get(s.thoughts.size()-1);
-  return t!=null&&t.emotionalWeight>=.42&&(t.uncertainty>=.35||speech.contains("nhớ")||speech.contains("lý do"));
- }
- private static String humanMemory(String raw){
-  String x=raw.trim();if(x.isEmpty())return "";
-  // Internal memories are often authored in English; never leak raw developer prose to player dialogue.
-  String l=x.toLowerCase(java.util.Locale.ROOT);
-  if(l.contains("cat")&&l.contains("search"))return "Chuyện mình từng phải đi tìm cậu vẫn làm mình để ý hơn.";
-  if(l.contains("walk"))return "Mình vẫn nhớ cảm giác của lần mình đi cùng cậu trước đó.";
-  if(l.contains("hurt")||l.contains("boundary")||l.contains("control"))return "Chuyện trước đó vẫn khiến mình dè chừng một chút.";
-  if(l.contains("reunion")||l.contains("found"))return "Mình vẫn nhớ cảm giác lúc tìm thấy cậu.";
-  return "";
- }
+ public static String enrich(WorldState s,String speech,long now){if(speech==null||speech.isEmpty()||s==null)return speech;String thought=thoughtHint(s);String mem=BehaviorExpressionEngine.rememberedContext(s,now);String hint=humanMemory(mem);if(!thought.isEmpty()&&shouldSurfaceThought(s,speech))return speech+" "+thought;if(!hint.isEmpty()&&shouldSurfaceMemory(s,speech))return speech+" "+hint;return speech;}
+ private static boolean shouldSurfaceThought(WorldState s,String speech){if(s.thoughts==null||s.thoughts.isEmpty())return false;ThoughtState t=s.thoughts.get(s.thoughts.size()-1);return t!=null&&(t.emotionalWeight>=.38||speech.contains("lý do")||speech.contains("tại sao")||speech.contains("đang"));}
+ private static boolean shouldSurfaceMemory(WorldState s,String speech){if(s.thoughts==null||s.thoughts.isEmpty())return false;ThoughtState t=s.thoughts.get(s.thoughts.size()-1);return t!=null&&t.emotionalWeight>=.42&&(t.uncertainty>=.35||speech.contains("nhớ")||speech.contains("lý do"));}
+ private static String thoughtHint(WorldState s){String id=s.currentIntention==null?"":s.currentIntention;if("recover".equals(id))return"Mình muốn lấy lại sức một chút rồi mới tính tiếp.";if("observe_lake".equals(id))return"Lúc này mình chỉ muốn nhìn mặt hồ thêm một lúc.";if("explore_garden".equals(id))return"Mình đang tò mò xem lối cỏ hôm nay có gì khác.";if("watch_reedling".equals(id))return"Sinh vật nhỏ ngoài bờ cỏ đang làm mình chú ý.";if("quiet_pause".equals(id))return"Mình muốn đầu óc yên xuống một chút trước.";if("seek_solitude".equals(id))return"Mình đang cần một khoảng riêng.";if("reflect".equals(id))return"Có vài chuyện mình vẫn đang tự nghĩ lại.";if("find_cat".equals(id))return"Lúc không thấy cậu, mình đã thật sự để ý đến chuyện đó.";return"";}
+ private static String humanMemory(String raw){String x=raw==null?"":raw.trim();if(x.isEmpty())return"";String l=x.toLowerCase(java.util.Locale.ROOT);if(l.contains("cat")&&l.contains("search"))return"Chuyện mình từng phải đi tìm cậu vẫn làm mình để ý hơn.";if(l.contains("walk"))return"Mình vẫn nhớ cảm giác của lần mình đi cùng cậu trước đó.";if(l.contains("hurt")||l.contains("boundary")||l.contains("control"))return"Chuyện trước đó vẫn khiến mình dè chừng một chút.";if(l.contains("reunion")||l.contains("found"))return"Mình vẫn nhớ cảm giác lúc tìm thấy cậu.";return"";}
 }
