@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class WorldState {
-    public static final int SAVE_VERSION = 44;
+    public static final int SAVE_VERSION = 45;
     public long createdAt;
     public long lastSavedAt;
     public long lastOpenedAt;
