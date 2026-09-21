@@ -24,13 +24,13 @@ public final class HumanAnatomyModel{
  public static String organizationLevels(){return"tế bào → mô → cơ quan → hệ cơ quan → cơ thể";}
  public static Region dominantPainRegion(WorldState s){
   if(s==null||s.localizedPain==null)return null;LocalizedPainState p=s.localizedPain;Region best=null;double v=0;
-  double[] xs={p.head,p.core,p.leftArm,p.rightArm,p.leftLeg,p.rightLeg};Region[] rs={Region.HEAD,Region.THORAX,Region.LEFT_ARM,Region.RIGHT_ARM,Region.LEFT_LEG,Region.RIGHT_LEG};
+  double[] xs={p.head,p.neck,p.chest,p.abdomen,p.leftArm,p.rightArm,p.leftLeg,p.rightLeg};Region[] rs={Region.HEAD,Region.NECK,Region.THORAX,Region.ABDOMEN,Region.LEFT_ARM,Region.RIGHT_ARM,Region.LEFT_LEG,Region.RIGHT_LEG};
   for(int i=0;i<xs.length;i++)if(xs[i]>v){v=xs[i];best=rs[i];}
   return v>=.12?best:null;
  }
  public static double painLoad(WorldState s,Region r){
   if(s==null||s.localizedPain==null||r==null)return 0;LocalizedPainState p=s.localizedPain;
-  switch(r){case HEAD:return p.head;case THORAX:case ABDOMEN:return p.core;case LEFT_ARM:return p.leftArm;case RIGHT_ARM:return p.rightArm;case LEFT_LEG:return p.leftLeg;case RIGHT_LEG:return p.rightLeg;default:return 0;}
+  switch(r){case HEAD:return p.head;case NECK:return p.neck;case THORAX:return p.chest;case ABDOMEN:return p.abdomen;case LEFT_ARM:return p.leftArm;case RIGHT_ARM:return p.rightArm;case LEFT_LEG:return p.leftLeg;case RIGHT_LEG:return p.rightLeg;default:return 0;}
  }
  public static String diagnostic(WorldState s){
   StringBuilder b=new StringBuilder("HARU ANATOMY\nLevels: ").append(organizationLevels()).append('\n');
