@@ -10,7 +10,7 @@ public final class DigestionHydrationEngine{
   double energyGain=digest*(18.0+10.0*d.nutrientReserve);s.body.energy=Math.min(100,s.body.energy+energyGain);
   d.digestionLoad=DigestiveState.cl(d.stomachFood*.62+(1-d.nutrientReserve)*.18);
   double waterLoss=hours*(.010+work*.012+heat*.014+sweat*.020);h.hydration=Math.max(0,h.hydration-waterLoss);h.bladderFill=Math.min(1,h.bladderFill+hours*(.018+.018*h.hydration));h.renalLoad=Math.max(0,Math.min(1,(.62-h.hydration)*1.35+h.bladderFill*.18));
-  if(h.hydration<.35){s.body.energy=Math.max(0,s.body.energy-hours*(.35-h.hydration)*8);if(s.circulation!=null)s.circulation.perfusion=Math.max(.2,s.circulation.perfusion-hours*(.35-h.hydration)*.025);}
+  if(h.hydration<.35){s.body.energy=Math.max(0,s.body.energy-hours*(.35-h.hydration)*8);}
   s.body.clamp();d.lastUpdatedAt=Math.max(d.lastUpdatedAt,now);h.lastUpdatedAt=Math.max(h.lastUpdatedAt,now);
  }
  public static boolean eat(WorldState s,long now){if(s==null||s.digestive==null)return false;DigestiveState d=s.digestive;if(d.stomachFood>.82)return false;d.stomachFood=Math.min(1,d.stomachFood+.58);d.nutrientReserve=Math.min(1,d.nutrientReserve+.08);d.lastMealAt=now;d.lastUpdatedAt=now;return true;}
