@@ -1,5 +1,5 @@
 {
-  "worldDefinitionVersion": 3,
+  "worldDefinitionVersion": 4,
   "worldId": "vnf_lakeside_home_v1",
   "areas": [
     {
@@ -13,35 +13,276 @@
       "blendRight": true,
       "weatherExposed": false,
       "tags": "shelter,home,interior,dry,quiet,rest,sleep",
-      "connections": ["garden_path"],
-      "visual": {"sky":"home_sky","distant":"home_distant","midground":"home_mid","ground":"home_ground","foreground":"home_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
+      "connections": [
+        "garden_path"
+      ],
+      "visual": {
+        "sky": "home_sky",
+        "distant": "home_distant",
+        "midground": "home_mid",
+        "ground": "home_ground",
+        "foreground": "home_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      },
+      "biomeId": "sheltered_home",
+      "elevationM": 120,
+      "localMoistureOffset": -0.08
     },
     {
-      "id":"garden_path","systemName":"Garden Path","haruName":"lối đi cạnh cỏ","left":590,"right":1050,"ground":842,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"path,vegetation","connections":["home_shelter","lakeside"],
-      "visual":{"sky":"garden_sky","distant":"garden_distant","midground":"garden_mid","ground":"garden_ground","foreground":"garden_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
+      "id": "garden_path",
+      "systemName": "Garden Path",
+      "haruName": "lối đi cạnh cỏ",
+      "left": 590,
+      "right": 1050,
+      "ground": 842,
+      "blendLeft": true,
+      "blendRight": true,
+      "weatherExposed": true,
+      "tags": "path,vegetation",
+      "connections": [
+        "home_shelter",
+        "lakeside"
+      ],
+      "visual": {
+        "sky": "garden_sky",
+        "distant": "garden_distant",
+        "midground": "garden_mid",
+        "ground": "garden_ground",
+        "foreground": "garden_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      },
+      "biomeId": "humid_meadow_edge",
+      "elevationM": 122,
+      "localMoistureOffset": 0
     },
     {
-      "id":"lakeside","systemName":"Lakeside","haruName":"bờ hồ","left":1050,"right":1900,"ground":850,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"lake,reflect,open","connections":["garden_path","quiet_grove"],
-      "visual":{"sky":"lakeside_sky","distant":"lakeside_distant","midground":"lakeside_mid","ground":"lakeside_ground","foreground":"lakeside_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
+      "id": "lakeside",
+      "systemName": "Lakeside",
+      "haruName": "bờ hồ",
+      "left": 1050,
+      "right": 1900,
+      "ground": 850,
+      "blendLeft": true,
+      "blendRight": true,
+      "weatherExposed": true,
+      "tags": "lake,reflect,open",
+      "connections": [
+        "garden_path",
+        "quiet_grove"
+      ],
+      "visual": {
+        "sky": "lakeside_sky",
+        "distant": "lakeside_distant",
+        "midground": "lakeside_mid",
+        "ground": "lakeside_ground",
+        "foreground": "lakeside_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      },
+      "biomeId": "freshwater_lakeshore",
+      "elevationM": 118,
+      "localMoistureOffset": 0.08
     },
     {
-      "id":"quiet_grove","systemName":"Vegetation Zone","haruName":"khoảng cây yên tĩnh","left":1900,"right":2320,"ground":844,"blendLeft":true,"blendRight":true,"weatherExposed":true,"tags":"quiet,vegetation","connections":["lakeside"],
-      "visual":{"sky":"grove_sky","distant":"grove_distant","midground":"grove_mid","ground":"grove_ground","foreground":"grove_foreground","parallax":"0.02,0.08,0.22,1.0,1.08"}
+      "id": "quiet_grove",
+      "systemName": "Vegetation Zone",
+      "haruName": "khoảng cây yên tĩnh",
+      "left": 1900,
+      "right": 2320,
+      "ground": 844,
+      "blendLeft": true,
+      "blendRight": true,
+      "weatherExposed": true,
+      "tags": "quiet,vegetation",
+      "connections": [
+        "lakeside"
+      ],
+      "visual": {
+        "sky": "grove_sky",
+        "distant": "grove_distant",
+        "midground": "grove_mid",
+        "ground": "grove_ground",
+        "foreground": "grove_foreground",
+        "parallax": "0.02,0.08,0.22,1.0,1.08"
+      },
+      "biomeId": "humid_broadleaf_grove",
+      "elevationM": 121,
+      "localMoistureOffset": 0.04
     }
   ],
   "objects": [
     {
-      "id":"shelter_01","type":"home","areaId":"home_shelter","assetRef":"shelter_wood","haruDescription":"ngôi nhà nhỏ khô ráo có chỗ nghỉ, nước sinh hoạt và thực phẩm dự trữ","x":315,"ground":846,"width":470,"height":360,"tags":"home,shelter,interior,door,rest,dry,safe,sleep,food_source,water_source,toilet","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":360,"colliderSegments":[[-180,-32],[88,180]],"interiorLeftOffset":-30,"interiorRightOffset":86,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":355,"interactionRadius":105
+      "id": "shelter_01",
+      "type": "home",
+      "areaId": "home_shelter",
+      "assetRef": "shelter_wood",
+      "haruDescription": "ngôi nhà nhỏ khô ráo có chỗ nghỉ, nước sinh hoạt và thực phẩm dự trữ",
+      "x": 315,
+      "ground": 846,
+      "width": 470,
+      "height": 360,
+      "tags": "home,shelter,interior,door,rest,dry,safe,sleep,food_source,water_source,toilet",
+      "interactable": true,
+      "collision": true,
+      "colliderOffsetX": 0,
+      "colliderWidth": 360,
+      "colliderSegments": [
+        [
+          -180,
+          -32
+        ],
+        [
+          88,
+          180
+        ]
+      ],
+      "interiorLeftOffset": -30,
+      "interiorRightOffset": 86,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1,
+      "zOrder": 4,
+      "interactionX": 355,
+      "interactionRadius": 105
     },
     {
-      "id":"bench_lake_01","type":"bench","areaId":"lakeside","assetRef":"bench_wood_01","haruDescription":"chiếc ghế cạnh hồ","x":1430,"ground":850,"width":220,"height":135,"tags":"rest,reflect,landmark,sit","interactable":true,"collision":false,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":1430,"interactionRadius":70,"visualSeatOffsetY":70
+      "id": "bench_lake_01",
+      "type": "bench",
+      "areaId": "lakeside",
+      "assetRef": "bench_wood_01",
+      "haruDescription": "chiếc ghế cạnh hồ",
+      "x": 1430,
+      "ground": 850,
+      "width": 220,
+      "height": 135,
+      "tags": "rest,reflect,landmark,sit",
+      "interactable": true,
+      "collision": false,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1,
+      "zOrder": 4,
+      "interactionX": 1430,
+      "interactionRadius": 70,
+      "visualSeatOffsetY": 70
     },
     {
-      "id":"lake_tree_03","type":"tree","areaId":"quiet_grove","assetRef":"tree_autumn_02","haruDescription":"cái cây cạnh hồ","x":2070,"ground":844,"width":180,"height":300,"tags":"vegetation,landmark,quiet,observe","interactable":true,"collision":true,"colliderOffsetX":0,"colliderWidth":54,"renderLayer":"WORLD_PROPS","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":4,"interactionX":2070,"interactionRadius":60
+      "id": "lake_tree_03",
+      "type": "tree",
+      "areaId": "quiet_grove",
+      "assetRef": "tree_autumn_02",
+      "haruDescription": "cái cây cạnh hồ",
+      "x": 2070,
+      "ground": 844,
+      "width": 180,
+      "height": 300,
+      "tags": "vegetation,landmark,quiet,observe",
+      "interactable": true,
+      "collision": true,
+      "colliderOffsetX": 0,
+      "colliderWidth": 54,
+      "renderLayer": "WORLD_PROPS",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1,
+      "zOrder": 4,
+      "interactionX": 2070,
+      "interactionRadius": 60
     },
     {
-      "id":"reedling_01","type":"creature","areaId":"lakeside","assetRef":"reedling_idle","haruDescription":"sinh vật nhỏ bên bờ cỏ","x":1730,"ground":850,"width":55,"height":60,"tags":"creature,lake,vegetation","interactable":false,"collision":false,"renderLayer":"ACTORS","habitat":"lake,vegetation","safeEditable":"position,enabled","visualAnchor":"BOTTOM_CENTER","visualScale":1.0,"zOrder":5,"interactionX":1730,"interactionRadius":60
+      "id": "reedling_01",
+      "type": "creature",
+      "areaId": "lakeside",
+      "assetRef": "reedling_idle",
+      "haruDescription": "sinh vật nhỏ bên bờ cỏ",
+      "x": 1730,
+      "ground": 850,
+      "width": 55,
+      "height": 60,
+      "tags": "creature,lake,vegetation",
+      "interactable": false,
+      "collision": false,
+      "renderLayer": "ACTORS",
+      "habitat": "lake,vegetation",
+      "safeEditable": "position,enabled",
+      "visualAnchor": "BOTTOM_CENTER",
+      "visualScale": 1,
+      "zOrder": 5,
+      "interactionX": 1730,
+      "interactionRadius": 60
     }
   ],
-  "visualProfile":{"logicalViewport":"2400x1080","style":"cozy layered pixel-art","layers":["SKY","DISTANT","MIDGROUND","GROUND","WORLD_PROPS","ACTORS","FOREGROUND","ATMOSPHERE"]}
+  "visualProfile": {
+    "logicalViewport": "2400x1080",
+    "style": "cozy layered pixel-art",
+    "layers": [
+      "SKY",
+      "DISTANT",
+      "MIDGROUND",
+      "GROUND",
+      "WORLD_PROPS",
+      "ACTORS",
+      "FOREGROUND",
+      "ATMOSPHERE"
+    ]
+  },
+  "biomes": [
+    {
+      "id": "sheltered_home",
+      "label": "sheltered home",
+      "climate": "buffered indoor microclimate",
+      "terrain": "built interior",
+      "waterRegime": "stored freshwater",
+      "vegetation": "cultivated herbs, small garden plants",
+      "fauna": "small commensal insects",
+      "tags": "interior,shelter,dry,human_space,rain_tolerant",
+      "baseMoisture": 0.38,
+      "canopy": 0,
+      "elevationMinM": 0,
+      "elevationMaxM": 2500
+    },
+    {
+      "id": "humid_meadow_edge",
+      "label": "humid meadow edge",
+      "climate": "mild humid lakeside",
+      "terrain": "grass path and low vegetation",
+      "waterRegime": "rain-fed soil",
+      "vegetation": "grasses, low shrubs, wildflowers, broadleaf saplings",
+      "fauna": "small insects, ground birds, small mammals",
+      "tags": "vegetation,grass,meadow,edge,insects,birds,rain_tolerant",
+      "baseMoisture": 0.58,
+      "canopy": 0.18,
+      "elevationMinM": 0,
+      "elevationMaxM": 1200
+    },
+    {
+      "id": "freshwater_lakeshore",
+      "label": "freshwater lakeshore",
+      "climate": "mild humid freshwater margin",
+      "terrain": "open lake bank",
+      "waterRegime": "freshwater lake",
+      "vegetation": "reeds, sedges, wet grasses, waterside broadleaf plants",
+      "fauna": "reedling, amphibians, water insects, small shore birds",
+      "tags": "lake,water,wetland,reeds,vegetation,amphibian,insects,birds,rain_tolerant",
+      "baseMoisture": 0.82,
+      "canopy": 0.12,
+      "elevationMinM": 0,
+      "elevationMaxM": 1800
+    },
+    {
+      "id": "humid_broadleaf_grove",
+      "label": "humid broadleaf grove",
+      "climate": "humid shaded lakeside",
+      "terrain": "tree grove",
+      "waterRegime": "moist soil",
+      "vegetation": "broadleaf trees, ferns, moss, shade shrubs",
+      "fauna": "small birds, insects, arboreal small animals",
+      "tags": "grove,forest,vegetation,shade,moss,fern,birds,insects,rain_tolerant",
+      "baseMoisture": 0.68,
+      "canopy": 0.72,
+      "elevationMinM": 0,
+      "elevationMaxM": 1800
+    }
+  ]
 }
