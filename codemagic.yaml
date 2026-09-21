@@ -38,7 +38,17 @@ workflows:
     name: VNF Stable Signed Release APK
     instance_type: mac_mini_m2
     max_build_duration: 120
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'release/v1.0.0'
+          include: true
+          source: true
+      cancel_previous_builds: true
     environment:
+      groups:
+        - github_credentials
       java: 17
       android_signing:
         - vnf-release
