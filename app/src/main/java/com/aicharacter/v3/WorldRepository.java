@@ -83,7 +83,8 @@ public final class WorldRepository{
  }
 
  private static long causalCursor(WorldState s){
-  return s==null?Long.MIN_VALUE:Math.max(s.lastSimulatedAt,s.lastOpenedAt);
+  if(s==null)return Long.MIN_VALUE;
+  return s.lastSimulatedAt>0?s.lastSimulatedAt:s.lastOpenedAt;
  }
 
  private static int compareCausalVersion(WorldState a,WorldState b){
