@@ -38,6 +38,11 @@ public final class LocalDialogueEngine {
             if(!personal.isEmpty())return pick(s,raw,"Mình không biết đó có phải tên thật không. Mình tự gọi nó là "+personal+".","Mình đặt một cái tên để dễ nhớ thôi: "+personal+". Mình chưa biết người khác có gọi như vậy không.");
             return pick(s,raw,"Mình chưa có tên nào đủ quen cho nó. Mình vẫn đang nhìn và nhớ nó bằng hình dạng thôi.","Chưa. Mình thấy nó vài lần rồi nhưng chưa muốn đặt tên vội.");
         }
+        if(containsAny(q,"an toàn","nguy hiểm","trú","có ích","khó chịu","nguồn sống","đáng tò mò","safe","danger","shelter","helpful")){
+            String meaning=HaruAbstractConceptEngine.currentSummary(s);
+            if(!meaning.isEmpty())return meaning;
+            return pick(s,raw,"Mình chưa trải qua đủ ở đây để dám gọi nó là an toàn hay nguy hiểm.","Mình có cảm giác riêng, nhưng chưa đủ lần để biến nó thành một điều mình thật sự tin.");
+        }
         if(containsAny(q,"cùng loại","giống nhau","cùng nhóm","nhóm nào","same kind","same group")){
             String concept=HaruConceptEngine.nearestVisibleConceptSummary(s);
             if(!concept.isEmpty())return concept;
