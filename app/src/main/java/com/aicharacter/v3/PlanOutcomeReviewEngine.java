@@ -13,14 +13,7 @@ public final class PlanOutcomeReviewEngine {
   PlanState p=s.planState;
   if(!p.outcomeNeedsReview())return false;
   MemoryEntry m=PlanCausalAudit.findMemory(s,p.outcomeMemoryId);
-  if(m==null){
-   if(s.developerReports!=null)s.developerReports.add(new DeveloperReport(
-    now,"PLAN_CAUSAL_AUDIT","ERROR","PlanOutcomeReviewEngine",
-    "Outcome review blocked because learned memory is missing.",
-    "causal ledger mismatch","plan="+p.planId+" memory="+p.outcomeMemoryId,
-    "Preserve current plan state and inspect persistence/history ordering."));
-   return false;
-  }
+  if(m==null){PlanCausalAudit.reportIfInvalid(s,now);return false;}
   double expectation=AdaptiveBeliefEngine.planExpectation(s,p.intentionId);
   double preference=0;
   PreferenceState pref=s.preferences.get("activity:"+activityKey(p.intentionId));
