@@ -56,8 +56,8 @@ public final class EcologyObservationLearningEngine{
  private static String parseFlora(String subject){int a=subject.indexOf("->"),b=subject.lastIndexOf(":");return a>=0&&b>a?subject.substring(a+2,b):"";}
  private static String parseCreature(String subject){int a=subject.indexOf("eco_hyp:"),b=subject.indexOf("->");return a>=0&&b>a?subject.substring(a+8,b):"";}
  private static String readableSubject(WorldState s,String subject){
-  if(subject.startsWith("eco_pair:")){int a=subject.indexOf(":"),b=subject.indexOf("<->"),c=subject.lastIndexOf(":");String x=b>a?subject.substring(a+1,b):"",y=c>b?subject.substring(b+3,c):"";WorldObject xo=s.world==null?null:s.world.object(x),yo=s.world==null?null:s.world.object(y);return(xo==null?x:label(xo))+" <-> "+(yo==null?y:label(yo));}
-  WorldObject c=s.world==null?null:s.world.object(parseCreature(subject)),f=s.world==null?null:s.world.object(parseFlora(subject));return(c==null?parseCreature(subject):label(c))+" -> "+(f==null?parseFlora(subject):label(f));
+  if(subject.startsWith("eco_pair:")){int a=subject.indexOf(":"),b=subject.indexOf("<->"),c=subject.lastIndexOf(":");String x=b>a?subject.substring(a+1,b):"",y=c>b?subject.substring(b+3,c):"";WorldObject xo=s.world==null?null:s.world.object(x),yo=s.world==null?null:s.world.object(y);return(xo==null?x:HaruNamingEngine.personalOrDescription(s,xo))+" <-> "+(yo==null?y:HaruNamingEngine.personalOrDescription(s,yo));}
+  WorldObject c=s.world==null?null:s.world.object(parseCreature(subject)),f=s.world==null?null:s.world.object(parseFlora(subject));return(c==null?parseCreature(subject):HaruNamingEngine.personalOrDescription(s,c))+" -> "+(f==null?parseFlora(subject):HaruNamingEngine.personalOrDescription(s,f));
  }
  private static String label(WorldObject o){return o==null||o.haruDescription==null||o.haruDescription.isEmpty()?o==null?"something":o.id:o.haruDescription;}
  private static String signal(double delta,double growth){return delta>.055?"open":delta<-.055?"close":Math.abs(growth)>.07?"rhythm":"stable";}
