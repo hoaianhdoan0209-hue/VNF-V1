@@ -17,7 +17,7 @@ public final class CatCameraDirector{
  public static void resetForTest(){smoothElev=0;smoothAir=0;lastMode="CHARACTER_FRAME";stableTicks=0;}
  public static Frame direct(WorldState s){
   float dx=s.haruX-s.catX;
-  float elev=26f,lookY=420f;
+  float elev=26f,lookY=420f,lookX=s.haruX;
   String wanted="CHARACTER_FRAME";
   String reason="automatic framing follows Haru while preserving the cat's ground context";
   if("girl".equals(s.catState.attachedToEntity)){
@@ -49,7 +49,7 @@ public final class CatCameraDirector{
   }else stableTicks=0;
   float targetElev=elev+smoothAir;
   smoothElev+=(targetElev-smoothElev)*(airborne?.24f:.16f);
-  float cameraX=0f,lookX=s.haruX;
+  float cameraX=0f;
   s.cameraTrace="mode="+wanted+" subject=girl haru="+(int)s.haruX+" cat="+(int)s.catX+
           " camera=0,"+(int)smoothElev+" air="+(int)smoothAir+" girlLift="+(int)girlLift+
           " look="+(int)lookX+","+(int)lookY+" manual=false reason="+reason;
