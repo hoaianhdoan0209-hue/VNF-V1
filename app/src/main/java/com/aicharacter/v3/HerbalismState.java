@@ -2,10 +2,16 @@ package com.aicharacter.v3;
 import org.json.*;import java.util.*;
 /** Haru's learned herbal state. System truth stays in HerbalDictionary; this stores only observations, trials and carried samples. */
 public final class HerbalismState{
+ public static final class MethodEvidence{
+  public int trials;public double effectConfidence=.05,safetyConfidence=.12;public String lastEffect="";
+  JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("trials",trials);j.put("effectConfidence",effectConfidence);j.put("safetyConfidence",safetyConfidence);j.put("lastEffect",lastEffect);}catch(Exception ignored){}return j;}
+  static MethodEvidence fromJson(JSONObject j){MethodEvidence e=new MethodEvidence();if(j==null)return e;e.trials=Math.max(0,j.optInt("trials"));e.effectConfidence=cl(j.optDouble("effectConfidence",e.effectConfidence));e.safetyConfidence=cl(j.optDouble("safetyConfidence",e.safetyConfidence));e.lastEffect=j.optString("lastEffect","");return e;}
+ }
  public static final class Knowledge{
-  public int observations,trials;public double safetyConfidence=.10,effectConfidence=.05;public String discoveredPreparation="",lastMethod="",lastObservedEffect="";
-  JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("observations",observations);j.put("trials",trials);j.put("safetyConfidence",safetyConfidence);j.put("effectConfidence",effectConfidence);j.put("discoveredPreparation",discoveredPreparation);j.put("lastMethod",lastMethod);j.put("lastObservedEffect",lastObservedEffect);}catch(Exception ignored){}return j;}
-  static Knowledge fromJson(JSONObject j){Knowledge k=new Knowledge();if(j==null)return k;k.observations=j.optInt("observations");k.trials=j.optInt("trials");k.safetyConfidence=cl(j.optDouble("safetyConfidence",k.safetyConfidence));k.effectConfidence=cl(j.optDouble("effectConfidence",k.effectConfidence));k.discoveredPreparation=j.optString("discoveredPreparation","");k.lastMethod=j.optString("lastMethod","");k.lastObservedEffect=j.optString("lastObservedEffect","");return k;}
+  public int observations,trials;public double safetyConfidence=.10,effectConfidence=.05;public String discoveredPreparation="",lastMethod="",lastObservedEffect="";public final Map<String,MethodEvidence> methods=new LinkedHashMap<>();
+  public MethodEvidence method(String id){return methods.computeIfAbsent(id,x->new MethodEvidence());}
+  JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("observations",observations);j.put("trials",trials);j.put("safetyConfidence",safetyConfidence);j.put("effectConfidence",effectConfidence);j.put("discoveredPreparation",discoveredPreparation);j.put("lastMethod",lastMethod);j.put("lastObservedEffect",lastObservedEffect);JSONObject m=new JSONObject();for(Map.Entry<String,MethodEvidence>e:methods.entrySet())m.put(e.getKey(),e.getValue().toJson());j.put("methods",m);}catch(Exception ignored){}return j;}
+  static Knowledge fromJson(JSONObject j){Knowledge k=new Knowledge();if(j==null)return k;k.observations=Math.max(0,j.optInt("observations"));k.trials=Math.max(0,j.optInt("trials"));k.safetyConfidence=cl(j.optDouble("safetyConfidence",k.safetyConfidence));k.effectConfidence=cl(j.optDouble("effectConfidence",k.effectConfidence));k.discoveredPreparation=j.optString("discoveredPreparation","");k.lastMethod=j.optString("lastMethod","");k.lastObservedEffect=j.optString("lastObservedEffect","");JSONObject m=j.optJSONObject("methods");if(m!=null){Iterator<String>it=m.keys();while(it.hasNext()){String id=it.next();k.methods.put(id,MethodEvidence.fromJson(m.optJSONObject(id)));}}return k;}
  }
  public final Map<String,Knowledge> knowledge=new LinkedHashMap<>();public String carriedHerbId="",preparedHerbId="",preparedMethod="";public int carriedCount;public double preparedPotency,preparedRisk;public long lastUpdatedAt;
  public Knowledge know(String id){return knowledge.computeIfAbsent(id,x->new Knowledge());}
