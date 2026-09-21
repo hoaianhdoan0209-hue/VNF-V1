@@ -3,7 +3,7 @@ import java.util.*;
 /** Haru coins private names from perceived cues and her own beliefs. Hidden object IDs/taxonomy never provide the name meaning. */
 public final class HaruNamingEngine{
  private static final long SAMPLE_MS=8L*60000L,ENCOUNTER_GAP_MS=10L*60000L;
- public static final class Phenomenon{public final String key,description;Phenomenon(String k,String d){key=k;description=d;}}
+ public static final class Phenomenon{public final String key,description;Phenomenon(String k,String d){key=k;description=d;}} public static final class PhenomenonSnapshot{public final String key,description;PhenomenonSnapshot(String k,String d){key=k;description=d;}}
  private HaruNamingEngine(){}
  public static void observe(WorldState s,long now){
   if(s==null||s.world==null||BodyRhythmEngine.isSleeping(s))return;ensure(s);if(s.personalLexicon.lastObservedAt>0&&now-s.personalLexicon.lastObservedAt<SAMPLE_MS)return;
@@ -16,6 +16,7 @@ public final class HaruNamingEngine{
  public static String personalName(WorldState s,WorldObject o){if(s==null||o==null)return"";ensure(s);PersonalLexiconState.Entry e=s.personalLexicon.entries.get("object:"+o.id);return e==null?"":e.name;}
  public static String personalOrDescription(WorldState s,WorldObject o){String n=personalName(s,o);return!n.isEmpty()?n:o==null?"":o.haruDescription;}
  public static String nearestNamedVisible(WorldState s){if(s==null||s.world==null)return"";HaruVisionEngine.Snapshot v=HaruVisionEngine.observe(s);for(HaruVisionEngine.Seen x:v.seen){WorldObject o=s.world.object(x.id);String n=personalName(s,o);if(!n.isEmpty())return n;}for(Phenomenon p:perceivedPhenomena(s,v)){PersonalLexiconState.Entry e=s.personalLexicon.entries.get(p.key);if(e!=null&&e.named())return e.name;}return"";}
+ public static List<PhenomenonSnapshot> visiblePhenomena(WorldState s){List<PhenomenonSnapshot> out=new ArrayList<>();if(s==null)return out;HaruVisionEngine.Snapshot v=HaruVisionEngine.observe(s);for(Phenomenon p:perceivedPhenomena(s,v))out.add(new PhenomenonSnapshot(p.key,p.description));return out;}
  public static List<String> visiblePhenomenonLabels(WorldState s){List<String> out=new ArrayList<>();if(s==null)return out;HaruVisionEngine.Snapshot v=HaruVisionEngine.observe(s);ensure(s);for(Phenomenon p:perceivedPhenomena(s,v)){PersonalLexiconState.Entry e=s.personalLexicon.entries.get(p.key);out.add(e!=null&&e.named()?e.name+" — "+p.description:p.description);}return out;}
  public static String diagnostic(WorldState s){ensure(s);StringBuilder b=new StringBuilder("HARU PERSONAL LEXICON\n");for(PersonalLexiconState.Entry e:s.personalLexicon.entries.values())b.append(e.key).append(" | ").append(e.stage()).append(" | name=").append(e.named()?e.name:"?").append(" | encounters=").append(e.encounters).append(" | confidence=").append(fmt(e.confidence)).append(" | salience=").append(fmt(e.salience)).append(" | cue=").append(e.lastCue).append('\n');return b.toString();}
  private static void learn(WorldState s,String key,String kind,String cue,double clarity,long now){PersonalLexiconState.Entry e=s.personalLexicon.entry(key,kind);if(e.firstSeenAt<=0)e.firstSeenAt=now;if(e.lastSeenAt>0&&now-e.lastSeenAt<ENCOUNTER_GAP_MS)return;e.lastSeenAt=now;e.encounters++;e.salience=cl(e.salience*.84+clarity*.24+memorySalience(s,key)*.18);e.lastCue=cue;
