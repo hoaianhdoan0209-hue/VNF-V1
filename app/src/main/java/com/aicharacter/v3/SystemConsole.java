@@ -5,6 +5,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("DEV LIFE TEST"))return LifeDevTest.runAll(s);
   if(q.equals("DEV QUALITY TEST"))return LifeQualityDevTest.runAll(s);
   if(q.equals("DEV V3 FOUNDATION TEST"))return V3FoundationDevTest.run(s);
+  if(q.equals("DEV V1 FOUNDATION TEST"))return V1FoundationDevTest.run(s);
   if(q.equals("PERSONALITY TRACE V3"))return PersonalDevelopmentEngine.diagnostic(s,System.currentTimeMillis());
   if(q.equals("PLAN CAUSAL AUDIT V3"))return PlanCausalAudit.diagnostic(s);
   if(q.equals("VISIBLE BEHAVIOR V3"))return HaruVisibleBehaviorBridge.diagnostic(s,System.currentTimeMillis());
