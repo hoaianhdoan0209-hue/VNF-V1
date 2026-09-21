@@ -21,13 +21,30 @@ public final class DivineManifestationView extends View {
         super.onDraw(c);long now=System.currentTimeMillis();float t=(now-phaseAt)/1000f;float cx=getWidth()*.5f,cy=getHeight()*.47f;
         float pulse=(float)(.5+.5*Math.sin(now/420.0));float strength=strength();
         if(phase==Phase.DISAPPEARING)strength=Math.max(0f,1f-t/0.48f);
-        int veil=(int)(24*strength);p.setColor(Color.argb(veil,28,38,64));c.drawRect(0,0,getWidth(),getHeight(),p);
+        int veil=(int)(18*strength);p.setColor(Color.argb(veil,28,38,64));c.drawRect(0,0,getWidth(),getHeight(),p);
+        drawAtmosphere(c,cx,cy,t,pulse,strength);
         drawFragments(c,cx,cy,t,pulse,strength);
         drawSigil(c,cx,cy,pulse,strength);
         if(phase!=Phase.DISAPPEARING&&phase!=Phase.DEGRADED)postInvalidateDelayed(45);
         else if(phase==Phase.DISAPPEARING&&strength>0)postInvalidateDelayed(32);
     }
     private float strength(){switch(phase){case DEGRADED:return .38f;case CONNECTING:return .55f;case WARNING:return 1f;default:return .88f;}}
+    private void drawAtmosphere(Canvas c,float cx,float cy,float t,float pulse,float strength){
+        float d=getResources().getDisplayMetrics().density;
+        p.setStyle(Paint.Style.FILL);
+        int halo=(int)(34*strength);p.setColor(Color.argb(halo,223,226,191));
+        c.drawOval(cx-86*d-pulse*8*d,cy-48*d,cx+86*d+pulse*8*d,cy+48*d,p);
+        p.setColor(Color.argb((int)(22*strength),171,210,219));
+        c.drawOval(cx-145*d,cy-23*d,cx+145*d,cy+23*d,p);
+        int strands=phase==Phase.WARNING?11:7;
+        for(int i=0;i<strands;i++){
+            float off=(i-(strands-1)/2f)*18*d;
+            float sway=(float)Math.sin(t*(.7+i*.05)+i*.8)*6*d;
+            float top=cy-(92+i%3*18)*d,bottom=cy+(72+(i+1)%3*22)*d;
+            p.setColor(Color.argb((int)((26+(i%3)*13)*strength),205,224,214));
+            c.drawRect(cx+off+sway-1.1f*d,top,cx+off+sway+1.1f*d,bottom,p);
+        }
+    }
     private void drawSigil(Canvas c,float cx,float cy,float pulse,float strength){
         float unit=Math.max(4f,getResources().getDisplayMetrics().density*3f);float r=unit*(8.5f+pulse*1.2f);
         int a=(int)(220*strength);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(unit);p.setColor(Color.argb(a,244,224,164));
