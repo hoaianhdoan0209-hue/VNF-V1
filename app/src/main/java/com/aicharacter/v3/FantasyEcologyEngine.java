@@ -18,6 +18,16 @@ public final class FantasyEcologyEngine{
   for(String id:cur.connections){WorldArea a=s.world.area(id);if(a==null)continue;double u=areaUtility(s,self,a);if(u>best+.08){best=u;bestId=id;}}
   return bestId;
  }
+ public static boolean stepReedlingMigration(WorldState s,WorldObject self,CreatureState c,double minutes){
+  if(s==null||self==null||c==null||minutes<=0)return false;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(p==null)return false;WorldArea cur=s.world.area(c.areaId);if(cur==null)return false;
+  c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur);double here=areaUtility(s,self,cur),drive=cl((candidate.isEmpty()?0:.40)+c.relationPressure*.36+(1-here)*.24+c.hunger*.26)*p.migrationDrive;
+  c.migrationIntent=follow(c.migrationIntent,drive,minutes,5);if(!candidate.isEmpty()&&(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent>.44))c.ecologyTargetAreaId=candidate;
+  if(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent<.30)return false;WorldArea target=s.world.area(c.ecologyTargetAreaId);if(target==null||!cur.connections.contains(target.id)){c.ecologyTargetAreaId="";return false;}
+  float dir=target.left>=cur.right?1f:target.right<=cur.left?-1f:(target.left+target.right>cur.left+cur.right?1f:-1f);double speed=8+24*c.energy+16*c.migrationIntent;float nx=c.x+(float)(dir*speed*minutes);
+  if(dir>0&&nx>=cur.right-2){c.areaId=target.id;c.x=Math.min(target.right-24,target.left+24);c.ecologyTargetAreaId="";c.migrationIntent*=.45;return true;}
+  if(dir<0&&nx<=cur.left+2){c.areaId=target.id;c.x=Math.max(target.left+24,target.right-24);c.ecologyTargetAreaId="";c.migrationIntent*=.45;return true;}
+  c.x=Math.max(cur.left+22,Math.min(cur.right-22,nx));return true;
+ }
  public static boolean stepMigration(WorldState s,WorldObject self,CreatureLifeState c,double minutes){
   if(s==null||self==null||c==null||minutes<=0)return false;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(p==null)return false;WorldArea cur=s.world.area(c.areaId);if(cur==null)return false;
   c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur);double here=areaUtility(s,self,cur),away=c.relationPressure*.38+(1-here)*.24,hunger=c.hunger*.25,targetDrive=cl((candidate.isEmpty()?0:.42)+away+hunger)*p.migrationDrive;
@@ -30,7 +40,7 @@ public final class FantasyEcologyEngine{
  }
  public static void stimulateFlora(WorldState s,WorldObject self,String areaId,double minutes){
   if(s==null||s.world==null||minutes<=0)return;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(p==null||p.stimulateFloraTags.isEmpty())return;
-  for(WorldObject o:s.world.objects){if(!LivingWorldEngine.isLivingFlora(o)||!areaId.equals(o.areaId))continue;String identity=(o.tags==null?"":o.tags)+","+(o.dictionaryRef==null?"":o.dictionaryRef);if(!FantasyEcologyDictionary.anyTag(p.stimulateFloraTags,identity))continue;FloraLifeState f=LivingWorldEngine.flora(s,o.id);double pulse=p.stimulusStrength*minutes/18.0;f.sense.vibrationSense=cl(f.sense.vibrationSense+pulse*.22);f.growthPulse=cl(f.growthPulse+pulse*.15);f.body.strain=cl(f.body.strain-pulse*.04);f.cycle.growthReserve=cl(f.cycle.growthReserve+pulse*.10);}
+  for(WorldObject o:s.world.objects){if(!LivingWorldEngine.isLivingFlora(o)||!areaId.equals(o.areaId))continue;String identity=(o.tags==null?"":o.tags)+","+(o.dictionaryRef==null?"":o.dictionaryRef);if(!FantasyEcologyDictionary.anyTag(p.stimulateFloraTags,identity))continue;FloraLifeState f=LivingWorldEngine.flora(s,o.id);double pulse=p.stimulusStrength*minutes/18.0;f.sense.vibrationSense=cl(f.sense.vibrationSense+pulse*.22);f.growthPulse=cl(f.growthPulse+pulse*.15);f.body.strain=cl(f.body.strain-pulse*.04);if(f.cycle==null)f.cycle=new OrganismCycleState();f.cycle.growthReserve=cl(f.cycle.growthReserve+pulse*.10);}
  }
  public static String relationCue(WorldState s,WorldObject self){
   if(s==null||self==null)return"";String areaId=HaruVisionEngine.actualAreaId(s,self);WorldArea a=s.world.area(areaId);SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(a==null||p==null)return"";
