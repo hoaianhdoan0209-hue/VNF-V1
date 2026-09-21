@@ -8,6 +8,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("PERSONALITY TRACE V3"))return PersonalDevelopmentEngine.diagnostic(s,System.currentTimeMillis());
   if(q.equals("PLAN CAUSAL AUDIT V3"))return PlanCausalAudit.diagnostic(s);
   if(q.equals("VISIBLE BEHAVIOR V3"))return HaruVisibleBehaviorBridge.diagnostic(s,System.currentTimeMillis());
+  if(q.equals("WORLD LIBRARY V1")||q.equals("WORLD KNOWLEDGE V1"))return WorldKnowledgeAnchor.diagnostic(s.world);
   if(q.equals("WHY HARU")||q.equals("WHY HARU V2")){LifeDecisionEngine.choose(s,System.currentTimeMillis());return s.lastDecisionTrace;}
   if(q.equals("MEMORY GRAPH"))return LivingCharacterDiagnostics.memoryGraph(s);
   if(q.equals("BELIEF DIAGNOSTIC V2"))return LivingCharacterDiagnostics.beliefs(s);
