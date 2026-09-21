@@ -33,6 +33,11 @@ public final class LocalDialogueEngine {
                 return pick(s,raw,"Có. Hôm nay mình thấy nhẹ người hơn.","Ừ, khá vui. Không có lý do gì lớn, chỉ là thấy dễ chịu.");
             return pick(s,raw,"Bình thường thôi. Nhưng cũng không tệ.","Chưa hẳn vui lắm. Mình thấy yên hơn là vui.");
         }
+        if(containsAny(q,"tên gì","gọi là gì","cậu gọi","đặt tên","what do you call")){
+            String personal=HaruNamingEngine.nearestNamedVisible(s);
+            if(!personal.isEmpty())return pick(s,raw,"Mình không biết đó có phải tên thật không. Mình tự gọi nó là "+personal+".","Mình đặt một cái tên để dễ nhớ thôi: "+personal+". Mình chưa biết người khác có gọi như vậy không.");
+            return pick(s,raw,"Mình chưa có tên nào đủ quen cho nó. Mình vẫn đang nhìn và nhớ nó bằng hình dạng thôi.","Chưa. Mình thấy nó vài lần rồi nhưng chưa muốn đặt tên vội.");
+        }
         if(containsAny(q,"ai là","là ai","biết gì về","cậu biết","có biết")){
             if(s.thoughts!=null && !s.thoughts.isEmpty()){
                 ThoughtState t=s.thoughts.get(s.thoughts.size()-1);
