@@ -72,6 +72,7 @@ public final class PlanCausalAudit {
    "plan="+p.planId+" intention="+p.intentionId+" status="+p.status+"\n"+
    "arrival="+p.arrivedAt+" -> action="+p.actionResolvedAt+" -> learned="+p.outcomeLearnedAt+" -> review="+p.postOutcomeReviewedAt+"\n"+
    "memory="+(p.outcomeMemoryId.isEmpty()?"<none>":p.outcomeMemoryId)+" valid="+valid(s,p)+"\n"+
+   "review="+(p.lastOutcomeReview==null||p.lastOutcomeReview.isEmpty()?"<none>":p.lastOutcomeReview)+"\n"+
    "contract=arrival precedes action; action precedes learning; learned evidence precedes next-life review";
  }
 
