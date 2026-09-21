@@ -37,7 +37,17 @@ public final class V1FoundationDevTest{
     AtmosphereEvolutionEngine.advance(s,now);
     check(s.atmosphere.pressureKPa>90&&s.atmosphere.pressureKPa<=101.5,"local elevation produces bounded atmospheric pressure",ok,bad);
     check(s.atmosphere.relativeHumidity>=0&&s.atmosphere.relativeHumidity<=1,"biome/weather humidity stays bounded",ok,bad);
-   }catch(Throwable t){bad.add("cloned atmosphere step: "+t.getClass().getSimpleName());}
+
+    WorldState wake=WorldState.fromJson(original.toJson());wake.world=original.world;wake.haruActivity="idle";wake.body.energy=72;wake.body.sleepiness=22;
+    BodyRhythmEngine.advanceMinutes(wake,60);
+    check(wake.body.energy>70.8&&wake.body.energy<71.6,"quiet waking fatigue advances on real-hour timescale",ok,bad);
+    check(wake.body.sleepiness>23&&wake.body.sleepiness<25,"quiet waking sleep pressure grows gradually",ok,bad);
+
+    WorldState sleep=WorldState.fromJson(original.toJson());sleep.world=original.world;sleep.haruActivity="sleeping";sleep.body.energy=55;sleep.body.sleepiness=70;
+    BodyRhythmEngine.advanceMinutes(sleep,60);
+    check(sleep.body.energy>58&&sleep.body.energy<60,"sleep restores energy gradually over hours",ok,bad);
+    check(sleep.body.sleepiness>63&&sleep.body.sleepiness<66,"sleep reduces sleep pressure over real hours",ok,bad);
+   }catch(Throwable t){bad.add("cloned V1 simulation step: "+t.getClass().getSimpleName());}
   }else bad.add("world definition/library unavailable");
 
   StringBuilder b=new StringBuilder("V1 FOUNDATION TEST\nPASS ").append(ok.size()).append(" / FAIL ").append(bad.size()).append('\n');
