@@ -25,6 +25,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("HARU VISION"))return HaruVisionEngine.diagnostic(s);
   if(q.equals("ANATOMY TRACE")||q.equals("HARU ANATOMY"))return HumanAnatomyModel.diagnostic(s);
   if(q.equals("BIOLOGY TRACE")||q.equals("HARU PHYSIOLOGY"))return PhysiologyDiagnostics.trace(s);
+  if(q.equals("ECOLOGY TRACE")||q.equals("BIOME TRACE"))return EcologyEngine.diagnostic(s);
   if(q.equals("PERCEPTION TRACE"))return TravelDiagnostics.perception(s);
   if(q.equals("ROUTE TRACE"))return TravelDiagnostics.route(s);
   if(q.equals("DEV V08 TEST"))return V08DevTest.run(s);
