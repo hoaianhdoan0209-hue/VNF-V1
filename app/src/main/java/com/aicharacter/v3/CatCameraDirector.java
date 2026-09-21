@@ -29,6 +29,10 @@ public final class CatCameraDirector{
   }else if("SIT".equalsIgnoreCase(s.haruActivity)||"REST".equalsIgnoreCase(s.haruActivity)){
    elev=72f;lookY=430f;wanted="CHARACTER_REST";reason="Haru is resting: calmer medium framing";
   }
+  float encounterX=nearestLivingEncounterX(s);
+  if(Float.isFinite(encounterX)&&Math.abs(encounterX-s.haruX)<230f&&!(s.girlTravel!=null&&s.girlTravel.active)&&!"girl".equals(s.catState.attachedToEntity)){
+   lookX=s.haruX*.62f+encounterX*.38f;elev=94f;lookY=392f;wanted="LIFE_ENCOUNTER";reason="a nearby living organism shares the frame with Haru without taking control of her movement";
+  }
   double girlClear=s.girlPhysics==null?0:s.girlPhysics.groundClearanceM,catClear=s.catPhysics==null?0:s.catPhysics.groundClearanceM;
   float girlLift=(float)WorldUnits.mToPx(Math.max(0,girlClear)),catLift=(float)WorldUnits.mToPx(Math.max(0,catClear));
   boolean airborne=girlClear>.025||(s.girlPhysics!=null&&!s.girlPhysics.grounded);
@@ -50,5 +54,15 @@ public final class CatCameraDirector{
           " camera=0,"+(int)smoothElev+" air="+(int)smoothAir+" girlLift="+(int)girlLift+
           " look="+(int)lookX+","+(int)lookY+" manual=false reason="+reason;
   return new Frame(cameraX,smoothElev,lookX,lookY,smoothAir,girlLift,wanted,reason);
+ }
+ private static float nearestLivingEncounterX(WorldState s){
+  if(s==null||s.world==null)return Float.NaN;WorldArea haruArea=s.world.areaAt(s.haruX);if(haruArea==null)return Float.NaN;
+  float best=Float.NaN,bestD=Float.MAX_VALUE;
+  if(s.reedling!=null&&haruArea.id.equals(s.reedling.areaId)){float d=Math.abs(s.reedling.x-s.haruX);if(d<bestD){bestD=d;best=s.reedling.x;}}
+  if(s.livingWorld!=null)for(WorldObject o:s.world.objects){
+   if(!LivingWorldEngine.isGenericCreature(o,s))continue;CreatureLifeState x=s.livingWorld.creatures.get(o.id);if(x==null||!haruArea.id.equals(x.areaId))continue;
+   float d=Math.abs(x.x-s.haruX);if(d<bestD){bestD=d;best=x.x;}
+  }
+  return bestD<=260f?best:Float.NaN;
  }
 }
