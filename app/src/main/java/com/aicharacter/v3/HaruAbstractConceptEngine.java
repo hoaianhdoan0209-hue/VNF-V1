@@ -20,8 +20,12 @@ public final class HaruAbstractConceptEngine{
   return safe*4.5+shelter*(4+10*needShelter)+life*(2+12*needLife)+help*5+interest*(1+7*needCur)-danger*(5+12*n.safety/100.0)-bad*(2+9*n.physicalComfort/100.0);
  }
  public static String currentSummary(WorldState s){
-  if(s==null||s.abstractMeanings==null)return"";String key="place:"+HaruPerception.currentPlaceId(s);AbstractMeaningState.Anchor a=s.abstractMeanings.anchors.get(key);if(a==null)return"";List<String>x=new ArrayList<>();for(String m:new String[]{SAFE,DANGER,SHELTER,LIFE_SOURCE,HELPFUL,UNCOMFORTABLE,INTERESTING}){double c=meaningAt(s,key,m);if(c>=.34)x.add(label(m)+" ("+certainty(c)+")");}if(x.isEmpty())return"";return"Mình đang dần hiểu nơi này là "+join(x)+". Đó là cách mình rút ra từ những lần ở đây, không phải điều mình biết chắc từ trước.";
+  if(s==null||s.abstractMeanings==null)return"";String placeKey="place:"+HaruPerception.currentPlaceId(s);List<String>place=meaningLabels(s,placeKey);String objectSummary="";
+  HaruVisionEngine.Snapshot v=HaruVisionEngine.observe(s);for(HaruVisionEngine.Seen seen:v.seen){String key="object:"+seen.id;List<String>x=meaningLabels(s,key);if(x.isEmpty())continue;WorldObject o=s.world==null?null:s.world.object(seen.id);String name=o==null?seen.label:HaruNamingEngine.personalOrDescription(s,o);objectSummary=" Với "+name+", mình đang nghi nó là "+join(x)+".";break;}
+  if(place.isEmpty()&&objectSummary.isEmpty())return"";String base=place.isEmpty()?"":("Mình đang dần hiểu nơi này là "+join(place)+".");return base+objectSummary+" Đó đều là ý nghĩa mình rút ra từ trải nghiệm, nên mình vẫn có thể đổi ý.";
  }
+ private static List<String> meaningLabels(WorldState s,String key){List<String>x=new ArrayList<>();for(String m:new String[]{SAFE,DANGER,SHELTER,LIFE_SOURCE,HELPFUL,UNCOMFORTABLE,INTERESTING}){double c=meaningAt(s,key,m);if(c>=.34)x.add(label(m)+" ("+certainty(c)+")");}return x;}
+
  public static String diagnostic(WorldState s){
   ensure(s);StringBuilder b=new StringBuilder("HARU ABSTRACT MEANINGS\n");for(AbstractMeaningState.Anchor a:s.abstractMeanings.anchors.values()){b.append(readableAnchor(s,a.key)).append(" | obs=").append(a.observations);for(String m:new String[]{SAFE,DANGER,SHELTER,LIFE_SOURCE,HELPFUL,UNCOMFORTABLE,INTERESTING}){AbstractMeaningState.Meaning x=a.meanings.get(m);if(x!=null&&x.confidence>.05)b.append(" | ").append(m).append("=").append(fmt(x.confidence)).append("[+").append(x.support).append("/-").append(x.contradictions).append("]");}b.append('\n');}return b.toString();
  }
