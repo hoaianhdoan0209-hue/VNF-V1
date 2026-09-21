@@ -30,6 +30,14 @@ public final class V1FoundationDevTest{
    }
    check(creatures>=7,"launch world contains multiple authored fictional creatures",ok,bad);
    check(!copiedRealSpecies,"authored fauna are not direct real-species copies",ok,bad);
+   for(WorldArea area:original.world.areas){
+    boolean living=false;
+    for(WorldObject o:original.world.objects){
+     if(!o.enabled||!area.id.equals(o.areaId))continue;
+     if("creature".equals(o.type)||LivingWorldEngine.isLivingFlora(o)){living=true;break;}
+    }
+    check(living,"launch biome "+area.id+" contains visible persistent life",ok,bad);
+   }
 
    try{
     WorldState s=WorldState.fromJson(original.toJson());s.world=original.world;
@@ -37,6 +45,14 @@ public final class V1FoundationDevTest{
     AtmosphereEvolutionEngine.advance(s,now);
     check(s.atmosphere.pressureKPa>90&&s.atmosphere.pressureKPa<=101.5,"local elevation produces bounded atmospheric pressure",ok,bad);
     check(s.atmosphere.relativeHumidity>=0&&s.atmosphere.relativeHumidity<=1,"biome/weather humidity stays bounded",ok,bad);
+    WorldObject physical=null;for(WorldObject o:s.world.objects)if(LivingWorldEngine.isGenericCreature(o,s)){physical=o;break;}
+    if(physical!=null){
+     CreatureLifeState pc=s.livingWorld.creature(physical.id);pc.areaId=physical.areaId;pc.x=physical.x;
+     CreaturePhysicsEngine.advanceLocal(s,physical,pc,.04,now);
+     WorldArea pa=s.world.area(pc.areaId);
+     check(pa!=null&&pc.x>=pa.left&&pc.x<=pa.right,"creature physics stays inside its habitat area",ok,bad);
+     check(Double.isFinite(pc.velocityXMps)&&Double.isFinite(pc.verticalOffsetM),"creature motion state remains finite",ok,bad);
+    }else bad.add("no generic creature available for physics gate");
 
     WorldState wake=WorldState.fromJson(original.toJson());wake.world=original.world;wake.haruActivity="idle";wake.body.energy=72;wake.body.sleepiness=22;
     BodyRhythmEngine.advanceMinutes(wake,60);
