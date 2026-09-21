@@ -7,7 +7,7 @@ public final class BodyRhythmEngine {
   if(isSleeping(s)){
    // Sustained sleep restores the body over real hours, not as a one-frame reward.
    s.body.energy+=minutes*.12;       // ~7.2 points/hour
-   s.body.sleepiness-=minutes*.15;  // ~9 points/hour
+   double endocrineRecovery=s.endocrine==null?1:(.88+.12*s.endocrine.recoverySignal);s.body.sleepiness-=minutes*.15*endocrineRecovery;  // ~9 points/hour
    if(s.body.pain>0)s.body.pain-=minutes*.006;
    if(s.body.health<100)s.body.health+=minutes*(s.body.hasInjury()?.0025:.004);
   }else if(isResting(s)){
@@ -18,7 +18,7 @@ public final class BodyRhythmEngine {
   }else{
    // Awake baseline: roughly 3 energy points and 4 sleepiness points per real hour.
    s.body.energy-=minutes*.050;
-   s.body.sleepiness+=minutes*.067;
+   double circadian=s.endocrine==null?.25:s.endocrine.circadianSleepSignal;s.body.sleepiness+=minutes*(.052+.030*circadian);
   }
   s.body.clamp();
  }
