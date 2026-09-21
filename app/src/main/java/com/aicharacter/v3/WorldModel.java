@@ -14,6 +14,7 @@ public final class WorldModel {
     public final List<WorldArea> areas=new ArrayList<>();
     public final List<WorldObject> objects=new ArrayList<>();
     public final Map<String,BiomeProfile> biomes=new LinkedHashMap<>();
+    public final List<WorldKnowledgeAnchor> knowledgeAnchors=new ArrayList<>();
 
     public WorldArea areaAt(float x){ for(WorldArea a:areas) if(a.contains(x)) return a; return null; }
     public WorldArea area(String id){ for(WorldArea a:areas) if(a.id.equals(id)) return a; return null; }
