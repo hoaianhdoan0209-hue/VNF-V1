@@ -1,5 +1,5 @@
 {
-  "worldDefinitionVersion": 6,
+  "worldDefinitionVersion": 7,
   "worldId": "vnf_lakeside_home_v1",
   "areas": [
     {
@@ -280,6 +280,44 @@
       "zOrder": 2,
       "interactionX": 2160,
       "interactionRadius": 54
+    },
+    {
+      "id": "driftwing_01",
+      "type": "creature",
+      "areaId": "garden_path",
+      "assetRef": "",
+      "haruDescription": "một sinh vật mỏng như dải lụa, lơ lửng thấp và đổi hướng khi cảm nhận rung động",
+      "x": 910,
+      "ground": 790,
+      "width": 48,
+      "height": 34,
+      "tags": "creature,driftwing,verge,mist",
+      "habitat": "verge,mist,driftwing",
+      "interactable": false,
+      "collision": false,
+      "renderLayer": "ACTORS",
+      "safeEditable": "position,enabled",
+      "interactionX": 910,
+      "interactionRadius": 55
+    },
+    {
+      "id": "root_husher_01",
+      "type": "creature",
+      "areaId": "quiet_grove",
+      "assetRef": "",
+      "haruDescription": "một sinh vật thấp có những phiến cảm nhận áp sát mặt rễ, thường dừng lại khi nền đất rung",
+      "x": 2240,
+      "ground": 844,
+      "width": 58,
+      "height": 42,
+      "tags": "creature,root_husher,veilroot,shade",
+      "habitat": "veilroot,shade,hushling",
+      "interactable": false,
+      "collision": false,
+      "renderLayer": "ACTORS",
+      "safeEditable": "position,enabled",
+      "interactionX": 2240,
+      "interactionRadius": 55
     }
   ],
   "visualProfile": {
