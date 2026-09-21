@@ -45,6 +45,26 @@ public final class PlanCausalAudit {
   return true;
  }
 
+ public static boolean reportIfInvalid(WorldState s,long now){
+  PlanState p=s==null?null:s.planState;
+  if(p==null||valid(s,p))return false;
+  String marker="plan="+p.planId;
+  if(s.developerReports!=null){
+   for(int i=s.developerReports.size()-1;i>=0&&i>=s.developerReports.size()-24;i--){
+    DeveloperReport r=s.developerReports.get(i);
+    if(r!=null&&"PLAN_CAUSAL_AUDIT".equals(r.category)&&r.context!=null&&r.context.contains(marker))return true;
+   }
+   s.developerReports.add(new DeveloperReport(
+    now,"PLAN_CAUSAL_AUDIT","ERROR","PlanCausalAudit",
+    "Plan lifecycle phases are missing or out of causal order.",
+    "arrival/action/learning/review ordering violation",
+    marker+" arrival="+p.arrivedAt+" action="+p.actionResolvedAt+" learned="+p.outcomeLearnedAt+" review="+p.postOutcomeReviewedAt+" memory="+p.outcomeMemoryId,
+    "Do not auto-repair cognition. Preserve the save and inspect the lifecycle integration."));
+   while(s.developerReports.size()>80)s.developerReports.remove(0);
+  }
+  return true;
+ }
+
  public static String diagnostic(WorldState s){
   PlanState p=s==null?null:s.planState;
   if(p==null)return "PLAN CAUSAL AUDIT V3 <no plan>";
