@@ -2,7 +2,7 @@ package com.aicharacter.v3;
 import java.util.*;
 /** Haru learns fictional VNF herbs only from observation and real trial outcomes. No real-world medical guidance. */
 public final class HerbalismEngine{
- private static final String[] METHODS={"RINSE_CRUSH","WARM_STEEP","DRY_CRUSH"};
+ private static final String[] METHODS={"DEW_FOLD","LUMEN_REST","ECHO_DRY"};
  private HerbalismEngine(){}
  public static boolean isHerb(WorldObject o){return o!=null&&"herb".equals(o.type)&&HerbalDictionary.get(o.dictionaryRef)!=null;}
  public static HerbDefinition definition(WorldObject o){return isHerb(o)?HerbalDictionary.get(o.dictionaryRef):null;}
