@@ -2,7 +2,7 @@ package com.aicharacter.v3;
 import java.util.Arrays;
 import org.json.JSONObject;
 
-/** Non-destructive checks for the V3 personality/expression foundation. */
+/** Non-destructive checks for the V3 personality/expression/causal foundation. */
 public final class V3FoundationDevTest {
  private V3FoundationDevTest(){}
 
@@ -20,6 +20,16 @@ public final class V3FoundationDevTest {
    double delta=learned.personality.curiosity-before;
    boolean slowLearning=delta>0&&delta<.01&&bounded(learned.personality);
 
+   PersonalityState mature=new PersonalityState();
+   mature.curiosity=.72;mature.curiosityEvidence=120;mature.normalize();
+   double matureBefore=mature.curiosity;
+   mature.slowlyLearn("explore",-1,1.5);
+   double oneShockDrop=matureBefore-mature.curiosity;
+   double afterOne=mature.curiosity;
+   for(int i=0;i<12;i++)mature.slowlyLearn("explore",-1,1.5);
+   double repeatedDrop=afterOne-mature.curiosity;
+   boolean contradictionResistance=oneShockDrop>0&&oneShockDrop<.0025&&mature.curiosityOpposition>=0&&repeatedDrop>oneShockDrop;
+
    String intention=learned.currentIntention;
    String planId=learned.planState==null?"":learned.planState.planId;
    boolean travelling=learned.girlTravel!=null&&learned.girlTravel.active;
@@ -35,13 +45,26 @@ public final class V3FoundationDevTest {
     near(active.body.sleepiness,offline.body.sleepiness)&&
     near(active.emotion.curiosity,offline.emotion.curiosity);
 
-   boolean pass=slowLearning&&expressionReadOnly&&clockParity;
+   WorldState causal=copy(source,now);
+   PlanState p=new PlanState();p.planId="dev_v3_causal";p.intentionId="observe_lake";p.status="COMPLETED";
+   p.arrivedAt=now-3000;p.actionResolvedAt=now-2000;p.lastProgressAt=now-15000;
+   MemoryEntry outcome=new MemoryEntry("dev_v3_outcome_memory",now-1000,"planned_action_outcome","synthetic causal audit outcome",.42,.12,.95,"lakeside",null,Arrays.asList("observe_lake","success"));
+   causal.memories.add(outcome);p.outcomeMemoryId=outcome.memoryId;p.outcomeLearnedAt=outcome.time;causal.planState=p;
+   String beforeReviewIntention=causal.currentIntention;boolean beforeReviewTravel=causal.girlTravel.active;
+   boolean reviewed=PlanOutcomeReviewEngine.reviewIfReady(causal,now);
+   boolean causalOrdering=reviewed&&PlanCausalAudit.valid(causal,p)&&p.postOutcomeReviewedAt>=p.outcomeLearnedAt&&
+    same(beforeReviewIntention,causal.currentIntention)&&beforeReviewTravel==causal.girlTravel.active;
+   PlanState broken=new PlanState();broken.planId="dev_v3_broken";broken.arrivedAt=now-1000;broken.actionResolvedAt=now;broken.outcomeLearnedAt=now-5000;
+   boolean catchesBrokenOrder=!PlanCausalAudit.valid(causal,broken);
+
+   boolean pass=slowLearning&&contradictionResistance&&expressionReadOnly&&clockParity&&causalOrdering&&catchesBrokenOrder;
    return "DEV V3 FOUNDATION: "+(pass?"PASS":"FAIL")+"\n"+
     "slowLearning="+slowLearning+" deltaCuriosity="+fmt(delta)+"\n"+
-    "expressionReadOnly="+expressionReadOnly+" visible="+
-      (expression.stageDirection().isEmpty()?"<none>":expression.stageDirection())+"\n"+
+    "contradictionResistance="+contradictionResistance+" oneShockDrop="+fmt(oneShockDrop)+" repeatedDrop="+fmt(repeatedDrop)+"\n"+
+    "expressionReadOnly="+expressionReadOnly+" visible="+(expression.stageDirection().isEmpty()?"<none>":expression.stageDirection())+"\n"+
     "activeOfflineClockParity="+clockParity+"\n"+
-    "contract=memory/outcome -> slow personality -> contextual expression; plans remain autonomous";
+    "causalOrdering="+causalOrdering+" catchesBrokenOrder="+catchesBrokenOrder+"\n"+
+    "contract=arrival -> action -> learned outcome -> review; personality changes slowly under repeated lived evidence";
   }catch(Exception e){
    return "DEV V3 FOUNDATION: FAIL "+e.getClass().getSimpleName()+": "+e.getMessage();
   }
