@@ -4,7 +4,7 @@ import java.util.*;
 
 /** Persistent intention execution state. Arrival, action, learning and review are distinct causal steps. */
 public final class PlanState{
- public String planId="",intentionId="",goal="",status="IDLE",lastReason="",destination="",plannedAction="",lastDecision="",lastArrival="",lastAction="",lastOutcome="",pauseReason="";
+ public String planId="",intentionId="",goal="",status="IDLE",lastReason="",destination="",plannedAction="",lastDecision="",lastArrival="",lastAction="",lastOutcome="",pauseReason="",lastOutcomeReview="";
  public String outcomeMemoryId="";
  public double commitment=0;
  public long createdAt=0,lastReconsideredAt=0,pausedAt=0,lastProgressAt=0;
@@ -21,7 +21,7 @@ public final class PlanState{
  public JSONObject toJson(){JSONObject j=new JSONObject();try{
   j.put("planId",planId);j.put("intentionId",intentionId);j.put("goal",goal);j.put("status",status);j.put("lastReason",lastReason);
   j.put("destination",destination);j.put("plannedAction",plannedAction);j.put("lastDecision",lastDecision);j.put("lastArrival",lastArrival);
-  j.put("lastAction",lastAction);j.put("lastOutcome",lastOutcome);j.put("pauseReason",pauseReason);j.put("outcomeMemoryId",outcomeMemoryId);
+  j.put("lastAction",lastAction);j.put("lastOutcome",lastOutcome);j.put("pauseReason",pauseReason);j.put("lastOutcomeReview",lastOutcomeReview);j.put("outcomeMemoryId",outcomeMemoryId);
   j.put("commitment",commitment);j.put("createdAt",createdAt);j.put("lastReconsideredAt",lastReconsideredAt);j.put("pausedAt",pausedAt);
   j.put("lastProgressAt",lastProgressAt);j.put("arrivedAt",arrivedAt);j.put("actionResolvedAt",actionResolvedAt);j.put("outcomeLearnedAt",outcomeLearnedAt);
   j.put("postOutcomeReviewedAt",postOutcomeReviewedAt);j.put("steps",new JSONArray(steps));j.put("stepIndex",stepIndex);
@@ -31,7 +31,7 @@ public final class PlanState{
   p.planId=j.optString("planId","");p.intentionId=j.optString("intentionId","");p.goal=j.optString("goal","");p.status=j.optString("status","IDLE");
   p.lastReason=j.optString("lastReason","");p.destination=j.optString("destination","");p.plannedAction=j.optString("plannedAction","");
   p.lastDecision=j.optString("lastDecision","");p.lastArrival=j.optString("lastArrival","");p.lastAction=j.optString("lastAction","");
-  p.lastOutcome=j.optString("lastOutcome","");p.pauseReason=j.optString("pauseReason","");p.outcomeMemoryId=j.optString("outcomeMemoryId","");
+  p.lastOutcome=j.optString("lastOutcome","");p.pauseReason=j.optString("pauseReason","");p.lastOutcomeReview=j.optString("lastOutcomeReview","");p.outcomeMemoryId=j.optString("outcomeMemoryId","");
   p.commitment=j.optDouble("commitment",0);p.createdAt=j.optLong("createdAt",0);p.lastReconsideredAt=j.optLong("lastReconsideredAt",0);
   p.pausedAt=j.optLong("pausedAt",0);p.lastProgressAt=j.optLong("lastProgressAt",p.createdAt);p.arrivedAt=j.optLong("arrivedAt",0);
   p.actionResolvedAt=j.optLong("actionResolvedAt",0);p.outcomeLearnedAt=j.optLong("outcomeLearnedAt",0);p.postOutcomeReviewedAt=j.optLong("postOutcomeReviewedAt",0);
