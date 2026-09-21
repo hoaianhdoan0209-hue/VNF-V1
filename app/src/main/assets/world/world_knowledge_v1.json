@@ -1,0 +1,215 @@
+{
+  "libraryVersion": 1,
+  "policy": "Real-world knowledge is a reference and constraint layer. It must be transformed into fictional VNF content before becoming authored world truth. Do not copy article prose or import real species as VNF fauna.",
+  "anchors": [
+    {
+      "id": "physics.gravity",
+      "domain": "physics",
+      "realAnchor": "Massive bodies accelerate unsupported objects; near Earth's surface the familiar reference acceleration is about 9.81 m/s^2.",
+      "fantasyRule": "Use consistent SI mechanics and gravity as a physical constraint, while terrain/materials/organisms remain fictional.",
+      "sourceFamily": "Open science / Wikimedia-style reference graph",
+      "sourceRef": "gravity; acceleration; classical mechanics",
+      "tags": [
+        "gravity",
+        "mass",
+        "acceleration",
+        "impact"
+      ]
+    },
+    {
+      "id": "physics.friction",
+      "domain": "physics",
+      "realAnchor": "Contact friction and surface conditions constrain acceleration, braking and slipping.",
+      "fantasyRule": "Let rain, fictional ground materials and slope alter traction without inventing arbitrary movement buffs.",
+      "sourceFamily": "Open science / Wikimedia-style reference graph",
+      "sourceRef": "friction; coefficient of friction; slope",
+      "tags": [
+        "traction",
+        "rain",
+        "slope",
+        "movement"
+      ]
+    },
+    {
+      "id": "atmosphere.gases",
+      "domain": "atmosphere",
+      "realAnchor": "A breathable atmosphere is a mixture of gases; pressure and oxygen availability influence respiration.",
+      "fantasyRule": "Keep physically coherent pressure and respiratory availability, but permit fictional trace gases only when explicitly authored and non-magical effects are bounded.",
+      "sourceFamily": "Open science / Wikimedia-style reference graph",
+      "sourceRef": "atmosphere; oxygen; nitrogen; carbon dioxide",
+      "tags": [
+        "air",
+        "pressure",
+        "oxygen",
+        "respiration"
+      ]
+    },
+    {
+      "id": "atmosphere.humidity",
+      "domain": "atmosphere",
+      "realAnchor": "Temperature, humidity, pressure and moving air affect thermal comfort, evaporation, cloud formation and weather.",
+      "fantasyRule": "Drive mist, rain, wetness and thermal load from continuous fields before naming a weather state.",
+      "sourceFamily": "Open science / Wikimedia-style reference graph",
+      "sourceRef": "humidity; cloud; precipitation; weather",
+      "tags": [
+        "humidity",
+        "cloud",
+        "rain",
+        "thermal"
+      ]
+    },
+    {
+      "id": "biology.homeostasis",
+      "domain": "biology",
+      "realAnchor": "Living bodies regulate internal conditions while activity, hydration, nutrition, temperature and injury impose competing demands.",
+      "fantasyRule": "Haru's body uses human-like physiological constraints; fictional organisms use their own body/sense states rather than copied Earth anatomy.",
+      "sourceFamily": "Open biology / Wikimedia-style reference graph",
+      "sourceRef": "homeostasis; metabolism; physiology",
+      "tags": [
+        "body",
+        "energy",
+        "recovery",
+        "stress"
+      ]
+    },
+    {
+      "id": "biology.respiration",
+      "domain": "biology",
+      "realAnchor": "Respiration depends on available oxygen, ventilation and circulation; exertion raises demand.",
+      "fantasyRule": "Make breath load, oxygen delivery and exertion causally affect visible motion and recovery without exposing engine numbers to Haru.",
+      "sourceFamily": "Open biology / Wikimedia-style reference graph",
+      "sourceRef": "respiration; circulation; oxygen saturation",
+      "tags": [
+        "breathing",
+        "oxygen",
+        "circulation",
+        "exercise"
+      ]
+    },
+    {
+      "id": "biology.ecology",
+      "domain": "ecology",
+      "realAnchor": "Organisms occupy niches shaped by resources, climate, competition, disturbance and movement between habitats.",
+      "fantasyRule": "Invent species and food/resource relations, but make habitat suitability, migration and activity respond to measurable world conditions.",
+      "sourceFamily": "Open ecology / Wikimedia-style reference graph",
+      "sourceRef": "ecology; ecological niche; habitat; migration",
+      "tags": [
+        "niche",
+        "habitat",
+        "resource",
+        "migration"
+      ]
+    },
+    {
+      "id": "biology.evolution",
+      "domain": "ecology",
+      "realAnchor": "Populations adapt across generations through heritable variation and selection pressures.",
+      "fantasyRule": "Use evolutionary logic to design fictional forms and senses; do not claim individual creatures instantly evolve during gameplay.",
+      "sourceFamily": "Open biology / Wikimedia-style reference graph",
+      "sourceRef": "evolution; natural selection; adaptation",
+      "tags": [
+        "adaptation",
+        "species",
+        "selection"
+      ]
+    },
+    {
+      "id": "hydrology.water_cycle",
+      "domain": "hydrology",
+      "realAnchor": "Water moves through evaporation, condensation, precipitation, runoff, storage and infiltration.",
+      "fantasyRule": "Use a coherent moisture cycle to drive fictional lakes, mist-fed biomes and plant water balance.",
+      "sourceFamily": "Open Earth science / Wikimedia-style reference graph",
+      "sourceRef": "water cycle; precipitation; evaporation; infiltration",
+      "tags": [
+        "water",
+        "rain",
+        "mist",
+        "soil"
+      ]
+    },
+    {
+      "id": "geology.terrain",
+      "domain": "geology",
+      "realAnchor": "Terrain, substrate, erosion, deposition and material strength constrain drainage, slopes and habitats.",
+      "fantasyRule": "Create imaginary minerals and landforms but preserve causal consequences for footing, water and ecology.",
+      "sourceFamily": "Open Earth science / Wikimedia-style reference graph",
+      "sourceRef": "geomorphology; erosion; sediment; rock",
+      "tags": [
+        "terrain",
+        "material",
+        "erosion",
+        "habitat"
+      ]
+    },
+    {
+      "id": "astronomy.light_cycle",
+      "domain": "astronomy",
+      "realAnchor": "Rotation and orbital geometry create changing illumination cycles and seasonal energy patterns.",
+      "fantasyRule": "VNF may use a fictional sky body/system, but illumination changes must be internally consistent and feed environment cycles.",
+      "sourceFamily": "Open astronomy / Wikimedia-style reference graph",
+      "sourceRef": "rotation; orbit; illumination; day-night cycle",
+      "tags": [
+        "light",
+        "day",
+        "night",
+        "cycle"
+      ]
+    },
+    {
+      "id": "thermodynamics.heat",
+      "domain": "physics",
+      "realAnchor": "Heat transfer occurs through conduction, convection and radiation; phase and moisture alter energy exchange.",
+      "fantasyRule": "Use heat balance to drive body thermal strain and environmental transitions while fictional materials may have authored properties.",
+      "sourceFamily": "Open physics / Wikimedia-style reference graph",
+      "sourceRef": "heat transfer; convection; radiation; conduction",
+      "tags": [
+        "temperature",
+        "heat",
+        "body",
+        "weather"
+      ]
+    },
+    {
+      "id": "cognition.learning",
+      "domain": "cognition",
+      "realAnchor": "Learning updates expectations from experience; repeated evidence, novelty and contradiction can have different influence.",
+      "fantasyRule": "Haru learns only from lived evidence/teaching and changes slowly; reference knowledge cannot directly overwrite personality or memories.",
+      "sourceFamily": "Open cognitive science / Wikimedia-style reference graph",
+      "sourceRef": "learning; memory; prediction; habituation",
+      "tags": [
+        "memory",
+        "learning",
+        "evidence",
+        "personality"
+      ]
+    },
+    {
+      "id": "materials.structure",
+      "domain": "materials",
+      "realAnchor": "Material structure affects stiffness, strength, fracture, permeability and thermal behavior.",
+      "fantasyRule": "Fantasy materials can be unfamiliar, but their observed properties must remain stable enough for Haru and creatures to learn causal expectations.",
+      "sourceFamily": "Open materials science / Wikimedia-style reference graph",
+      "sourceRef": "materials science; strength; permeability; fracture",
+      "tags": [
+        "material",
+        "structure",
+        "collision",
+        "shelter"
+      ]
+    },
+    {
+      "id": "information.provenance",
+      "domain": "knowledge",
+      "realAnchor": "Reliable knowledge systems preserve source, revision and uncertainty instead of presenting every claim as equally certain.",
+      "fantasyRule": "God may consult broad reference knowledge, but every VNF library anchor keeps provenance and the world only commits explicitly authored fictional facts.",
+      "sourceFamily": "Wikimedia/Wikidata-inspired open knowledge practice",
+      "sourceRef": "provenance; knowledge graph; revision history",
+      "tags": [
+        "source",
+        "provenance",
+        "uncertainty",
+        "library"
+      ]
+    }
+  ]
+}

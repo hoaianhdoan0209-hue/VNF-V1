@@ -33,6 +33,21 @@ public final class LocalDialogueEngine {
                 return pick(s,raw,"Có. Hôm nay mình thấy nhẹ người hơn.","Ừ, khá vui. Không có lý do gì lớn, chỉ là thấy dễ chịu.");
             return pick(s,raw,"Bình thường thôi. Nhưng cũng không tệ.","Chưa hẳn vui lắm. Mình thấy yên hơn là vui.");
         }
+        if(containsAny(q,"tên gì","gọi là gì","cậu gọi","đặt tên","what do you call")){
+            String personal=HaruNamingEngine.nearestNamedVisible(s);
+            if(!personal.isEmpty())return pick(s,raw,"Mình không biết đó có phải tên thật không. Mình tự gọi nó là "+personal+".","Mình đặt một cái tên để dễ nhớ thôi: "+personal+". Mình chưa biết người khác có gọi như vậy không.");
+            return pick(s,raw,"Mình chưa có tên nào đủ quen cho nó. Mình vẫn đang nhìn và nhớ nó bằng hình dạng thôi.","Chưa. Mình thấy nó vài lần rồi nhưng chưa muốn đặt tên vội.");
+        }
+        if(containsAny(q,"an toàn","nguy hiểm","trú","có ích","khó chịu","nguồn sống","đáng tò mò","safe","danger","shelter","helpful")){
+            String meaning=HaruAbstractConceptEngine.currentSummary(s);
+            if(!meaning.isEmpty())return meaning;
+            return pick(s,raw,"Mình chưa trải qua đủ ở đây để dám gọi nó là an toàn hay nguy hiểm.","Mình có cảm giác riêng, nhưng chưa đủ lần để biến nó thành một điều mình thật sự tin.");
+        }
+        if(containsAny(q,"cùng loại","giống nhau","cùng nhóm","nhóm nào","same kind","same group")){
+            String concept=HaruConceptEngine.nearestVisibleConceptSummary(s);
+            if(!concept.isEmpty())return concept;
+            return pick(s,raw,"Mình chưa thấy đủ điểm lặp lại để xếp chúng vào cùng một nhóm.","Có vài nét giống nhau, nhưng mình chưa muốn gọi chúng là cùng loại khi chưa quan sát thêm.");
+        }
         if(containsAny(q,"ai là","là ai","biết gì về","cậu biết","có biết")){
             if(s.thoughts!=null && !s.thoughts.isEmpty()){
                 ThoughtState t=s.thoughts.get(s.thoughts.size()-1);
@@ -73,6 +88,8 @@ public final class LocalDialogueEngine {
             return pick(s,raw,"Ừ, mình nghe. Nhưng lúc nãy mình còn đang tìm cậu đấy.","Nghe thấy rồi. Cậu làm mình mất công tìm quanh đây một lúc đấy nhé.");
         if("observe_lake".equals(intention))
             return pick(s,raw,"Ừ. Mình đang nhìn mặt hồ nên hơi lơ đãng một chút.","Mình nghe. Gió ngoài hồ làm đầu mình cứ chạy sang chuyện khác một chút thôi.");
+        if("compare_concept".equals(intention))
+            return pick(s,raw,"Mình đang xem lại một nhóm mình tự nghĩ ra. Có thể mình đã gom chúng hơi vội.","Mình muốn nhìn kỹ thêm. Mấy thứ này có vài nét giống nhau nhưng mình chưa chắc chúng thật sự cùng loại.");
         if("rest".equals(intention) || "seek_shelter".equals(intention))
             return pick(s,raw,"Mình nghe đây. Nhưng mình muốn nghỉ thêm một chút trước.","Ừ. Nói với mình được, chỉ là mình chưa muốn đứng dậy lúc này.");
 

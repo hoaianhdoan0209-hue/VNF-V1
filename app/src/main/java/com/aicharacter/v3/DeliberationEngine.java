@@ -3,34 +3,13 @@ import java.util.*;
 /** Offline deliberation: lived memory, revisable beliefs, learned preferences and slowly developed personality. */
 public final class DeliberationEngine {
  private DeliberationEngine(){}
- public static void apply(WorldState s,List<LifeDecision> candidates,long now){
-  if(candidates==null||candidates.isEmpty())return;
-  String here=HaruPerception.currentPlaceId(s);
-  for(LifeDecision d:candidates){
-   String id=d.intention.id;
-   PreferenceState learned=s.preferences.get("activity:"+activity(id));
-   if(learned!=null)d.reason("learned_outcome",learned.value*12);
-   double remembered=memoryFor(s,id,here,now);if(Math.abs(remembered)>.01)d.reason("recalled_outcomes",remembered);
-   double belief=beliefSupport(s,id);if(Math.abs(belief)>.01)d.reason("belief_model",belief);
-   double personal=PersonalDevelopmentEngine.expression(s,id);if(Math.abs(personal)>.01)d.reason("developed_personality",personal);
-   double uncertainty=uncertainty(s,id);d.reason("uncertainty",-uncertainty*(4+6*s.personality.caution));
-   d.intention.utility=sum(d.reasons)+(id.equals(s.currentIntention)?5:0);
-  }
-  double best=-Double.MAX_VALUE;for(LifeDecision d:candidates)best=Math.max(best,d.intention.utility);
-  for(LifeDecision d:candidates)if(best-d.intention.utility<=4.5){double v=tieVariation(s,d.intention.id,now);d.reason("near_tie_variation",v);d.intention.utility+=v;}
- }
- public static void recordThought(WorldState s,List<LifeDecision> candidates,LifeDecision selected,long now){
-  if(selected==null)return;double second=-Double.MAX_VALUE;for(LifeDecision d:candidates)if(d!=selected)second=Math.max(second,d.intention.utility);
-  double gap=second==-Double.MAX_VALUE?20:selected.intention.utility-second;double u=clamp01(.62-gap/18.0);
-  String trigger=dominant(selected.reasons);ThoughtState t=new ThoughtState("deliberation:"+selected.intention.id,trigger,selected.intention.id,u,clamp01(.25+Math.abs(selected.intention.utility)/80.0),now);
-  for(MemoryEntry m:MemoryRetrievalEngine.retrieve(s,HaruPerception.currentPlaceId(s),null,activity(selected.intention.id),selected.intention.id,3,now))t.relatedMemories.add(m.memoryId);
-  s.thoughts.add(t);while(s.thoughts.size()>80)s.thoughts.remove(0);
- }
+ public static void apply(WorldState s,List<LifeDecision> candidates,long now){if(candidates==null||candidates.isEmpty())return;String here=HaruPerception.currentPlaceId(s);for(LifeDecision d:candidates){String id=d.intention.id;PreferenceState learned=s.preferences.get("activity:"+activity(id));if(learned!=null)d.reason("learned_outcome",learned.value*12);double remembered=memoryFor(s,id,here,now);if(Math.abs(remembered)>.01)d.reason("recalled_outcomes",remembered);double belief=beliefSupport(s,id);if(Math.abs(belief)>.01)d.reason("belief_model",belief);double personal=PersonalDevelopmentEngine.expression(s,id);if(Math.abs(personal)>.01)d.reason("developed_personality",personal);double uncertainty=uncertainty(s,id);d.reason("uncertainty",-uncertainty*(4+6*s.personality.caution));d.intention.utility=sum(d.reasons)+(id.equals(s.currentIntention)?5:0);}double best=-Double.MAX_VALUE;for(LifeDecision d:candidates)best=Math.max(best,d.intention.utility);for(LifeDecision d:candidates)if(best-d.intention.utility<=4.5){double v=tieVariation(s,d.intention.id,now);d.reason("near_tie_variation",v);d.intention.utility+=v;}}
+ public static void recordThought(WorldState s,List<LifeDecision> candidates,LifeDecision selected,long now){if(selected==null)return;double second=-Double.MAX_VALUE;for(LifeDecision d:candidates)if(d!=selected)second=Math.max(second,d.intention.utility);double gap=second==-Double.MAX_VALUE?20:selected.intention.utility-second;double u=clamp01(.62-gap/18.0);String trigger=dominant(selected.reasons);ThoughtState t=new ThoughtState("deliberation:"+selected.intention.id,trigger,selected.intention.id,u,clamp01(.25+Math.abs(selected.intention.utility)/80.0),now);for(MemoryEntry m:MemoryRetrievalEngine.retrieve(s,HaruPerception.currentPlaceId(s),null,activity(selected.intention.id),selected.intention.id,3,now))t.relatedMemories.add(m.memoryId);s.thoughts.add(t);while(s.thoughts.size()>80)s.thoughts.remove(0);}
  private static double memoryFor(WorldState s,String id,String here,long now){String a=activity(id);double sum=0,w=0;for(MemoryEntry m:MemoryRetrievalEngine.retrieve(s,null,null,a,id,8,now)){if(!(m.hasTag(id)||m.hasTag(a)))continue;double rw=MemoryRetrievalEngine.score(m,now,here,null,a,id,s);sum+=m.valence*rw;w+=rw;}return w==0?0:(sum/w)*10;}
- private static double beliefSupport(WorldState s,String id){if("find_cat".equals(id)){BeliefState b=s.beliefStates.get("cat_returns");return b==null?0:(b.confidence-.5)*-8;}if("seek_shelter".equals(id)||"sleep".equals(id)){BeliefState b=s.beliefStates.get("shelter_safe");return b==null?0:(b.confidence-.5)*6;}return 0;}
+ private static double beliefSupport(WorldState s,String id){if("find_cat".equals(id)){BeliefState b=s.beliefStates.get("cat_returns");return b==null?0:(b.confidence-.5)*-8;}if("seek_shelter".equals(id)||"sleep".equals(id)||"recover".equals(id)){BeliefState b=s.beliefStates.get("shelter_safe");return b==null?0:(b.confidence-.5)*6;}return 0;}
  private static double uncertainty(WorldState s,String id){double u=.28;if("find_cat".equals(id)){BeliefState b=s.beliefStates.get("cat_returns");u=b==null?.65:1-b.confidence;}PreferenceState p=s.preferences.get("activity:"+activity(id));if(p!=null)u*=.75;return clamp01(u);}
  private static double tieVariation(WorldState s,String id,long now){long bucket=now/(30*60*1000L);long z=bucket*1103515245L+id.hashCode()*2654435761L+(long)(s.personality.curiosity*1000);z^=(z>>>16);double unit=(Math.abs(z)%1001)/1000.0;return(unit-.5)*2.4;}
  private static String dominant(Map<String,Double> r){String k="internal_state";double b=0;for(Map.Entry<String,Double>e:r.entrySet())if(Math.abs(e.getValue())>b){b=Math.abs(e.getValue());k=e.getKey();}return k;}
- private static String activity(String id){if(id==null)return"observe";if(id.equals("sleep")||id.equals("seek_shelter"))return"rest";if(id.equals("find_cat"))return"search";if(id.equals("seek_solitude"))return"solitude";return id;}
+ private static String activity(String id){if(id==null)return"observe";if(id.equals("sleep")||id.equals("seek_shelter")||id.equals("recover"))return"rest";if(id.equals("find_cat"))return"search";if(id.equals("seek_solitude")||id.equals("quiet_pause"))return"solitude";if(id.equals("observe_lake")||id.equals("watch_reedling"))return"observe";if(id.equals("explore_garden"))return"explore";if(id.equals("quiet_pause"))return"solitude";return id;}
  private static double sum(Map<String,Double>m){double v=0;for(double x:m.values())v+=x;return v;}private static double clamp01(double v){return Math.max(0,Math.min(1,v));}
 }

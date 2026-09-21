@@ -1,0 +1,59 @@
+name: VNF Android Debug APK
+
+on:
+  push:
+    branches:
+      - mong/god-session-ui
+  workflow_dispatch:
+
+jobs:
+  build-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout live VNF branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Android SDK 35
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          test -n "$SDK_ROOT"
+          echo "sdk.dir=$SDK_ROOT" > local.properties
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -path '*/bin/sdkmanager' -type f | sort -V | tail -n 1)"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "Using SDK: $SDK_ROOT"
+          java -version
+
+      - name: Download Gradle 8.14.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2             "https://services.gradle.org/distributions/gradle-8.14.1-bin.zip"             -o /tmp/gradle-8.14.1-bin.zip
+          unzip -q /tmp/gradle-8.14.1-bin.zip -d /tmp
+          /tmp/gradle-8.14.1/bin/gradle --version
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/gradle-8.14.1/bin/gradle :app:assembleDebug --stacktrace
+
+      - name: Verify APK
+        run: test -f app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload VNF debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VNF-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

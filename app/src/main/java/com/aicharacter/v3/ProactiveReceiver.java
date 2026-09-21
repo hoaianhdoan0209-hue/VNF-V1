@@ -5,6 +5,7 @@ public final class ProactiveReceiver extends BroadcastReceiver{
  @Override public void onReceive(Context context,Intent intent){
   WorldRepository repo=new WorldRepository(context);WorldState s=repo.loadOrCreate();long now=System.currentTimeMillis();
   try{
+   WorldCaretaker.Result maintenance=DivineMaintenanceEngine.maintain(s,now);if(maintenance.kept>0)repo.save(s);
    OfflineLifeEngine.reconstruct(s,now);CatOfflineEngine.followAttachment(s);
    if(GirlCatSearchEngine.shouldSearch(s,now))GirlCatSearchEngine.start(s,now,"absence/history made the cat worth looking for");
    if(s.catSearch.active)GirlCatSearchEngine.advance(s,now);CatOfflineEngine.followAttachment(s);

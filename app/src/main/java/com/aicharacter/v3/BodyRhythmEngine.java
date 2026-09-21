@@ -1,0 +1,36 @@
+package com.aicharacter.v3;
+/** Shared real-time body rhythm. Both active and reconstructed life advance the same 1:1 rates. */
+public final class BodyRhythmEngine {
+ private BodyRhythmEngine(){}
+ public static void advanceMinutes(WorldState s,double minutes){
+  if(s==null||s.body==null||minutes<=0)return;
+  if(isSleeping(s)){
+   // Sustained sleep restores the body over real hours, not as a one-frame reward.
+   s.body.energy+=minutes*.070;      // ~4.2 points/hour; meaningful recovery takes hours
+   double endocrineRecovery=s.endocrine==null?1:(.88+.12*s.endocrine.recoverySignal);s.body.sleepiness-=minutes*.110*endocrineRecovery; // ~6.6 points/hour before endocrine modulation
+   if(s.body.pain>0)s.body.pain-=minutes*.006;
+   if(s.body.health<100)s.body.health+=minutes*(s.body.hasInjury()?.0025:.004);
+  }else if(isResting(s)){
+   // Quiet protected rest helps gradually while awake, but is weaker than sleep.
+   s.body.energy+=minutes*.012;
+   s.body.sleepiness-=minutes*.008;
+   
+  }else{
+   // Awake baseline is deliberately mild. Work, heat, hydration, nutrition and illness add the meaningful load elsewhere.
+   s.body.energy-=minutes*.012; // ~0.72 points/hour at quiet wakefulness
+   double circadian=s.endocrine==null?.25:s.endocrine.circadianSleepSignal;
+   s.body.sleepiness+=minutes*(.026+.024*circadian); // circadian pressure, not a fixed game timer
+  }
+  s.body.clamp();
+ }
+ public static boolean isSleeping(WorldState s){return s!=null&&"sleeping".equals(s.haruActivity);}
+ public static boolean isResting(WorldState s){if(s==null||s.haruActivity==null)return false;String a=s.haruActivity;return"resting".equals(a)||"taking a quiet rest".equals(a)||"settling after rest".equals(a)||"waking slowly".equals(a);}
+ /** A sleeping girl remains asleep until recovery is meaningful; this is pressure-based, not a fixed schedule. */
+ public static boolean shouldRemainAsleep(WorldState s){return isSleeping(s)&&s.body!=null&&(s.body.energy<88||s.body.sleepiness>18||s.body.pain>28||s.body.health<68);}
+ public static boolean needsRecoveryTransition(WorldState s){return s!=null&&s.body!=null&&(s.body.energy<28||s.body.sleepiness>72||s.body.pain>28||s.body.health<68);}
+ public static boolean recoveredEnoughToAct(WorldState s){return s!=null&&s.body!=null&&s.body.energy>=28&&s.body.sleepiness<=72&&s.body.pain<=28&&s.body.health>=68;}
+ /** Collapse is deterministic body failure, never random drama. Pain above 20 only creates risk; severe combined strain is required. */
+ public static boolean shouldCollapse(WorldState s){if(s==null||s.body==null||s.body.pain<=20)return false;double strain=(s.body.pain-20)*.72+Math.max(0,24-s.body.energy)*1.15+Math.max(0,55-s.body.health)*.9+Math.max(0,s.body.sleepiness-82)*.45;return strain>=38;}
+ public static void collapse(WorldState s,long now){if(s==null||s.body==null)return;if(s.girlTravel!=null)s.girlTravel.active=false;s.currentIntention="";s.persistentIntentionTarget="";s.intentionStartedAt=now;s.haruActivity="sleeping";if(s.planState!=null&&s.planState.active()){s.planState.status="PAUSED";s.planState.pausedAt=now;s.planState.pauseReason="body collapse interrupted the current plan";s.planState.lastProgressAt=now;s.planState.lastReconsideredAt=now;}if(s.emotion!=null)s.emotion.fear=Math.min(1,s.emotion.fear+.12);CognitionEngine.experience(s,now,"body_collapse","Her body gave out under severe combined pain and exhaustion.",-.42,.82,"pain","recovery");}
+ public static void advanceSeconds(WorldState s,double seconds){advanceMinutes(s,seconds/60.0);}
+}

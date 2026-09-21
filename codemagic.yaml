@@ -70,6 +70,35 @@ workflows:
           fi
           "$GRADLE" :app:assembleRelease --stacktrace
           test -f "$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+      - name: Publish stable release to GitHub
+        script: |
+          set -eu
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          if [ -z "${GITHUB_TOKEN:-}" ]; then
+            echo "GITHUB_TOKEN is not configured; signed APK was built but GitHub Release publishing is skipped."
+            exit 0
+          fi
+          command -v gh >/dev/null
+          VERSION_CODE=$(sed -n "s/.*versionCode[[:space:]]*\\([0-9][0-9]*\\).*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
+          VERSION_NAME=$(sed -n "s/.*versionName[[:space:]]*'\\([^']*\\)'.*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
+          test -n "$VERSION_CODE"
+          test -n "$VERSION_NAME"
+          TAG="v$VERSION_NAME"
+          ASSET_NAME="VNF-$VERSION_NAME.apk"
+          META="$CM_BUILD_DIR/vnf-release.json"
+          SHA256=$(shasum -a 256 "$APK" | awk '{print $1}')
+          SIZE=$(stat -f%z "$APK")
+          NOTES="VNF $VERSION_NAME (versionCode $VERSION_CODE) — stable signed release."
+          node -e 'const fs=require("fs"); const [p,vc,vn,sha,size,notes,asset]=process.argv.slice(1); fs.writeFileSync(p,JSON.stringify({versionCode:Number(vc),versionName:vn,sha256:sha,size:Number(size),notes,apkAssetName:asset},null,2)+"\\n")' "$META" "$VERSION_CODE" "$VERSION_NAME" "$SHA256" "$SIZE" "$NOTES" "$ASSET_NAME"
+          export GH_TOKEN="$GITHUB_TOKEN"
+          if gh release view "$TAG" --repo "$CM_REPO_SLUG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK#$ASSET_NAME" "$META#vnf-release.json" --clobber --repo "$CM_REPO_SLUG"
+            gh release edit "$TAG" --title "VNF $VERSION_NAME" --notes "$NOTES" --repo "$CM_REPO_SLUG"
+          else
+            gh release create "$TAG" "$APK#$ASSET_NAME" "$META#vnf-release.json" --target "$CM_COMMIT" --title "VNF $VERSION_NAME" --notes "$NOTES" --latest --repo "$CM_REPO_SLUG"
+          fi
+          echo "Published GitHub Release $TAG"
     artifacts:
       - app/build/outputs/apk/release/app-release.apk
+      - vnf-release.json
       - app/build/reports/**
