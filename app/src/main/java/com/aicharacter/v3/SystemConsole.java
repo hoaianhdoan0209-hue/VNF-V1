@@ -29,6 +29,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("LIVING WORLD TRACE")||q.equals("ORGANISM TRACE"))return LivingWorldEngine.diagnostic(s);
   if(q.equals("ECO RELATIONS")||q.equals("FANTASY ECOLOGY"))return FantasyEcologyEngine.diagnostic(s);
   if(q.equals("HARU ECO BELIEFS")||q.equals("ECO HYPOTHESES"))return EcologyObservationLearningEngine.diagnostic(s);
+  if(q.equals("HARU NAMES")||q.equals("PERSONAL LEXICON"))return HaruNamingEngine.diagnostic(s);
   if(q.equals("HERBAL TRACE")||q.equals("HERBALISM TRACE"))return HerbalismEngine.diagnostic(s);
   if(q.equals("PERCEPTION TRACE"))return TravelDiagnostics.perception(s);
   if(q.equals("ROUTE TRACE"))return TravelDiagnostics.route(s);
