@@ -1,5 +1,5 @@
 {
-  "worldDefinitionVersion": 5,
+  "worldDefinitionVersion": 6,
   "worldId": "vnf_lakeside_home_v1",
   "areas": [
     {
@@ -24,7 +24,7 @@
         "foreground": "home_foreground",
         "parallax": "0.02,0.08,0.22,1.0,1.08"
       },
-      "biomeId": "sheltered_home",
+      "biomeId": "hearth_hollow",
       "elevationM": 120,
       "localMoistureOffset": -0.08
     },
@@ -38,7 +38,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "path,vegetation,grass,meadow",
+      "tags": "path,vegetation,verge,rootmat,mist",
       "connections": [
         "home_shelter",
         "lakeside"
@@ -51,7 +51,7 @@
         "foreground": "garden_foreground",
         "parallax": "0.02,0.08,0.22,1.0,1.08"
       },
-      "biomeId": "humid_meadow_edge",
+      "biomeId": "silverfold_verge",
       "elevationM": 122,
       "localMoistureOffset": 0
     },
@@ -65,7 +65,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "lake,reflect,open,water,wetland,reeds",
+      "tags": "lumenmere,reflect,open,water,wet_margin,lam_thread",
       "connections": [
         "garden_path",
         "quiet_grove"
@@ -78,7 +78,7 @@
         "foreground": "lakeside_foreground",
         "parallax": "0.02,0.08,0.22,1.0,1.08"
       },
-      "biomeId": "freshwater_lakeshore",
+      "biomeId": "lumenmere_margin",
       "elevationM": 118,
       "localMoistureOffset": 0.08
     },
@@ -92,7 +92,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "quiet,vegetation,grove,forest,shade",
+      "tags": "quiet,vegetation,veilroot,shade,echo_frond",
       "connections": [
         "lakeside"
       ],
@@ -104,7 +104,7 @@
         "foreground": "grove_foreground",
         "parallax": "0.02,0.08,0.22,1.0,1.08"
       },
-      "biomeId": "humid_broadleaf_grove",
+      "biomeId": "veilroot_grove",
       "elevationM": 121,
       "localMoistureOffset": 0.04
     }
@@ -204,7 +204,7 @@
       "interactable": false,
       "collision": false,
       "renderLayer": "ACTORS",
-      "habitat": "lake,vegetation",
+      "habitat": "lumenmere,vegetation",
       "safeEditable": "position,enabled",
       "visualAnchor": "BOTTOM_CENTER",
       "visualScale": 1,
@@ -223,7 +223,7 @@
       "width": 54,
       "height": 38,
       "tags": "herb,vegetation,observe,sample",
-      "habitat": "meadow,vegetation",
+      "habitat": "verge,rootmat,vegetation",
       "dictionaryRef": "mistleaf",
       "interactable": true,
       "collision": false,
@@ -246,7 +246,7 @@
       "width": 64,
       "height": 82,
       "tags": "herb,vegetation,reeds,observe,sample",
-      "habitat": "lake,wetland,vegetation",
+      "habitat": "lumenmere,wet_margin,vegetation",
       "dictionaryRef": "blue_reed",
       "interactable": true,
       "collision": false,
@@ -269,7 +269,7 @@
       "width": 66,
       "height": 24,
       "tags": "herb,vegetation,moss,observe,sample",
-      "habitat": "grove,forest,moss,shade",
+      "habitat": "veilroot,shade,vegetation",
       "dictionaryRef": "ember_moss",
       "interactable": true,
       "collision": false,
@@ -298,7 +298,7 @@
   },
   "biomes": [
     {
-      "id": "sheltered_home",
+      "id": "hearth_hollow",
       "label": "Hearth Hollow",
       "climate": "buffered hearth-field",
       "terrain": "crafted hollow interior",
@@ -313,7 +313,7 @@
       "baseTemperatureC": 22
     },
     {
-      "id": "humid_meadow_edge",
+      "id": "silverfold_verge",
       "label": "Silverfold Verge",
       "climate": "mild mist-fed verge",
       "terrain": "soft rootmat path with responsive low growth",
@@ -328,7 +328,7 @@
       "baseTemperatureC": 24
     },
     {
-      "id": "freshwater_lakeshore",
+      "id": "lumenmere_margin",
       "label": "Lumenmere Margin",
       "climate": "cool luminous waterside field",
       "terrain": "soft resonant bank around the lumenmere",
@@ -343,7 +343,7 @@
       "baseTemperatureC": 23.5
     },
     {
-      "id": "humid_broadleaf_grove",
+      "id": "veilroot_grove",
       "label": "Veilroot Grove",
       "climate": "dim moist resonance grove",
       "terrain": "woven root floor beneath veil-crowns",
