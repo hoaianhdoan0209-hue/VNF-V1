@@ -36,11 +36,11 @@ public final class PersonalDevelopmentEngine {
   PersonalityState p=s.personality;
   BehaviorExpressionEngine.Snapshot x=BehaviorExpressionEngine.observe(s,now);
   return "PERSONALITY V3\n"+
-   "curiosity="+fmt(p.curiosity)+" caution="+fmt(p.caution)+" sociability="+fmt(p.sociability)+
-   " independence="+fmt(p.independence)+" patience="+fmt(p.patience)+"\n"+
+   "curiosity="+fmt(p.curiosity)+"[e="+p.curiosityEvidence+",opp="+fmt(p.curiosityOpposition)+"] caution="+fmt(p.caution)+"[e="+p.cautionEvidence+",opp="+fmt(p.cautionOpposition)+"]\n"+
+   "sociability="+fmt(p.sociability)+"[e="+p.sociabilityEvidence+",opp="+fmt(p.sociabilityOpposition)+"] independence="+fmt(p.independence)+"[e="+p.independenceEvidence+",opp="+fmt(p.independenceOpposition)+"] patience="+fmt(p.patience)+"[e="+p.patienceEvidence+",opp="+fmt(p.patienceOpposition)+"]\n"+
    "context="+(s.currentIntention==null?"":s.currentIntention)+" expressionPressure="+fmt(expression(s,s.currentIntention))+"\n"+
    "visible="+(x.stageDirection().isEmpty()?"<none>":x.stageDirection())+"\n"+
-   "contract=lived evidence -> slow traits -> contextual expression; no direct action control";
+   "contract=lived evidence -> contradiction buffer -> slow traits -> contextual expression; no direct action control";
  }
  private static String fmt(double v){return String.format(Locale.US,"%.3f",v);}
 }
