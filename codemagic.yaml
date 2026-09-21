@@ -47,6 +47,8 @@ workflows:
           source: true
       cancel_previous_builds: true
     environment:
+      groups:
+        - github_credentials
       java: 17
       android_signing:
         - vnf-release
