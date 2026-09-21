@@ -1,5 +1,5 @@
 {
-  "worldDefinitionVersion": 8,
+  "worldDefinitionVersion": 9,
   "worldId": "vnf_lakeside_home_v1",
   "areas": [
     {
@@ -172,7 +172,7 @@
       "type": "tree",
       "areaId": "quiet_grove",
       "assetRef": "",
-      "haruDescription": "một veilroot cao với các nhánh phiến cong, những nút hồng dọc thân co giãn theo độ ẩm và rung động",
+      "haruDescription": "một thân sống cao với các nhánh phiến cong, những nút hồng dọc thân co giãn theo độ ẩm và rung động",
       "x": 2070,
       "ground": 844,
       "width": 180,
@@ -240,7 +240,7 @@
       "type": "herb",
       "areaId": "lakeside",
       "assetRef": "",
-      "haruDescription": "một cụm lam ty mảnh phát nhịp sáng mờ khi hơi ẩm dâng lên",
+      "haruDescription": "một cụm sợi mảnh phát nhịp sáng xanh mờ khi hơi ẩm dâng lên",
       "x": 1630,
       "ground": 850,
       "width": 64,
