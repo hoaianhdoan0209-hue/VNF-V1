@@ -141,15 +141,21 @@ public final class WorldRepository{
    }
 
    WorldState committed=tryLoad(saveFile);
-   if(committed==null)throw new IOException("Committed world save failed validation");
+   if(committed==null){
+    restoreBackupIfValid();
+    throw new IOException("Committed world save failed validation");
+   }
    if(compareCausalVersion(committed,staged)<0){
-    WorldState backup=tryLoad(backupFile);
-    if(backup!=null)copy(backupFile,saveFile);
+    restoreBackupIfValid();
     throw new IOException("Committed world save lost causal progress");
    }
   }catch(Exception e){
    throw new IllegalStateException("Could not persist VNF world",e);
   }
+ }
+
+ private void restoreBackupIfValid()throws IOException{
+  if(tryLoad(backupFile)!=null)copy(backupFile,saveFile);
  }
 
  private void attachDefinition(WorldState state){
