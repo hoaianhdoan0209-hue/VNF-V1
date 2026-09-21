@@ -14,7 +14,7 @@ public final class V3FoundationDevTest {
    double before=learned.personality.curiosity;
    MemoryEntry lived=new MemoryEntry(
     "v3_foundation_probe",now,"v3_probe","A novel detail rewarded careful observation.",
-    .90,.65,.95,HaruPerception.currentPlaceId(learned),null,
+    .90,.65,.95,"__dev_v3_probe__",null,
     Arrays.asList("explore","observe","novel"));
    PersonalDevelopmentEngine.learn(learned,lived);
    double delta=learned.personality.curiosity-before;
@@ -29,6 +29,14 @@ public final class V3FoundationDevTest {
    for(int i=0;i<12;i++)mature.slowlyLearn("explore",-1,1.5);
    double repeatedDrop=afterOne-mature.curiosity;
    boolean contradictionResistance=oneShockDrop>0&&oneShockDrop<.0025&&mature.curiosityOpposition>=0&&repeatedDrop>oneShockDrop;
+
+   WorldState repetition=copy(source,now);
+   MemoryEntry freshEvidence=new MemoryEntry("dev_repeat_fresh",now,"v3_repeat_probe","fresh observation",.55,.35,.95,"__dev_repeat__",null,Arrays.asList("explore","observe"));
+   double freshWeight=PersonalDevelopmentEngine.evidenceWeight(repetition,freshEvidence);
+   for(int i=0;i<6;i++)repetition.memories.add(new MemoryEntry("dev_repeat_old_"+i,now-(i+1)*1000L,"v3_repeat_probe","repeated observation "+i,.55,.35,.95,"__dev_repeat__",null,Arrays.asList("explore","observe")));
+   MemoryEntry repeatedEvidence=new MemoryEntry("dev_repeat_next",now,"v3_repeat_probe","another repeated observation",.55,.35,.95,"__dev_repeat__",null,Arrays.asList("explore","observe"));
+   double repeatedWeight=PersonalDevelopmentEngine.evidenceWeight(repetition,repeatedEvidence);
+   boolean repetitionDamping=repeatedWeight<freshWeight*.60;
 
    String intention=learned.currentIntention;
    String planId=learned.planState==null?"":learned.planState.planId;
@@ -57,14 +65,15 @@ public final class V3FoundationDevTest {
    PlanState broken=new PlanState();broken.planId="dev_v3_broken";broken.arrivedAt=now-1000;broken.actionResolvedAt=now;broken.outcomeLearnedAt=now-5000;
    boolean catchesBrokenOrder=!PlanCausalAudit.valid(causal,broken);
 
-   boolean pass=slowLearning&&contradictionResistance&&expressionReadOnly&&clockParity&&causalOrdering&&catchesBrokenOrder;
+   boolean pass=slowLearning&&contradictionResistance&&repetitionDamping&&expressionReadOnly&&clockParity&&causalOrdering&&catchesBrokenOrder;
    return "DEV V3 FOUNDATION: "+(pass?"PASS":"FAIL")+"\n"+
     "slowLearning="+slowLearning+" deltaCuriosity="+fmt(delta)+"\n"+
     "contradictionResistance="+contradictionResistance+" oneShockDrop="+fmt(oneShockDrop)+" repeatedDrop="+fmt(repeatedDrop)+"\n"+
+    "repetitionDamping="+repetitionDamping+" freshWeight="+fmt(freshWeight)+" repeatedWeight="+fmt(repeatedWeight)+"\n"+
     "expressionReadOnly="+expressionReadOnly+" visible="+(expression.stageDirection().isEmpty()?"<none>":expression.stageDirection())+"\n"+
     "activeOfflineClockParity="+clockParity+"\n"+
     "causalOrdering="+causalOrdering+" catchesBrokenOrder="+catchesBrokenOrder+"\n"+
-    "contract=arrival -> action -> learned outcome -> review; personality changes slowly under repeated lived evidence";
+    "contract=arrival -> action -> learned outcome -> review; repeated evidence is damped; personality changes slowly under lived evidence";
   }catch(Exception e){
    return "DEV V3 FOUNDATION: FAIL "+e.getClass().getSimpleName()+": "+e.getMessage();
   }
