@@ -1,0 +1,15 @@
+package com.aicharacter.v3;
+import org.json.*;import java.util.*;
+/** Haru's learned herbal state. System truth stays in HerbalDictionary; this stores only observations, trials and carried samples. */
+public final class HerbalismState{
+ public static final class Knowledge{
+  public int observations,trials;public double safetyConfidence=.10,effectConfidence=.05;public String discoveredPreparation="",lastMethod="",lastObservedEffect="";
+  JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("observations",observations);j.put("trials",trials);j.put("safetyConfidence",safetyConfidence);j.put("effectConfidence",effectConfidence);j.put("discoveredPreparation",discoveredPreparation);j.put("lastMethod",lastMethod);j.put("lastObservedEffect",lastObservedEffect);}catch(Exception ignored){}return j;}
+  static Knowledge fromJson(JSONObject j){Knowledge k=new Knowledge();if(j==null)return k;k.observations=j.optInt("observations");k.trials=j.optInt("trials");k.safetyConfidence=cl(j.optDouble("safetyConfidence",k.safetyConfidence));k.effectConfidence=cl(j.optDouble("effectConfidence",k.effectConfidence));k.discoveredPreparation=j.optString("discoveredPreparation","");k.lastMethod=j.optString("lastMethod","");k.lastObservedEffect=j.optString("lastObservedEffect","");return k;}
+ }
+ public final Map<String,Knowledge> knowledge=new LinkedHashMap<>();public String carriedHerbId="",preparedHerbId="",preparedMethod="";public int carriedCount;public double preparedPotency,preparedRisk;public long lastUpdatedAt;
+ public Knowledge know(String id){return knowledge.computeIfAbsent(id,x->new Knowledge());}
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{JSONObject k=new JSONObject();for(Map.Entry<String,Knowledge>e:knowledge.entrySet())k.put(e.getKey(),e.getValue().toJson());j.put("knowledge",k);j.put("carriedHerbId",carriedHerbId);j.put("carriedCount",carriedCount);j.put("preparedHerbId",preparedHerbId);j.put("preparedMethod",preparedMethod);j.put("preparedPotency",preparedPotency);j.put("preparedRisk",preparedRisk);j.put("lastUpdatedAt",lastUpdatedAt);}catch(Exception ignored){}return j;}
+ public static HerbalismState fromJson(JSONObject j){HerbalismState h=new HerbalismState();if(j==null)return h;JSONObject k=j.optJSONObject("knowledge");if(k!=null){Iterator<String>it=k.keys();while(it.hasNext()){String id=it.next();h.knowledge.put(id,Knowledge.fromJson(k.optJSONObject(id)));}}h.carriedHerbId=j.optString("carriedHerbId","");h.carriedCount=Math.max(0,j.optInt("carriedCount"));h.preparedHerbId=j.optString("preparedHerbId","");h.preparedMethod=j.optString("preparedMethod","");h.preparedPotency=cl(j.optDouble("preparedPotency"));h.preparedRisk=cl(j.optDouble("preparedRisk"));h.lastUpdatedAt=j.optLong("lastUpdatedAt");return h;}
+ private static double cl(double v){return Math.max(0,Math.min(1,v));}
+}
