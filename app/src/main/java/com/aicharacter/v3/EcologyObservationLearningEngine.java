@@ -59,7 +59,7 @@ public final class EcologyObservationLearningEngine{
   if(subject.startsWith("eco_pair:")){int a=subject.indexOf(":"),b=subject.indexOf("<->"),c=subject.lastIndexOf(":");String x=b>a?subject.substring(a+1,b):"",y=c>b?subject.substring(b+3,c):"";WorldObject xo=s.world==null?null:s.world.object(x),yo=s.world==null?null:s.world.object(y);return(xo==null?x:HaruNamingEngine.personalOrDescription(s,xo))+" <-> "+(yo==null?y:HaruNamingEngine.personalOrDescription(s,yo));}
   WorldObject c=s.world==null?null:s.world.object(parseCreature(subject)),f=s.world==null?null:s.world.object(parseFlora(subject));return(c==null?parseCreature(subject):HaruNamingEngine.personalOrDescription(s,c))+" -> "+(f==null?parseFlora(subject):HaruNamingEngine.personalOrDescription(s,f));
  }
- private static String label(WorldObject o){return o==null||o.haruDescription==null||o.haruDescription.isEmpty()?o==null?"something":o.id:o.haruDescription;}
+ private static String label(WorldState s,WorldObject o){if(o==null)return"something";String n=HaruNamingEngine.personalName(s,o);return!n.isEmpty()?n:o.haruDescription==null||o.haruDescription.isEmpty()?o.id:o.haruDescription;}
  private static String signal(double delta,double growth){return delta>.055?"open":delta<-.055?"close":Math.abs(growth)>.07?"rhythm":"stable";}
  private static long recentEvidence(BeliefState b){if(b==null||b.evidence.isEmpty())return 0;return b.evidence.get(b.evidence.size()-1).timestamp;}
  private static void trim(EcologyObservationState s,long now){
