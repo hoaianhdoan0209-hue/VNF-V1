@@ -9,12 +9,14 @@ public final class GirlAnimationController{
  }
  private GirlAnimationController(){}
  public static Visual select(WorldState s){
-  String a=s.haruActivity==null?"":s.haruActivity.toLowerCase();
-  if(s.girlPhysics!=null&&s.girlPhysics.falling)return v(State.REACT,"girl_react_right",12,2.4f,.50f,.94f,"whole body lost physical support");\n  boolean facingRight=!s.girlTravel.active||Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX;
+  String a=s.haruActivity==null?"":s.haruActivity.toLowerCase();WorldArea here=s.world==null?null:s.world.areaAt(s.haruX);double exposure=WorldSemantics.exposure(here),rain="RAIN".equals(s.environment.weather)?s.environment.weatherIntensity*exposure:0,wind=s.environment.wind*exposure;
+  if(s.girlPhysics!=null&&s.girlPhysics.falling)return v(State.REACT,"girl_react_right",12,2.4f,.50f,.94f,"whole body lost physical support");
+  boolean facingRight=!s.girlTravel.active||Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX;
   if(a.contains("sleep"))return v(State.SLEEP,"girl_sleep_right",12,1.8f,.50f,.82f,"body/activity sleeping");
   if(a.contains("crouch")||a.contains("lean"))return v(State.CROUCH,"girl_crouch_right",12,2.5f,.50f,.94f,"real close interaction");
   if("find_cat".equals(s.currentIntention)||s.catSearch.active)return facingRight?v(State.SEARCH_RIGHT,"girl_search_right",12,3.2f,.50f,.94f,"active search plan"):v(State.SEARCH_LEFT,"girl_search_left",12,3.2f,.50f,.94f,"active search plan");
-  if(s.girlTravel.active){float bodyFactor=s.body.pain>20||s.body.energy<25?.72f:1f;float speed=(float)Math.max(2.2,Math.min(8.5,(3.4+s.girlTravel.lastSpeed/80.0)*bodyFactor));return facingRight?v(State.WALK_RIGHT,"girl_walk_right",12,speed,.50f,.94f,"travel expressed through current body state"):v(State.WALK_LEFT,"girl_walk_left",12,speed,.50f,.94f,"travel expressed through current body state");}
+  if(s.girlTravel.active){float bodyFactor=s.body.pain>20||s.body.energy<25?.72f:1f;float weatherFactor=(float)Math.max(.62,1-rain*.18-wind*.12-s.worldWetness*.08);float speed=(float)Math.max(2.2,Math.min(8.5,(3.4+s.girlTravel.lastSpeed/80.0)*bodyFactor*weatherFactor));String reason=rain>.18||wind>.35?"travel cadence responds to rain/wind and current body state":"travel expressed through current body state";return facingRight?v(State.WALK_RIGHT,"girl_walk_right",12,speed,.50f,.94f,reason):v(State.WALK_LEFT,"girl_walk_left",12,speed,.50f,.94f,reason);}
+  if(rain>.60&&(wind>.42||(s.thermal!=null&&s.thermal.coldLoad>.48)))return v(State.REACT,"girl_react_right",12,1.7f,.50f,.94f,"heavy exposed weather visibly changes posture");
   if(s.body.pain>20)return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"pain is visibly affecting movement");
   if(s.body.energy<22||s.body.sleepiness>78)return v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant");
   if(a.contains("keeping some distance")||a.contains("unresolved hurt"))return v(State.IDLE,"girl_idle_right",12,1.35f,.50f,.94f,"distance expressed without exposing relationship scores");
