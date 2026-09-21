@@ -16,6 +16,7 @@ public final class HaruVisibleBehaviorBridge {
 
  public static Cue observe(WorldState s,long now){
   if(s==null||s.worldHistory==null)return none();
+  now=Math.max(now,Math.max(s.lastSimulatedAt,s.lastOpenedAt));
   WorldHistoryEntry review=latest(s,"PLAN_POST_OUTCOME_REVIEWED",now,POST_OUTCOME_WINDOW_MS);
   if(review==null)return none();
   String intention=field(review.summary,"intention");
