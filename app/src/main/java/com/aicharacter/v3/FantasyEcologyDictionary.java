@@ -4,9 +4,9 @@ import java.util.*;
 public final class FantasyEcologyDictionary{
  private static final Map<String,SpeciesEcologyProfile> P=new LinkedHashMap<>();
  static{
-  add(new SpeciesEcologyProfile("reedling","lumenmere,wet_margin,lam_thread","driftwing","root_husher","lam_thread,blue_reed",.82,.48,.62,.12));
-  add(new SpeciesEcologyProfile("driftwing","verge,mist,rootmat","reedling","root_husher","mistleaf,silverfold,vegetation",.58,.72,.74,.22));
-  add(new SpeciesEcologyProfile("root_husher","veilroot,shade,echo_frond","","driftwing","veilroot,ember_moss,vegetation",.72,.36,.42,.28));
+  add(new SpeciesEcologyProfile("reedling","lumenmere,wet_margin,lam_thread","lumenmere,lam_thread,blue_reed","driftwing","root_husher","lam_thread,blue_reed",.82,.48,.62,.12));
+  add(new SpeciesEcologyProfile("driftwing","verge,mist,rootmat","mist,glow_seed,mistleaf,silverfold","reedling","root_husher","mistleaf,silverfold,vegetation",.58,.72,.74,.22));
+  add(new SpeciesEcologyProfile("root_husher","veilroot,shade,echo_frond","echo_frond,veilroot,ember_moss","","driftwing","veilroot,ember_moss,vegetation",.72,.36,.42,.28));
  }
  private FantasyEcologyDictionary(){}
  private static void add(SpeciesEcologyProfile p){P.put(p.key,p);}
