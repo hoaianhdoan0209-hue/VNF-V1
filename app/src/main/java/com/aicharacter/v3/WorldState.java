@@ -41,7 +41,25 @@ public final class WorldState {
     public EmotionState emotion = new EmotionState();
     public String currentIntention="observe_lake";
     public long lastProactiveAt=0L;
-    public EnvironmentState environment=new EnvironmentState();\n    public AtmosphereState atmosphere=new AtmosphereState();\n    public RespirationState respiration=new RespirationState();\n    public ThermalState thermal=new ThermalState();\n    public BodyInstinctState bodyInstinct=new BodyInstinctState();\n    public PhysicsBodyState girlPhysics=PhysicsBodyState.fromJson(null,50);\n    public PhysicsBodyState catPhysics=PhysicsBodyState.fromJson(null,4.2);\n    public BodyRigState bodyRig=new BodyRigState();\n    public MusculoskeletalState musculoskeletal=new MusculoskeletalState();\n    public JointConstraintState joints=new JointConstraintState();\n    public CatRigState catRig=new CatRigState();\n    public CirculationState circulation=new CirculationState();\n    public MetabolismState metabolism=new MetabolismState();\n    public NervousState nervous=new NervousState();\n    public CatNervousState catNervous=new CatNervousState();\n    public CatMetabolismState catMetabolism=new CatMetabolismState();\n    public CatRespirationState catRespiration=new CatRespirationState();\n    public LocalizedPainState localizedPain=new LocalizedPainState();\n    public AtmospherePerturbation atmospherePerturbation=new AtmospherePerturbation();
+    public EnvironmentState environment=new EnvironmentState();
+    public AtmosphereState atmosphere=new AtmosphereState();
+    public RespirationState respiration=new RespirationState();
+    public ThermalState thermal=new ThermalState();
+    public BodyInstinctState bodyInstinct=new BodyInstinctState();
+    public PhysicsBodyState girlPhysics=PhysicsBodyState.fromJson(null,50);
+    public PhysicsBodyState catPhysics=PhysicsBodyState.fromJson(null,4.2);
+    public BodyRigState bodyRig=new BodyRigState();
+    public MusculoskeletalState musculoskeletal=new MusculoskeletalState();
+    public JointConstraintState joints=new JointConstraintState();
+    public CatRigState catRig=new CatRigState();
+    public CirculationState circulation=new CirculationState();
+    public MetabolismState metabolism=new MetabolismState();
+    public NervousState nervous=new NervousState();
+    public CatNervousState catNervous=new CatNervousState();
+    public CatMetabolismState catMetabolism=new CatMetabolismState();
+    public CatRespirationState catRespiration=new CatRespirationState();
+    public LocalizedPainState localizedPain=new LocalizedPainState();
+    public AtmospherePerturbation atmospherePerturbation=new AtmospherePerturbation();
     public transient WorldModel world;
     public WorldRuntimeState runtime=new WorldRuntimeState();
     public final List<WorldHistoryEntry> worldHistory=new ArrayList<>();
@@ -51,7 +69,8 @@ public final class WorldState {
     public transient boolean devForceRepairRegression=false;
     public final Map<String,PreferenceState> preferences=new LinkedHashMap<>();
     public final Map<String,HabitState> habits=new LinkedHashMap<>();
-    public final Map<String,PlaceAssociation> placeAssociations=new LinkedHashMap<>();\n    public final Map<String,ContextualPlaceEvidence> contextualPlaceEvidence=new LinkedHashMap<>();
+    public final Map<String,PlaceAssociation> placeAssociations=new LinkedHashMap<>();
+    public final Map<String,ContextualPlaceEvidence> contextualPlaceEvidence=new LinkedHashMap<>();
     public MoodState mood=new MoodState();
     public PersonalityState personality=new PersonalityState();
     public final List<ThoughtState> thoughts=new ArrayList<>();
@@ -76,7 +95,9 @@ public final class WorldState {
     public final List<GodMessage> godInbox=new ArrayList<>();
     // Separate persistent memory for God/System conversations. Never merged into girl memory.
     public GodMemory godMemory=new GodMemory();
-    public final java.util.Set<String> processedLearningIds=new java.util.LinkedHashSet<>();\n    // Security ledger is separate from display/history trimming: committed God proposal ids remain replay-blocked across restarts.\n    public final java.util.Set<String> committedGodEventIds=new java.util.LinkedHashSet<>();
+    public final java.util.Set<String> processedLearningIds=new java.util.LinkedHashSet<>();
+    // Security ledger is separate from display/history trimming: committed God proposal ids remain replay-blocked across restarts.
+    public final java.util.Set<String> committedGodEventIds=new java.util.LinkedHashSet<>();
     public double worldWetness=0, visibility=1.0;
     public transient String lastGodTrace="",cameraTrace="",lastDecisionTrace="";
 
