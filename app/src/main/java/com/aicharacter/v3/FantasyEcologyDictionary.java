@@ -7,6 +7,8 @@ public final class FantasyEcologyDictionary{
   add(new SpeciesEcologyProfile("reedling","lumenmere,wet_margin,lam_thread","lumenmere,lam_thread,blue_reed","driftwing","root_husher","lam_thread,blue_reed",.82,.48,.62,.12));
   add(new SpeciesEcologyProfile("driftwing","verge,mist,rootmat","mist,glow_seed,mistleaf,silverfold","reedling","root_husher","mistleaf,silverfold,vegetation",.58,.72,.74,.22));
   add(new SpeciesEcologyProfile("root_husher","veilroot,shade,echo_frond","echo_frond,veilroot,ember_moss","","driftwing","veilroot,ember_moss,vegetation",.72,.36,.42,.28));
+  add(new SpeciesEcologyProfile("ripplekin","lumenmere,wet_margin,water","shimmer_mat,lam_thread,blue_reed","reedling","","lam_thread,shimmer_mat,vegetation",.76,.44,.68,.18));
+  add(new SpeciesEcologyProfile("hearthmote","interior,dry,quiet,warm","hearth,bloom,quiet","","","hearth,bloom,vegetation",.38,.10,.82,.10));
  }
  private FantasyEcologyDictionary(){}
  private static void add(SpeciesEcologyProfile p){P.put(p.key,p);}
