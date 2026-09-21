@@ -15,8 +15,9 @@ import java.nio.charset.StandardCharsets;
 /** Network client used only by the God channel. Girl/world offline cognition never depends on this class. */
 public final class GodOnlineClient {
     public static final class Result{
-        public final String reply,contentPatchManifestUrl,godRecipePayload,godRecipeSignature; public final boolean autoApplyContentPatch; public final GodRepairPlan repairPlan;
-        Result(String r,String u,boolean a,GodRepairPlan p,String gp,String gs){reply=r;contentPatchManifestUrl=u;autoApplyContentPatch=a;repairPlan=p;godRecipePayload=gp;godRecipeSignature=gs;}
+        public final String reply,contentPatchManifestUrl,godRecipePayload,godRecipeSignature; public final boolean autoApplyContentPatch; public final GodRepairPlan repairPlan; public final GodWorldEventProposal worldEventProposal;
+        Result(String r,String u,boolean a,GodRepairPlan p,String gp,String gs){this(r,u,a,p,gp,gs,null);}
+        Result(String r,String u,boolean a,GodRepairPlan p,String gp,String gs,GodWorldEventProposal e){reply=r;contentPatchManifestUrl=u;autoApplyContentPatch=a;repairPlan=p;godRecipePayload=gp;godRecipeSignature=gs;worldEventProposal=e;}
     }
     public interface Callback { void onResult(Result result, Throwable error); }
     private GodOnlineClient(){}

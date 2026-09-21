@@ -22,7 +22,7 @@ public final class FantasyEcologyEngine{
  }
  public static boolean stepReedlingMigration(WorldState s,WorldObject self,CreatureState c,double minutes){
   if(s==null||self==null||c==null||minutes<=0)return false;if(c.body!=null&&(c.body.strain>.72||c.body.vitalReserve<.26)||c.cycle!=null&&("WEAK".equals(c.cycle.phase)||"RECOVER".equals(c.cycle.phase)))return false;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(p==null)return false;WorldArea cur=s.world.area(c.areaId);if(cur==null)return false;
-  c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur);double here=areaUtility(s,self,cur),drive=cl((candidate.isEmpty()?0:.40)+c.relationPressure*.36+(1-here)*.24+c.hunger*.26)*p.migrationDrive;
+  c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur.id);double here=areaUtility(s,self,cur),drive=cl((candidate.isEmpty()?0:.40)+c.relationPressure*.36+(1-here)*.24+c.hunger*.26)*p.migrationDrive;
   c.migrationIntent=follow(c.migrationIntent,drive,minutes,5);if(!candidate.isEmpty()&&(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent>.44))c.ecologyTargetAreaId=candidate;
   if(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent<.30)return false;WorldArea target=s.world.area(c.ecologyTargetAreaId);if(target==null||!cur.connections.contains(target.id)){c.ecologyTargetAreaId="";return false;}
   float dir=target.left>=cur.right?1f:target.right<=cur.left?-1f:(target.left+target.right>cur.left+cur.right?1f:-1f);double speed=8+24*c.energy+16*c.migrationIntent;float nx=c.x+(float)(dir*speed*minutes);
@@ -32,7 +32,7 @@ public final class FantasyEcologyEngine{
  }
  public static boolean stepMigration(WorldState s,WorldObject self,CreatureLifeState c,double minutes){
   if(s==null||self==null||c==null||minutes<=0)return false;if(c.body!=null&&(c.body.strain>.72||c.body.vitalReserve<.26)||c.cycle!=null&&("WEAK".equals(c.cycle.phase)||"RECOVER".equals(c.cycle.phase)))return false;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(self);if(p==null)return false;WorldArea cur=s.world.area(c.areaId);if(cur==null)return false;
-  c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur);double here=areaUtility(s,self,cur),away=c.relationPressure*.38+(1-here)*.24,hunger=c.hunger*.25,targetDrive=cl((candidate.isEmpty()?0:.42)+away+hunger)*p.migrationDrive;
+  c.relationPressure=follow(c.relationPressure,relationPressure(s,self,cur),minutes,2.5);String candidate=bestAdjacentArea(s,self,cur.id);double here=areaUtility(s,self,cur),away=c.relationPressure*.38+(1-here)*.24,hunger=c.hunger*.25,targetDrive=cl((candidate.isEmpty()?0:.42)+away+hunger)*p.migrationDrive;
   c.migrationIntent=follow(c.migrationIntent,targetDrive,minutes,5);if(!candidate.isEmpty()&&(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent>.44))c.ecologyTargetAreaId=candidate;
   if(c.ecologyTargetAreaId.isEmpty()||c.migrationIntent<.30)return false;WorldArea target=s.world.area(c.ecologyTargetAreaId);if(target==null||!cur.connections.contains(target.id)){c.ecologyTargetAreaId="";return false;}
   float dir=target.left>=cur.right?1f:target.right<=cur.left?-1f:(target.left+target.right>cur.left+cur.right?1f:-1f);double speed=9+26*c.locomotionDrive+18*c.migrationIntent;float nx=c.x+(float)(dir*speed*minutes);
