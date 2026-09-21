@@ -54,6 +54,22 @@ public final class CreaturePhysicsEngine{
   else{c.verticalOffsetM=0;c.velocityYMps=0;c.grounded=true;}
  }
 
+ public static void advanceReedlingLocal(WorldState s,WorldObject o,CreatureState c,double minutes,long now){
+  if(s==null||s.world==null||o==null||c==null||minutes<=0)return;WorldArea area=s.world.area(c.areaId);if(area==null)return;
+  double seconds=Math.max(.001,minutes*60.0),moisture=EcologyEngine.localMoisture(s,area),slope=Math.abs(GroundGeometry.slope(s,c.x));
+  float margin=Math.max(22f,o.width*.45f),left=area.left+margin,right=area.right-margin;if(right<=left){left=area.left;right=area.right;}
+  long bucket=Math.max(0L,now/30000L);float target=(float)(left+(right-left)*(.14+.72*unitHash(o.id,bucket)));
+  double traction=clamp(.90-moisture*.14-slope*.40,.34,.97),speed=.10+.28*c.energy+.18*(1-c.fear);
+  if("rest".equals(c.activity))speed*=.10;else if("forage".equals(c.activity))speed*=.65;
+  double desired=Math.signum(target-c.x)*speed,maxAccel=WholeBodyPhysicsEngine.GRAVITY*traction*.46,dv=desired-c.velocityXMps;
+  c.velocityXMps+=Math.max(-maxAccel*seconds,Math.min(maxAccel*seconds,dv));c.velocityXMps*=Math.exp(-.74*Math.min(seconds,4.0)*.45);
+  c.heading=c.velocityXMps<-.006?-1:c.velocityXMps>.006?1:c.heading==0?1:c.heading;
+  double travelM=c.velocityXMps*seconds,maxToTarget=Math.abs(WorldUnits.pxToM(target-c.x));if(Math.abs(travelM)>maxToTarget)travelM=Math.signum(travelM)*maxToTarget;
+  float desiredX=(float)(c.x+WorldUnits.mToPx(travelM));desiredX=Math.max(left,Math.min(right,desiredX));
+  desiredX=limitAgainstWorld(s,o,c.areaId,c.x,desiredX);if(Math.abs(desiredX-c.x)<.01)c.velocityXMps=0;c.x=desiredX;
+  c.verticalOffsetM=0;c.velocityYMps=0;c.grounded=true;
+ }
+
  public static float renderGroundY(WorldState s,WorldObject o,CreatureLifeState c){
   if(s==null||o==null||c==null)return o==null?0:o.y;
   return (float)GroundGeometry.heightPx(s,c.x);
