@@ -30,7 +30,8 @@ public final class PlanCausalAudit {
  public static void reviewed(WorldState s,PlanState p,long now,String detail){
   if(s==null||p==null)return;
   p.postOutcomeReviewedAt=now;
-  WorldEventBus.publishId(s,now,id(p,"review"),"PLAN_POST_OUTCOME_REVIEWED",p.planId,detail==null?"outcome reviewed":detail);
+  String summary="intention="+safe(p.intentionId)+" status="+safe(p.status)+" memory="+safe(p.outcomeMemoryId)+" "+(detail==null?"outcome reviewed":detail);
+  WorldEventBus.publishId(s,now,id(p,"review"),"PLAN_POST_OUTCOME_REVIEWED",p.planId,summary);
  }
 
  public static boolean valid(WorldState s,PlanState p){
