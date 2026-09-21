@@ -46,7 +46,7 @@ public final class CreaturePhysicsEngine{
   if(Math.abs(travelM)>maxToTarget)travelM=Math.signum(travelM)*maxToTarget;
   float desiredX=(float)(c.x+WorldUnits.mToPx(travelM));
   desiredX=Math.max(left,Math.min(right,desiredX));
-  desiredX=limitAgainstWorld(s,o,c.x,desiredX);
+  desiredX=limitAgainstWorld(s,o,c.areaId,c.x,desiredX);
   if(Math.abs(desiredX-c.x)<.01&&Math.abs(travelM)>.001)c.velocityXMps=0;
   c.x=desiredX;
 
@@ -59,7 +59,7 @@ public final class CreaturePhysicsEngine{
   return (float)GroundGeometry.heightPx(s,c.x);
  }
 
- public static boolean isFlyer(WorldObject o){return o!=null&&(o.id.startsWith("driftwing")||has(o.tags,"glide")||has(o.tags,"wing"));}
+ public static boolean isFlyer(WorldObject o){return o!=null&&(o.id.startsWith("driftwing")||o.id.startsWith("hearthmote")||has(o.tags,"glide")||has(o.tags,"wing"));}
  private static boolean isRipple(WorldObject o){return o.id.startsWith("ripplekin");}
  private static boolean isRoot(WorldObject o){return o.id.startsWith("root_husher");}
  private static boolean isHearth(WorldObject o){return o.id.startsWith("hearthmote")||o.id.startsWith("hushcrawler");}
@@ -83,11 +83,11 @@ public final class CreaturePhysicsEngine{
   else c.grounded=false;
  }
 
- private static float limitAgainstWorld(WorldState s,WorldObject self,float from,float desired){
+ private static float limitAgainstWorld(WorldState s,WorldObject self,String areaId,float from,float desired){
   if(s==null||s.world==null||desired==from)return desired;
   float radius=Math.max(8f,self.width*.32f),dir=Math.signum(desired-from),out=desired;
   for(WorldObject o:s.world.objects){
-   if(o==null||o==self||!o.enabled||!o.collision||!self.areaId.equals(o.areaId))continue;
+   if(o==null||o==self||!o.enabled||!o.collision||areaId==null||!areaId.equals(o.areaId))continue;
    for(float[]seg:o.collisionIntervals()){
     if(seg==null||seg.length<2)continue;
     float l=seg[0]-radius,r=seg[1]+radius;
