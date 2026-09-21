@@ -5,6 +5,7 @@ public final class LifeCycleEngine {
     private LifeCycleEngine() {}
     public static void apply(WorldState s, long now) {
         long effectiveNow=Math.max(now,Math.max(s.lastSimulatedAt,s.lastOpenedAt));
+        if(s.createdAt>effectiveNow)s.createdAt=effectiveNow;
         int livedYears = (int)Math.max(0, (effectiveNow - s.createdAt) / YEAR_MS);
         int targetAge = 15 + livedYears;
         if (targetAge > s.age) {
