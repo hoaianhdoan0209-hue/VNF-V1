@@ -7,7 +7,7 @@ public final class CreatureLifeEngine {private CreatureLifeEngine(){}
   if(suitability<.32||bodyStrain>.72){c.activity="rest";c.energy=Math.max(0,c.energy-minutes*.0012);}
   else if(c.hunger>.65&&suitability>.45){c.activity="forage";double gathered=FantasyEcologyEngine.consumeSpeciesResource(s,o,a.id,minutes*.0025*suitability);c.energy=Math.min(1,Math.max(0,c.energy-minutes*.0012)+gathered*.22);c.hunger=Math.max(0,c.hunger-gathered*.78);}
   else if(risk>.62||c.energy<.25||alert>.78){c.activity="rest";c.energy=Math.min(1,c.energy+minutes*.003);}
-  else{c.activity="wander";c.energy=Math.max(0,c.energy-minutes*.0009);boolean migrating=FantasyEcologyEngine.stepReedlingMigration(s,o,c,minutes);if(migrating)c.activity="migrate";if(!migrating){WorldArea local=s.world.area(c.areaId);if(local==null)local=a;float span=Math.max(20,local.right-local.left-80);double phase=((now/60000L)+(c.id.hashCode()&31))*.17;c.x=(float)(local.left+40+(Math.sin(phase)*.5+.5)*span);}}
+  else{c.activity="wander";c.energy=Math.max(0,c.energy-minutes*.0009);boolean migrating=FantasyEcologyEngine.stepReedlingMigration(s,o,c,minutes);if(migrating)c.activity="migrate";if(!migrating)CreaturePhysicsEngine.advanceReedlingLocal(s,o,c,minutes,now);}
   if(!"wander".equals(c.activity)&&!"migrate".equals(c.activity)){boolean migrating=FantasyEcologyEngine.stepReedlingMigration(s,o,c,minutes);if(migrating)c.activity="migrate";}c.lastUpdate=now;LivingWorldEngine.advance(s,minutes,now);
  }
  private static WorldArea bestHabitat(WorldState s,WorldObject o){WorldArea best=null;double score=-1;for(WorldArea a:s.world.areas){double x=EcologyEngine.creatureSuitability(s,a,o);if(x>score){score=x;best=a;}}return best;}
