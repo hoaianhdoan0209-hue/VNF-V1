@@ -19,6 +19,10 @@ public final class GirlAnimationController{
   if(rain>.60&&(wind>.42||(s.thermal!=null&&s.thermal.coldLoad>.48)))return v(State.REACT,"girl_react_right",12,1.7f,.50f,.94f,"heavy exposed weather visibly changes posture");
   if(s.body.pain>20)return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"pain is visibly affecting movement");
   if(s.body.energy<22||s.body.sleepiness>78)return v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant");
+  HaruVisibleBehaviorBridge.Cue cue=HaruVisibleBehaviorBridge.observe(s,System.currentTimeMillis());
+  if(cue.mode==HaruVisibleBehaviorBridge.Mode.THINK)return v(State.THINK,"girl_think_right",12,1.9f,.50f,.94f,cue.reason);
+  if(cue.mode==HaruVisibleBehaviorBridge.Mode.SETTLE)return v(State.SIT,"girl_sit_right",12,1.6f,.50f,.94f,cue.reason);
+  if(cue.mode==HaruVisibleBehaviorBridge.Mode.REACT)return v(State.REACT,"girl_react_right",12,2.25f,.50f,.94f,cue.reason);
   if(a.contains("keeping some distance")||a.contains("unresolved hurt"))return v(State.IDLE,"girl_idle_right",12,1.35f,.50f,.94f,"distance expressed without exposing relationship scores");
   if(a.contains("softening")||a.contains("familiar attention"))return v(State.REACT,"girl_react_right",12,2.15f,.50f,.94f,"warmth toward the cat becomes a small visible response");
   if(a.contains("watching the cat")||a.contains("noticing the cat"))return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"local cat perception becomes visible attention");
