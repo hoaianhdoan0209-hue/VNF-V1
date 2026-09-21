@@ -4,6 +4,10 @@ public final class WorldInteractionEngine {
  private WorldInteractionEngine(){}
  public static boolean interact(WorldState s,WorldObject o,String action){return interact(s,o,action,Math.max(System.currentTimeMillis(),Math.max(s.lastOpenedAt,s.lastSimulatedAt)));}
  public static boolean interact(WorldState s,WorldObject o,String action,long now){if(o==null||!o.enabled||!o.interactable||!PhysicalInteraction.inRangeForAction(s,o,"REST".equals(action)?"REST_PROTECT":action))return false;String id=o.id;
+  if("STUDY_HERB".equals(action)&&HerbalismEngine.isHerb(o)){boolean ok=HerbalismEngine.observe(s,o,now);if(ok)s.haruActivity="studying an unfamiliar plant";return ok;}
+  if("HARVEST_HERB".equals(action)&&HerbalismEngine.isHerb(o)){boolean ok=HerbalismEngine.harvest(s,o,now);if(ok)s.haruActivity="carefully collecting a plant sample";return ok;}
+  if("PREPARE_HERB".equals(action)&&o.tags.contains("home")){boolean ok=HerbalismEngine.prepareAtHome(s,now);if(ok)s.haruActivity="carefully experimenting with a plant sample";return ok;}
+  if("TRY_HERB".equals(action)&&o.tags.contains("home")){boolean ok=HerbalismEngine.tryPrepared(s,now);if(ok)s.haruActivity="observing how her body responds to a tiny herbal trial";return ok;}
   if("EAT".equals(action)&&o.tags.contains("food_source")){if(!DigestionHydrationEngine.eat(s,now))return false;s.haruActivity="eating a simple meal";remember(s,o,"ate a simple meal from the food available at home","eat",now);return true;}
   if("DRINK".equals(action)&&o.tags.contains("water_source")){if(!DigestionHydrationEngine.drink(s,now))return false;s.haruActivity="drinking water";remember(s,o,"drank water at home","drink",now);return true;}
   if("TOILET".equals(action)&&o.tags.contains("toilet")){if(!DigestionHydrationEngine.urinate(s,now))return false;s.haruActivity="taking care of a bodily need";remember(s,o,"used the private sanitation space at home","toilet",now);return true;}
