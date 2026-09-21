@@ -25,9 +25,9 @@ public final class PlanOutcomeReviewEngine {
   double preference=0;
   PreferenceState pref=s.preferences.get("activity:"+activityKey(p.intentionId));
   if(pref!=null)preference=pref.value;
-  p.lastDecision="POST_OUTCOME_REVIEW: memory="+m.memoryId+
+  p.lastOutcomeReview="POST_OUTCOME_REVIEW: memory="+m.memoryId+
    " valence="+fmt(m.valence)+" expectation="+fmt(expectation)+" preference="+fmt(preference);
-  PlanCausalAudit.reviewed(s,p,now,p.lastDecision);
+  PlanCausalAudit.reviewed(s,p,now,p.lastOutcomeReview);
   return true;
  }
 
