@@ -27,6 +27,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("BIOLOGY TRACE")||q.equals("HARU PHYSIOLOGY"))return PhysiologyDiagnostics.trace(s);
   if(q.equals("ECOLOGY TRACE")||q.equals("BIOME TRACE"))return EcologyEngine.diagnostic(s);
   if(q.equals("LIVING WORLD TRACE")||q.equals("ORGANISM TRACE"))return LivingWorldEngine.diagnostic(s);
+  if(q.equals("ECO RELATIONS")||q.equals("FANTASY ECOLOGY"))return FantasyEcologyEngine.diagnostic(s);
   if(q.equals("HERBAL TRACE")||q.equals("HERBALISM TRACE"))return HerbalismEngine.diagnostic(s);
   if(q.equals("PERCEPTION TRACE"))return TravelDiagnostics.perception(s);
   if(q.equals("ROUTE TRACE"))return TravelDiagnostics.route(s);
