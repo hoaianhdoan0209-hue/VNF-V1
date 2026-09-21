@@ -38,7 +38,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "path,vegetation",
+      "tags": "path,vegetation,grass,meadow",
       "connections": [
         "home_shelter",
         "lakeside"
@@ -65,7 +65,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "lake,reflect,open",
+      "tags": "lake,reflect,open,water,wetland,reeds",
       "connections": [
         "garden_path",
         "quiet_grove"
@@ -92,7 +92,7 @@
       "blendLeft": true,
       "blendRight": true,
       "weatherExposed": true,
-      "tags": "quiet,vegetation",
+      "tags": "quiet,vegetation,grove,forest,shade",
       "connections": [
         "lakeside"
       ],
@@ -240,7 +240,8 @@
       "baseMoisture": 0.38,
       "canopy": 0,
       "elevationMinM": 0,
-      "elevationMaxM": 2500
+      "elevationMaxM": 2500,
+      "baseTemperatureC": 22
     },
     {
       "id": "humid_meadow_edge",
@@ -254,7 +255,8 @@
       "baseMoisture": 0.58,
       "canopy": 0.18,
       "elevationMinM": 0,
-      "elevationMaxM": 1200
+      "elevationMaxM": 1200,
+      "baseTemperatureC": 24
     },
     {
       "id": "freshwater_lakeshore",
@@ -268,7 +270,8 @@
       "baseMoisture": 0.82,
       "canopy": 0.12,
       "elevationMinM": 0,
-      "elevationMaxM": 1800
+      "elevationMaxM": 1800,
+      "baseTemperatureC": 23.5
     },
     {
       "id": "humid_broadleaf_grove",
@@ -282,7 +285,8 @@
       "baseMoisture": 0.68,
       "canopy": 0.72,
       "elevationMinM": 0,
-      "elevationMaxM": 1800
+      "elevationMaxM": 1800,
+      "baseTemperatureC": 22.5
     }
   ]
 }
