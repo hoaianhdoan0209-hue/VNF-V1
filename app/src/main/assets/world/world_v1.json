@@ -1,5 +1,5 @@
 {
-  "worldDefinitionVersion": 7,
+  "worldDefinitionVersion": 8,
   "worldId": "vnf_lakeside_home_v1",
   "areas": [
     {
@@ -171,13 +171,13 @@
       "id": "lake_tree_03",
       "type": "tree",
       "areaId": "quiet_grove",
-      "assetRef": "tree_autumn_02",
-      "haruDescription": "cái cây cạnh hồ",
+      "assetRef": "",
+      "haruDescription": "một veilroot cao với các nhánh phiến cong, những nút hồng dọc thân co giãn theo độ ẩm và rung động",
       "x": 2070,
       "ground": 844,
       "width": 180,
       "height": 300,
-      "tags": "vegetation,landmark,quiet,observe",
+      "tags": "vegetation,veilroot,landmark,quiet,observe,living_flora",
       "interactable": true,
       "collision": true,
       "colliderOffsetX": 0,
