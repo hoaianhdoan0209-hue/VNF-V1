@@ -6,19 +6,20 @@ public final class BodyRhythmEngine {
   if(s==null||s.body==null||minutes<=0)return;
   if(isSleeping(s)){
    // Sustained sleep restores the body over real hours, not as a one-frame reward.
-   s.body.energy+=minutes*.12;       // ~7.2 points/hour
-   double endocrineRecovery=s.endocrine==null?1:(.88+.12*s.endocrine.recoverySignal);s.body.sleepiness-=minutes*.15*endocrineRecovery;  // ~9 points/hour
+   s.body.energy+=minutes*.070;      // ~4.2 points/hour; meaningful recovery takes hours
+   double endocrineRecovery=s.endocrine==null?1:(.88+.12*s.endocrine.recoverySignal);s.body.sleepiness-=minutes*.110*endocrineRecovery; // ~6.6 points/hour before endocrine modulation
    if(s.body.pain>0)s.body.pain-=minutes*.006;
    if(s.body.health<100)s.body.health+=minutes*(s.body.hasInjury()?.0025:.004);
   }else if(isResting(s)){
    // Quiet protected rest helps gradually while awake, but is weaker than sleep.
-   s.body.energy+=minutes*.035;
-   s.body.sleepiness-=minutes*.025;
+   s.body.energy+=minutes*.012;
+   s.body.sleepiness-=minutes*.008;
    
   }else{
-   // Awake baseline: roughly 3 energy points and 4 sleepiness points per real hour.
-   s.body.energy-=minutes*.050;
-   double circadian=s.endocrine==null?.25:s.endocrine.circadianSleepSignal;s.body.sleepiness+=minutes*(.052+.030*circadian);
+   // Awake baseline is deliberately mild. Work, heat, hydration, nutrition and illness add the meaningful load elsewhere.
+   s.body.energy-=minutes*.012; // ~0.72 points/hour at quiet wakefulness
+   double circadian=s.endocrine==null?.25:s.endocrine.circadianSleepSignal;
+   s.body.sleepiness+=minutes*(.026+.024*circadian); // circadian pressure, not a fixed game timer
   }
   s.body.clamp();
  }
