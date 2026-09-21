@@ -1,10 +1,11 @@
 package com.aicharacter.v3;
 import java.util.*;
-/** Slow offline personal development derived only from lived evidence. It never scripts choices. */
+
+/** Slow personal development derived only from lived evidence. It never scripts choices. */
 public final class PersonalDevelopmentEngine {
  private PersonalDevelopmentEngine(){}
  public static void learn(WorldState s,MemoryEntry m){
-  if(s==null||m==null)return;
+  if(s==null||m==null)return;if(s.personality==null)s.personality=new PersonalityState();
   double sig=Math.max(.15,m.importance),v=m.valence;
   if(hasAny(m,"explore","explore_garden","observe","observe_lake","observe_creature","watch_reedling","novel"))develop(s,"explore",v>=-.1?1:-1,sig);
   if(m.hasTag("danger")||m.hasTag("failure")||m.hasTag("failed_search"))develop(s,"danger",1,sig);
@@ -16,6 +17,10 @@ public final class PersonalDevelopmentEngine {
  private static void develop(WorldState s,String axis,double direction,double sig){
   s.personality.slowlyLearn(axis,direction,Math.min(1.5,sig));
  }
+ /**
+  * Contextual expression pressure retained for diagnostics/future realization.
+  * It is deliberately not consumed as action utility by LifeDecisionEngine.
+  */
  public static double expression(WorldState s,String intentionId){
   if(s==null||s.personality==null)return 0;
   PersonalityState p=s.personality; String id=intentionId==null?"":intentionId;
@@ -26,4 +31,16 @@ public final class PersonalDevelopmentEngine {
   if("reflect".equals(id))return (p.patience-.5)*5;
   return 0;
  }
+ public static String diagnostic(WorldState s,long now){
+  if(s==null||s.personality==null)return "PERSONALITY V3 <no state>";
+  PersonalityState p=s.personality;
+  BehaviorExpressionEngine.Snapshot x=BehaviorExpressionEngine.observe(s,now);
+  return "PERSONALITY V3\n"+
+   "curiosity="+fmt(p.curiosity)+" caution="+fmt(p.caution)+" sociability="+fmt(p.sociability)+
+   " independence="+fmt(p.independence)+" patience="+fmt(p.patience)+"\n"+
+   "context="+(s.currentIntention==null?"":s.currentIntention)+" expressionPressure="+fmt(expression(s,s.currentIntention))+"\n"+
+   "visible="+(x.stageDirection().isEmpty()?"<none>":x.stageDirection())+"\n"+
+   "contract=lived evidence -> slow traits -> contextual expression; no direct action control";
+ }
+ private static String fmt(double v){return String.format(Locale.US,"%.3f",v);}
 }
