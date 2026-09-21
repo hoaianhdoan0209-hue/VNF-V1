@@ -6,7 +6,8 @@ public final class PerceptionBoundary {
     private PerceptionBoundary(){}
     public static String systemReality(WorldState s){return String.format(Locale.US,"catX=%.1f; haruX=%.1f; saveVersion=%d; worldDefinition=%d; weather=%s; light=%.2f",s.catX,s.haruX,WorldState.SAVE_VERSION,s.world.definitionVersion,s.environment.weather,s.environment.ambientBrightness);}
     public static PerceivedObject perceive(WorldState s,WorldObject o){
-        boolean familiar=false;for(MemoryEntry m:s.memories)if(o.id.equals(m.location)||m.tags.contains(o.id)){familiar=true;break;}
+        if(!HaruVisionEngine.canSee(s,o))return new PerceivedObject("unknown","không nhìn thấy rõ vật đó","ngoài nhận thức hiện tại",false);
+        boolean familiar=false;for(MemoryEntry m:s.memories)if(o.id.equals(m.location)||m.tags.contains(o.id)||m.participants.contains(o.id)){familiar=true;break;}
         String rel=o.x<s.haruX-70?"ở phía bên trái":o.x>s.haruX+70?"ở phía bên phải":"ở ngay gần đây";
         return new PerceivedObject(o.id,o.haruDescription,rel,familiar);
     }
