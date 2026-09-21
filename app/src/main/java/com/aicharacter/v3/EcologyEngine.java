@@ -1,0 +1,13 @@
+package com.aicharacter.v3;
+import java.util.Locale;
+/** Shared biome ecology. Geography and climate bound vegetation/creatures; weather modulates activity instead of inventing species. */
+public final class EcologyEngine{
+ private EcologyEngine(){}
+ public static BiomeProfile biome(WorldState s,WorldArea a){return s==null||s.world==null||a==null?null:s.world.biome(a.biomeId);}
+ public static double localMoisture(WorldState s,WorldArea a){BiomeProfile b=biome(s,a);double base=b==null?.45:b.baseMoisture;if(s!=null&&s.environment!=null&&"RAIN".equals(s.environment.weather))base+=s.environment.weatherIntensity*.18*WorldSemantics.exposure(a);if(a!=null)base+=a.localMoistureOffset;return cl(base);}
+ public static double creatureSuitability(WorldState s,WorldArea a,WorldObject creature){if(s==null||a==null||creature==null)return 0;BiomeProfile b=biome(s,a);if(b==null)return .45;double score=b.supports(creature.habitat)?.72:.12;double moisture=localMoisture(s,a);if(creature.habitat!=null&&(creature.habitat.contains("lake")||creature.habitat.contains("wetland")||creature.habitat.contains("water")))score+=moisture*.22;else score+=Math.max(0,.18-Math.abs(moisture-b.baseMoisture)*.35);if(a.elevationM<b.elevationMinM||a.elevationM>b.elevationMaxM)score-=.45;if(s.environment!=null&&"RAIN".equals(s.environment.weather)&&s.environment.weatherIntensity>.75&&!b.hasTag("rain_tolerant"))score-=.08;return cl(score);}
+ public static double vegetationVigor(WorldState s,WorldArea a){BiomeProfile b=biome(s,a);if(b==null)return .5;double moisture=localMoisture(s,a),delta=Math.abs(moisture-b.baseMoisture);return cl(.72-delta*.65+(b.canopy>.6?.08:0));}
+ public static String diagnostic(WorldState s){StringBuilder x=new StringBuilder("ECOLOGY TRACE\n");if(s==null||s.world==null)return x.append("<no world>").toString();for(WorldArea a:s.world.areas){BiomeProfile b=s.world.biome(a.biomeId);x.append(a.id).append(" | biome=").append(b==null?a.biomeId:b.label).append(" | elevation=").append(a.elevationM).append("m | moisture=").append(fmt(localMoisture(s,a))).append(" | vegetationVigor=").append(fmt(vegetationVigor(s,a)));if(b!=null)x.append(" | vegetation=").append(b.vegetation).append(" | fauna=").append(b.fauna);x.append('\n');}WorldObject r=s.world.object("reedling_01");if(r!=null){WorldArea a=s.world.area(s.reedling==null?r.areaId:s.reedling.areaId);x.append("reedlingSuitability=").append(fmt(creatureSuitability(s,a,r)));}return x.toString();}
+ private static double cl(double v){return Math.max(0,Math.min(1,v));}
+ private static String fmt(double v){return String.format(Locale.US,"%.2f",v);}
+}
