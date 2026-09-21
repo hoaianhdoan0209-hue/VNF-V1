@@ -22,6 +22,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("CAT ATTACH TRACE"))return CatOfflineEngine.attachTrace(s);
   if(q.equals("DEV V081 TEST"))return V081DevTest.continuity(s);
   if(q.equals("PHYSICAL INTERACTION TRACE")){WorldObject o=s.world.object(s.planState.destination);if(o==null)o=s.world.firstTagged("reflect");return PhysicalInteraction.trace(s,o);}
+  if(q.equals("HARU VISION"))return HaruVisionEngine.diagnostic(s);
   if(q.equals("PERCEPTION TRACE"))return TravelDiagnostics.perception(s);
   if(q.equals("ROUTE TRACE"))return TravelDiagnostics.route(s);
   if(q.equals("DEV V08 TEST"))return V08DevTest.run(s);
