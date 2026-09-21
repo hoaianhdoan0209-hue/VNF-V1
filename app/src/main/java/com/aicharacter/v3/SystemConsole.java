@@ -31,6 +31,7 @@ public final class SystemConsole {private SystemConsole(){}
   if(q.equals("HARU ECO BELIEFS")||q.equals("ECO HYPOTHESES"))return EcologyObservationLearningEngine.diagnostic(s);
   if(q.equals("HARU NAMES")||q.equals("PERSONAL LEXICON"))return HaruNamingEngine.diagnostic(s);
   if(q.equals("HARU CONCEPTS")||q.equals("CONCEPT TRACE"))return HaruConceptEngine.diagnostic(s);
+  if(q.equals("HARU MEANINGS")||q.equals("ABSTRACT MEANINGS"))return HaruAbstractConceptEngine.diagnostic(s);
   if(q.equals("HERBAL TRACE")||q.equals("HERBALISM TRACE"))return HerbalismEngine.diagnostic(s);
   if(q.equals("PERCEPTION TRACE"))return TravelDiagnostics.perception(s);
   if(q.equals("ROUTE TRACE"))return TravelDiagnostics.route(s);
