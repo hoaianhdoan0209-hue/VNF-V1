@@ -1,36 +1,79 @@
 package com.aicharacter.v3;
-import java.text.Normalizer;import java.util.*;
-/** Safe divine teaching: creates evidence/learning opportunities, never direct bodily control. */
-public final class GodTeachingGateway{
- private GodTeachingGateway(){}
- private static final Set<String> SAFE_ACTIONS=new LinkedHashSet<>(Arrays.asList("observe_carefully","read","sketch","tend_garden","prepare_simple_food","clean_space","care_for_creature"));
- public static boolean looksLikeTeaching(String raw){String q=norm(raw);return q.startsWith("day ")||q.startsWith("day:")||q.contains("day co ay")||q.startsWith("teach ")||q.contains("cap nhat kien thuc")||q.contains("hoc hanh dong");}
- public static String teach(WorldState s,String raw,long now){
-  String n=norm(raw);String payload=raw;int c=raw.indexOf(':');if(c>=0&&c+1<raw.length())payload=raw.substring(c+1).trim();
-  if(payload.isEmpty())return "Hãy nói rõ điều muốn Thần dạy. Ví dụ: DẠY CÔ ẤY: kiến thức về mưa.";
-  boolean action=n.contains("hanh dong")||n.contains("ky nang")||n.contains("skill");
-  if(action)return teachAction(s,payload,now);
-  return teachKnowledge(s,payload,now);
- }
- private static String teachKnowledge(WorldState s,String topic,long now){
-  String key=key(topic);if(key.isEmpty())return "Nội dung dạy chưa đủ rõ.";
-  int old=s.knowledge.containsKey(key)?s.knowledge.get(key):0;
-  int gain=(int)Math.max(1,Math.floor(AgeDevelopmentEngine.learningFactor(s)));
-  int next=Math.min(AgeDevelopmentEngine.knowledgeCeiling(s),old+gain);
-  s.knowledge.put(key,next);
-  s.memories.add(new MemoryEntry(now,"divine_teaching","Thần offered a lesson about "+topic+". She understood it at her present capacity, not as absolute truth.",.72));
-  CognitionEngine.experience(s,"learning","She received a lesson about "+topic+".",.12,.46,"learning","god_teaching");
-  return "Đã tạo một trải nghiệm học về “"+topic+"”. Mức hiểu: "+old+" → "+next+"/4. Đây là điều cô ấy đã tiếp nhận; Thần không ép cô ấy tin tuyệt đối hay hành động theo nó.";
- }
- private static String teachAction(WorldState s,String text,long now){
-  String k=key(text);String chosen="";for(String a:SAFE_ACTIONS)if(k.contains(a)||k.contains(a.replace('_',' '))){chosen=a;break;}
-  if(chosen.isEmpty())return "Thần chưa thể cài hành động tùy ý vào cô ấy. Hành động phải thuộc repertoire an toàn và được học qua trải nghiệm.";
-  double old=s.skills.containsKey(chosen)?s.skills.get(chosen):0;
-  double step=.12*AgeDevelopmentEngine.learningFactor(s);double next=Math.min(1,old+step);s.skills.put(chosen,next);
-  if(next>=.30)s.learnedActions.add(chosen);
-  s.memories.add(new MemoryEntry(now,"skill_learning","She practiced the idea of "+chosen+" after divine teaching.",.68));
-  return "Đã mở cơ hội học “"+chosen+"”. Kỹ năng "+String.format(Locale.US,"%.0f%% → %.0f%%",old*100,next*100)+(next>=.30?"; hành động đã vào repertoire lựa chọn.":"; chưa đủ quen để trở thành lựa chọn ổn định.");
- }
- private static String key(String x){String n=norm(x).replaceAll("[^a-z0-9]+","_").replaceAll("^_+|_+$","");return n.length()>48?n.substring(0,48):n;}
- private static String norm(String x){String n=Normalizer.normalize(x==null?"":x,Normalizer.Form.NFD).replaceAll("\\p{M}+","").toLowerCase(Locale.ROOT);return n.replace('đ','d').trim();}
+
+import java.text.Normalizer;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+
+/**
+ * Divine teaching boundary.
+ *
+ * God can offer a lesson, but cannot install knowledge, memory, personality,
+ * emotion, relationship, intention, skill or repertoire directly into Haru.
+ * The durable offer is later evaluated by HaruTeachingOpportunityEngine.
+ */
+public final class GodTeachingGateway {
+    private static final Set<String> SAFE_ACTIONS=new LinkedHashSet<>(Arrays.asList(
+            "observe_carefully","read","sketch","tend_garden","prepare_simple_food","clean_space","care_for_creature"));
+
+    private GodTeachingGateway(){}
+
+    public static boolean looksLikeTeaching(String raw){
+        String q=norm(raw);
+        return q.startsWith("day ")||q.startsWith("day:")||q.contains("day co ay")||
+                q.startsWith("teach ")||q.contains("cap nhat kien thuc")||q.contains("hoc hanh dong");
+    }
+
+    public static String teach(WorldState s,String raw,long now){
+        if(s==null)return "Không có world state để tạo lời dạy.";
+        String normalized=norm(raw);
+        String payload=raw==null?"":raw.trim();
+        int colon=payload.indexOf(':');
+        if(colon>=0&&colon+1<payload.length())payload=payload.substring(colon+1).trim();
+        if(payload.isEmpty())return "Hãy nói rõ điều muốn Thần dạy. Ví dụ: DẠY CÔ ẤY: kiến thức về mưa.";
+
+        boolean action=normalized.contains("hanh dong")||normalized.contains("ky nang")||normalized.contains("skill");
+        if(action)return offerAction(s,payload,now);
+        return offerKnowledge(s,payload,now);
+    }
+
+    private static String offerKnowledge(WorldState s,String topic,long now){
+        String key=key(topic);
+        if(key.isEmpty())return "Nội dung dạy chưa đủ rõ.";
+        publishOffer(s,"knowledge",key,now);
+        return "Thần đã đưa ra một lời dạy về “"+topic.trim()+"”. Haru chưa bị thay đổi: cô ấy sẽ tự quyết định có lắng nghe hay không trong nhịp sống tiếp theo.";
+    }
+
+    private static String offerAction(WorldState s,String text,long now){
+        String normalizedKey=key(text),chosen="";
+        for(String action:SAFE_ACTIONS){
+            if(normalizedKey.contains(action)||normalizedKey.contains(action.replace('_',' '))){chosen=action;break;}
+        }
+        if(chosen.isEmpty())
+            return "Thần không thể cài hành động tùy ý vào Haru. Kỹ năng phải thuộc repertoire an toàn và chỉ tiến bộ sau trải nghiệm/thực hành thật.";
+        publishOffer(s,"action",chosen,now);
+        return "Thần đã giải thích “"+chosen+"” như một cơ hội học. Haru có thể nghe hoặc bỏ qua; skill và repertoire chưa thay đổi cho đến khi cô ấy tự thực hành và có kết quả thật.";
+    }
+
+    private static void publishOffer(WorldState s,String mode,String key,long now){
+        long at=Math.max(now,Math.max(s.lastOpenedAt,s.lastSimulatedAt));
+        String seed=mode+":"+key+":"+at;
+        String id="god_teaching_offer_"+Long.toHexString(at)+"_"+Integer.toHexString(seed.hashCode());
+        // History records only the real interaction: an offer was made. It does
+        // not assert the lesson content as VNF world truth.
+        WorldEventBus.publishId(s,at,id,HaruTeachingOpportunityEngine.OFFER_TYPE,
+                "god_teaching","mode="+mode+" key="+key+" status=OFFERED");
+    }
+
+    private static String key(String x){
+        String n=norm(x).replaceAll("[^a-z0-9]+","_").replaceAll("^_+|_+$","");
+        return n.length()>48?n.substring(0,48):n;
+    }
+
+    private static String norm(String x){
+        String n=Normalizer.normalize(x==null?"":x,Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+","").toLowerCase(Locale.ROOT);
+        return n.replace('đ','d').trim();
+    }
 }
