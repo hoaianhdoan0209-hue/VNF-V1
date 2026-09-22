@@ -7,7 +7,7 @@ public final class WorldPhysicsInvariantTest {
  private static final long T0=1700000000000L;
 
  private static WorldState flat(){
-  WorldState s=new WorldState();
+  WorldState s=WorldState.fresh();
   s.world=new WorldModel();
   BiomeProfile b=new BiomeProfile();
   b.id="test";b.label="test";b.baseMoisture=.48;b.baseTemperatureC=24;b.waterRegime="dry";
