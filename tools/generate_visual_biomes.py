@@ -7,7 +7,7 @@ PRE=os.path.join(ROOT,"app/build/visual-preview")
 os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
-REV="authored-organic-biome-v2-2026-09"
+REV="authored-organic-biome-v3-2026-09"
 C={
  "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
  "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
@@ -45,8 +45,26 @@ def cluster(d,r,x,y,rx,ry,lo,hi,count=20):
         d.ellipse((xx-rw,yy-rh,xx+rw,yy+rh),fill=r.randint(lo,hi))
 
 def cloud(d,r,x,y,s):
-    for ox,oy,rx,ry in [(-34,4,30,9),(0,0,40,13),(36,6,28,8),(4,-8,25,9)]:
-        d.ellipse((x+ox*s-rx*s,y+oy*s-ry*s,x+ox*s+rx*s,y+oy*s+ry*s),fill=r.randint(10,15))
+    # layered, hand-shaped pixel cloud rather than a single flat blob
+    for ox,oy,rx,ry,shade in [(-34,4,30,9,11),(0,0,40,13,12),(36,6,28,8,11),(4,-8,25,9,13)]:
+        d.ellipse((x+ox*s-rx*s,y+oy*s-ry*s,x+ox*s+rx*s,y+oy*s+ry*s),fill=shade+r.randint(-1,1))
+    d.line((x-38*s,y+10*s,x+38*s,y+10*s),fill=9,width=max(1,int(s*2)))
+
+def pixel_sparkle(d,x,y,fill=74):
+    d.point((x,y),fill=fill)
+    d.point((x-1,y),fill=fill)
+    d.point((x+1,y),fill=fill)
+    d.point((x,y-1),fill=fill)
+
+def dither_patch(d,r,box,lo,hi,count):
+    x0,y0,x1,y1=box
+    for _ in range(count):
+        x=r.randint(x0,x1); y=r.randint(y0,y1)
+        d.rectangle((x,y,x+r.choice((1,1,2)),y+r.choice((0,1))),fill=r.randint(lo,hi))
+
+def sun_rays(d,x,y,fill):
+    for w in (110,78,46):
+        d.polygon([(x-w,y),(x+w,y),(x+int(w*.38),H),(x-int(w*.38),H)],fill=fill)
 
 def ridge(d,r,y,amp,fill,step=10):
     pts=[(0,H)]
@@ -93,13 +111,24 @@ def stone_path(d,r,center0,center1,y0=272):
 
 def draw_sky(name,c,r):
     im,d,a=layer(c,True)
+    # subtle horizontal color banding keeps the pixel-art sky from feeling flat
+    for y in range(18,H,26):
+        if r.random()<.7:
+            d.line((0,y,W,y),fill=min(15,2+y//32),width=1)
     cloud(d,r,140,75,.85); cloud(d,r,420,55,1.0); cloud(d,r,682,93,.72)
     if name in ("home","garden"):
-        d.ellipse((628,42,657,71),fill=70)
-        d.rectangle((637,52,648,62),fill=72)
+        d.ellipse((624,38,661,75),fill=69)
+        d.ellipse((630,44,655,69),fill=73)
+        for dx,dy in [(-10,8),(9,-7),(14,10)]:
+            pixel_sparkle(d,643+dx,56+dy,75)
+    if name=="lakeside":
+        d.ellipse((95,45,119,69),fill=67)
+        d.line((105,69,105,98),fill=16,width=1)
     if name=="grove":
-        d.rectangle((0,0,W,32),fill=4)
-        for x in range(0,W,26): d.rectangle((x,22,x+14,45+r.randint(0,18)),fill=r.randint(18,24))
+        d.rectangle((0,0,W,28),fill=4)
+        for x in range(0,W,22):
+            d.rectangle((x,18,x+r.randint(8,18),42+r.randint(0,22)),fill=r.randint(18,24))
+        sun_rays(d,395,42,7)
     save(im,a,os.path.join(OUT,name+"_sky.png"))
 
 def draw_distant(name,c,r):
@@ -116,9 +145,15 @@ def draw_distant(name,c,r):
     else:
         for x in range(-10,820,31): tree(d,r,x,252,r.randint(35,68))
         if name=="home":
-            d.polygon([(302,226),(362,187),(426,226)],fill=20)
-            d.rectangle((316,226,414,267),fill=37)
-            d.rectangle((350,236,372,267),fill=65)
+            # distant cottage mass + chimney smoke silhouette
+            d.polygon([(296,226),(362,184),(432,226)],fill=20)
+            d.polygon([(307,224),(362,190),(418,224)],fill=26)
+            d.rectangle((314,226,416,269),fill=37)
+            d.rectangle((351,236,374,269),fill=64)
+            d.rectangle((384,234,402,250),fill=69)
+            d.rectangle((326,204,334,222),fill=22)
+            for i in range(4):
+                d.ellipse((320+i*7,195-i*6,334+i*7,205-i*6),fill=12+i)
         else:
             d.line((80,246,720,242),fill=44,width=3)
             for x in range(100,720,48): d.line((x,242,x,260),fill=45,width=2)
@@ -127,42 +162,70 @@ def draw_distant(name,c,r):
 def draw_mid(name,c,r):
     im,d,a=layer(c)
     if name=="home":
-        tree(d,r,70,316,196); tree(d,r,734,316,184)
-        d.polygon([(110,236),(174,195),(242,236)],fill=19)
-        d.rectangle((126,236,225,292),fill=39)
-        d.rectangle((159,246,183,292),fill=64)
-        d.rectangle((194,248,214,269),fill=70)
-        d.line((92,286,285,282),fill=44,width=4); d.line((520,282,792,286),fill=44,width=4)
-        for x in list(range(105,286,30))+list(range(526,793,30)):
-            d.line((x,273,x,296),fill=43,width=2)
-        cluster(d,r,103,291,54,18,34,49,18); cluster(d,r,695,291,62,18,34,49,20)
+        tree(d,r,62,316,202); tree(d,r,742,316,190)
+        # main cottage: asymmetric roof, porch, warm windows, roof texture
+        d.polygon([(102,239),(176,189),(252,239)],fill=18)
+        d.polygon([(116,237),(177,198),(238,237)],fill=26)
+        for x in range(126,230,13):
+            d.line((x,214+(x%3),x+18,226+(x%4)),fill=r.randint(22,29),width=2)
+        d.rectangle((122,238,232,296),fill=39)
+        d.rectangle((155,247,184,296),fill=62)
+        d.rectangle((194,247,219,272),fill=69)
+        d.rectangle((198,251,215,268),fill=74)
+        d.line((206,251,206,268),fill=61,width=1)
+        d.line((198,259,215,259),fill=61,width=1)
+        d.rectangle((113,285,242,292),fill=33)
+        d.line((92,286,286,282),fill=44,width=4); d.line((516,282,792,286),fill=44,width=4)
+        for x in list(range(105,286,30))+list(range(522,793,30)):
+            d.line((x,272,x,298),fill=43,width=2)
+            d.line((x,278,x+24,278),fill=45,width=1)
+        cluster(d,r,101,292,58,18,34,49,22); cluster(d,r,699,292,66,18,34,49,24)
+        flowers(d,r,38,150,312,16); flowers(d,r,650,776,312,16)
+        dither_patch(d,r,(125,241,229,294),36,43,42)
     elif name=="garden":
-        for x in range(0,260,30): cluster(d,r,x,292,24,15,34,51,10)
-        for x in range(545,805,30): cluster(d,r,x,292,24,15,34,51,10)
-        for bx in (155,650):
-            pts=[(int(bx+math.cos(math.pi*i/28)*58),int(286-math.sin(math.pi*i/28)*96)) for i in range(29)]
-            d.line(pts,fill=21,width=5)
+        for x in range(0,260,28): cluster(d,r,x,292,25,16,34,51,11)
+        for x in range(545,805,28): cluster(d,r,x,292,25,16,34,51,11)
+        # twin rose arches frame the path without blocking Haru
+        for bx in (150,650):
+            pts=[(int(bx+math.cos(math.pi*i/30)*60),int(286-math.sin(math.pi*i/30)*99)) for i in range(31)]
+            d.line(pts,fill=21,width=6)
             d.line([(x+4,y) for x,y in pts],fill=43,width=1)
-        flowers(d,r,18,245,305,36); flowers(d,r,560,790,305,34)
-        d.rectangle((315,262,485,273),fill=43)
-        for x in range(320,486,28): d.line((x,252,x,282),fill=44,width=2)
+            for i,(x,y) in enumerate(pts[3:-3:4]):
+                d.ellipse((x-3,y-3,x+3,y+3),fill=70+(i%4))
+        flowers(d,r,14,252,307,52); flowers(d,r,552,792,307,50)
+        # small pergola/bench focal point
+        d.rectangle((316,260,484,272),fill=43)
+        d.rectangle((337,245,345,286),fill=42); d.rectangle((455,245,463,286),fill=42)
+        for x in range(322,483,22): d.line((x,251,x,282),fill=44,width=2)
+        d.rectangle((362,278,438,285),fill=47)
+        d.rectangle((370,286,377,300),fill=45); d.rectangle((423,286,430,300),fill=45)
     elif name=="lakeside":
-        tree(d,r,48,320,178); tree(d,r,755,320,165)
+        tree(d,r,44,320,184); tree(d,r,758,320,172)
         for x in list(range(0,230,9))+list(range(584,800,9)):
-            h=r.randint(38,102); d.line((x,320,x+r.randint(-6,6),320-h),fill=r.randint(35,50),width=r.choice((1,2)))
+            h=r.randint(38,104); d.line((x,320,x+r.randint(-6,6),320-h),fill=r.randint(35,50),width=r.choice((1,2)))
         d.polygon([(0,291),(180,279),(245,302),(242,326),(0,334)],fill=48)
         d.polygon([(800,291),(622,279),(558,302),(560,326),(800,334)],fill=48)
+        # low wooden pier creates a strong lakeside identity
+        d.polygon([(302,296),(468,290),(492,300),(323,307)],fill=45)
+        for x in (323,372,421,470):
+            d.line((x,299,x-2,327),fill=39,width=3)
         for x in range(0,150,24): d.ellipse((x,310,x+20,324),fill=r.randint(34,42))
+        for x,y in [(286,271),(520,259),(548,282)]:
+            d.arc((x,y,x+18,y+9),180,355,fill=66,width=1)
     else:
-        for x in (45,96,150,650,710,765):
-            tx,ty=trunk(d,r,x,330,r.randint(190,275),r.randint(5,9),r.randint(18,24))
-            cluster(d,r,tx,ty+18,45,25,29,47,18)
-        for x in (135,185,617,670):
-            d.line((x,319,x+r.randint(-8,8),125),fill=r.randint(18,25),width=r.randint(4,8))
-            d.arc((x-45,185,x+50,330),190,330,fill=r.randint(26,34),width=2)
-        for _ in range(26):
-            x=r.choice(list(range(25,245))+list(range(555,785))); y=r.randint(265,318)
+        for x in (38,90,145,655,715,770):
+            tx,ty=trunk(d,r,x,330,r.randint(195,282),r.randint(6,10),r.randint(18,24))
+            cluster(d,r,tx,ty+18,48,26,29,47,20)
+        for x in (132,182,618,672):
+            d.line((x,319,x+r.randint(-8,8),122),fill=r.randint(18,25),width=r.randint(4,8))
+            d.arc((x-48,182,x+54,333),190,330,fill=r.randint(26,34),width=2)
+        # glowing mushroom/fern pockets make the grove feel authored and magical
+        for _ in range(32):
+            x=r.choice(list(range(25,245))+list(range(555,785))); y=r.randint(265,320)
             d.ellipse((x,y,x+r.randint(4,10),y+r.randint(2,6)),fill=r.randint(31,46))
+        for x in (78,116,205,592,684,738):
+            d.rectangle((x,306,x+2,315),fill=38)
+            d.ellipse((x-4,302,x+6,308),fill=r.randint(68,74))
     save(im,a,os.path.join(OUT,name+"_mid.png"))
 
 def draw_ground(name,c,r):
@@ -174,25 +237,32 @@ def draw_ground(name,c,r):
         for x in range(20,780,38):
             if 290<x<520: continue
             d.ellipse((x,318+r.randint(-5,10),x+r.randint(8,17),326+r.randint(1,12)),fill=r.randint(47,56))
+        dither_patch(d,r,(0,300,799,359),44,54,95)
     elif name=="garden":
         stone_path(d,r,404,430)
         d.rectangle((38,296,260,324),fill=47); d.rectangle((540,296,770,324),fill=47)
-        flowers(d,r,45,250,318,42); flowers(d,r,548,760,318,44)
+        flowers(d,r,45,250,318,56); flowers(d,r,548,760,318,58)
+        dither_patch(d,r,(38,298,260,324),46,54,38); dither_patch(d,r,(540,298,770,324),46,54,38)
     elif name=="lakeside":
         d.polygon([(0,278),(222,276),(292,309),(304,H),(0,H)],fill=48)
         d.polygon([(800,278),(579,276),(510,309),(495,H),(800,H)],fill=48)
         d.polygon([(286,317),(514,317),(500,H),(302,H)],fill=34)
-        for y in range(326,H,8): d.line((305,y,495,y),fill=r.randint(35,40),width=1)
+        for y in range(324,H,7):
+            d.line((304,y,496,y),fill=r.randint(35,40),width=1)
+            if y%14==0: d.line((340,y+2,454,y+2),fill=63,width=1)
+        for _ in range(12):
+            x=r.randint(315,485); y=r.randint(326,356); pixel_sparkle(d,x,y,r.randint(62,70))
         for x in list(range(0,220,14))+list(range(580,800,14)): grass(d,r,x,H,r.randint(12,28),40,55)
     else:
         for sx in (28,102,168,631,702,774):
             d.line((sx,289,400+r.randint(-95,95),H),fill=r.randint(20,28),width=r.randint(3,7))
-        for _ in range(42):
+        for _ in range(52):
             x=r.randint(0,W); y=r.randint(292,H)
             d.line((x,y,x+r.randint(-12,12),y+r.randint(0,4)),fill=r.randint(30,46),width=1)
-        for _ in range(14):
+        for _ in range(22):
             x=r.choice(list(range(20,250))+list(range(560,780))); y=r.randint(305,352)
             d.rectangle((x,y,x+2,y+4),fill=r.randint(66,73))
+        dither_patch(d,r,(0,300,799,359),29,46,82)
     for x in range(0,W,13):
         if r.random()<.78: grass(d,r,x,H,r.randint(8,23),42,58)
     save(im,a,os.path.join(OUT,name+"_ground.png"))
@@ -200,10 +270,12 @@ def draw_ground(name,c,r):
 def draw_foreground(name,c,r):
     im,d,a=layer(c)
     if name=="grove":
-        for x in (9,62,742,792): trunk(d,r,x,H,r.randint(210,320),r.randint(7,12),r.randint(17,23))
-        cluster(d,r,76,315,80,35,28,47,30); cluster(d,r,722,315,80,35,28,47,30)
-        for x in range(-5,205,10): grass(d,r,x,H,r.randint(32,95),29,49)
-        for x in range(595,805,10): grass(d,r,x,H,r.randint(32,95),29,49)
+        for x in (6,56,746,796): trunk(d,r,x,H,r.randint(215,325),r.randint(8,13),r.randint(17,23))
+        cluster(d,r,74,315,84,38,28,47,34); cluster(d,r,726,315,84,38,28,47,34)
+        for x in range(-5,205,9): grass(d,r,x,H,r.randint(34,100),29,49)
+        for x in range(595,805,9): grass(d,r,x,H,r.randint(34,100),29,49)
+        # dark top corners create a natural vignette while center stays readable
+        cluster(d,r,18,36,78,38,18,32,20); cluster(d,r,782,36,78,38,18,32,20)
     elif name=="lakeside":
         tree(d,r,20,H,190); tree(d,r,780,H,188)
         for x in list(range(-5,180,9))+list(range(620,805,9)): grass(d,r,x,H,r.randint(36,105),31,49)
