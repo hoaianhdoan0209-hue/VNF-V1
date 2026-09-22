@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=2400,1080
-REV="authored-organic-biome-v9-native-2400x1080-2026-09"
+REV="authored-organic-biome-v9-aligned-bloom-2026-09"
 C={
  "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
  "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
@@ -74,6 +74,7 @@ def _masked_texture(base,mask,r,kind,biome):
             for pad,alpha in ((0,36),(40,24),(80,14)):
                 d.rectangle((0,0,170-pad,h),fill=(12,20,17,alpha))
                 d.rectangle((w-170+pad,0,w,h),fill=(12,20,17,alpha))
+    ov=ov.resize(base.size,Image.Resampling.BICUBIC)
     if mask is not None:
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
@@ -158,6 +159,7 @@ def _signature_detail(base,mask,r,kind,biome):
                 x=r.choice((r.randint(20,520),r.randint(1080,w-20))); y=r.randint(590,h-10)
                 glow_dot(x,y,1,(216,209,132),r.randint(18,42))
 
+    ov=ov.resize(base.size,Image.Resampling.BICUBIC)
     if mask is not None and kind!="sky":
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
@@ -237,6 +239,7 @@ def _material_depth(base,mask,r,kind,biome):
             x=r.randint(0,w-1); y=r.randint(int(h*.38),int(h*.74))
             d.line((x,y,x+r.randint(6,24),y),fill=(*warm,r.randint(5,12)),width=1)
 
+    ov=ov.resize(base.size,Image.Resampling.BICUBIC)
     if mask is not None and kind!="sky":
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
@@ -296,6 +299,7 @@ def _micro_life(base,mask,r,kind,biome):
             col=r.choice(((218,230,146),(167,224,169),(236,199,117)))
             butterfly(x,y,r.choice((1,2)),col,r.randint(26,56))
 
+    ov=ov.resize(base.size,Image.Resampling.BICUBIC)
     if mask is not None and kind!="sky":
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
@@ -366,9 +370,52 @@ def _cinematic_light(base,mask,kind,biome):
     if kind in ("sky","distant","ground"):
         light=light.filter(ImageFilter.GaussianBlur(18 if kind=="sky" else 12))
 
+    light=light.resize(base.size,Image.Resampling.BICUBIC)
     if mask is not None and kind!="sky":
         light.putalpha(ImageChops.multiply(light.getchannel("A"),mask))
     return Image.alpha_composite(base,light)
+
+def _emissive_bloom(base,kind,biome):
+    if kind not in ("mid","ground","foreground"):
+        return base
+    w,h=1600,720
+    glow=Image.new("RGBA",(w,h),(0,0,0,0)); gd=ImageDraw.Draw(glow)
+    core=Image.new("RGBA",(w,h),(0,0,0,0)); cd=ImageDraw.Draw(core)
+
+    def source(x,y,rx,ry,col,alpha):
+        gd.ellipse((x-rx,y-ry,x+rx,y+ry),fill=(*col,alpha))
+        cd.ellipse((x-max(2,rx//5),y-max(2,ry//5),x+max(2,rx//5),y+max(2,ry//5)),fill=(*col,min(105,alpha+38)))
+
+    if biome=="home" and kind=="mid":
+        for x,y,rx,ry in ((408,520,48,35),(458,535,34,28),(355,536,28,25)):
+            source(x,y,rx,ry,(255,184,92),32)
+    elif biome=="garden":
+        if kind=="mid":
+            source(800,500,70,24,(230,239,202),22)
+            for x,y in ((310,590),(430,607),(1170,596),(1300,610)):
+                source(x,y,18,10,(255,205,172),16)
+        elif kind=="ground":
+            for x,y in ((240,650),(390,675),(1200,650),(1360,686)):
+                source(x,y,24,10,(244,216,161),12)
+    elif biome=="lakeside":
+        if kind=="ground":
+            for x,y,rx in ((690,650,65),(800,675,90),(935,694,76)):
+                source(x,y,rx,8,(209,233,228),16)
+        elif kind=="mid":
+            source(1320,575,58,12,(232,213,163),11)
+    elif biome=="grove":
+        if kind=="mid":
+            for x,y in ((160,610),(235,600),(410,625),(1180,612),(1365,600),(1470,620)):
+                source(x,y,22,14,(206,222,143),20)
+        elif kind=="foreground":
+            for x,y in ((115,626),(1460,628)):
+                source(x,y,32,18,(185,211,139),12)
+
+    bloom=glow.filter(ImageFilter.GaussianBlur(26))
+    bloom=Image.alpha_composite(bloom,glow.filter(ImageFilter.GaussianBlur(9)))
+    bloom=Image.alpha_composite(bloom,core)
+    bloom=bloom.resize(base.size,Image.Resampling.BICUBIC)
+    return Image.alpha_composite(base,bloom)
 
 def save(im,a,path):
     name=os.path.basename(path).replace(".png","")
@@ -382,6 +429,7 @@ def save(im,a,path):
     rgba=_material_depth(rgba,mask,r,kind,biome)
     rgba=_micro_life(rgba,mask,r,kind,biome)
     rgba=_cinematic_light(rgba,mask,kind,biome)
+    rgba=_emissive_bloom(rgba,kind,biome)
     # Subtle tonal polish differs by depth. No blur on authored geometry.
     if kind=="sky":
         rgba=ImageEnhance.Color(rgba).enhance(1.10)
