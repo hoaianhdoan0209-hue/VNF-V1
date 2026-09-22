@@ -195,4 +195,3 @@ public final class VisualV1DevTest {
         static int i32(byte[]b,int p){return((b[p]&255)<<24)|((b[p+1]&255)<<16)|((b[p+2]&255)<<8)|(b[p+3]&255);}
     }
 }
-}
