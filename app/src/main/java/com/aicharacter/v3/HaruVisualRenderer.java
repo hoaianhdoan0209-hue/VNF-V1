@@ -54,7 +54,8 @@ public final class HaruVisualRenderer{
   c.translate(postureX,postureY);
   c.rotate(rotation,x,bodyGround);
   int bodyAlpha=(int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness));
-  int rimColor="MORNING".equals(phase)?Color.rgb(255,214,158):"EVENING".equals(phase)?Color.rgb(255,166,105):"NIGHT".equals(phase)?Color.rgb(152,188,232):Color.rgb(222,229,205);
+  String area="";if(s.world!=null){WorldArea wa=s.world.areaAt(s.haruX);if(wa!=null)area=wa.id==null?"":wa.id;}
+  int rimColor;if("NIGHT".equals(phase))rimColor=Color.rgb(152,188,232);else if("EVENING".equals(phase))rimColor=Color.rgb(255,166,105);else if("MORNING".equals(phase))rimColor=Color.rgb(255,214,158);else if("home_shelter".equals(area))rimColor=Color.rgb(235,216,172);else if("garden_path".equals(area))rimColor=Color.rgb(226,232,184);else if("quiet_grove".equals(area))rimColor=Color.rgb(184,211,168);else rimColor=Color.rgb(188,218,225);
   float rimDx="MORNING".equals(phase)?-3.5f:"EVENING".equals(phase)?3.5f:"NIGHT".equals(phase)?1.5f:-1.5f;
   float rimDy="NIGHT".equals(phase)?-2.5f:-1f;
   RectF rimDst=new RectF(dst.left+rimDx,dst.top+rimDy,dst.right+rimDx,dst.bottom+rimDy);
