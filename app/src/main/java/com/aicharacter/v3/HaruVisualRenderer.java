@@ -30,16 +30,12 @@ public final class HaruVisualRenderer{
   float postureX=0,postureY=0,rotation=0;
   BodyRigState rig=s.bodyRig;
   if(rig!=null){postureX+=(float)Math.max(-5,Math.min(5,rig.spineLean*18.0+rig.pelvisTilt*7.0));rotation+=(float)Math.max(-2.6,Math.min(2.6,rig.spineLean*11.0));}
-  BodyInstinctState bi=s.bodyInstinct;
-  if(bi!=null){
-   double respiratory=s.respiration==null?0:s.respiration.breathingLoad;
-   double oxygen=s.respiration==null?1:s.respiration.oxygenSaturation;
-   double pain=s.localizedPain==null?0:s.localizedPain.maxLoad();
-   postureY+=(float)Math.min(8,bi.fatigueDroop*4.2+pain*3.4+Math.max(0,.93-oxygen)*8.0);
-   postureY+=(float)Math.sin(anim*(1.55+bi.breathDrive*1.4+respiratory*.9))*(.45f+(float)Math.min(1.2,bi.breathDrive+respiratory));
-   postureX+=(float)Math.sin(anim*19.0)*Math.min(1.4f,(float)bi.shiver*1.25f);
-   rotation+=(float)Math.sin(anim*.55)*Math.min(1.2f,(float)pain*.7f);
-  }
+  BiologyVisualOutput bio=BiologyVisualOutput.from(s);
+  float breath=(float)Math.sin(anim*(1.35+bio.breathingIntensity*2.2))*(.35f+(float)bio.breathingIntensity*1.55f);
+  float thermalTremor=(float)Math.abs(bio.thermalDiscomfort)*.32f;
+  postureY+=(float)Math.min(8.0,bio.postureLoad*4.5+bio.fatigue*2.0+bio.dominantPain*2.6+bio.recoveryLoad*.8)+breath;
+  postureX+=(float)Math.sin(anim*(17.0+bio.tremor*7.0))*Math.min(1.5f,(float)(bio.tremor*1.3+thermalTremor));
+  rotation+=(float)Math.max(-1.3,Math.min(1.3,bio.gaitAsymmetry*1.05+Math.sin(anim*.55)*bio.dominantPain*.55));
 
   Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
   RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
