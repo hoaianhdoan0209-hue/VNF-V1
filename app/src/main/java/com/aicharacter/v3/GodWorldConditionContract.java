@@ -12,7 +12,7 @@ public final class GodWorldConditionContract {
   GodWorldEventProposal.Result valid=GodWorldEventProposal.validate(s,p,now);if(!valid.ok)return new Result(false,valid.reason,null);
   ensure(s);if(s.characterGod.worldConditions.containsKey(p.id))return new Result(false,"proposal already exists",s.characterGod.worldConditions.get(p.id));
   if(!CONDITIONS.contains(p.condition))return new Result(false,"unsupported condition",null);
-  WorldConditionProposalState x=new WorldConditionProposalState();x.id=p.id;x.condition=p.condition;x.scopeType=p.scopeType;x.scopeTarget=p.scopeTarget;x.intensity=p.intensity;x.durationMinutes=p.durationMinutes;x.provenanceLayer=p.provenanceLayer;x.sourceRef=p.sourceRef;x.sourceConfidence=p.sourceConfidence;x.rollbackPolicy=p.rollbackPolicy;x.proposedAt=now;x.status="PROPOSED";
+  WorldConditionProposalState x=new WorldConditionProposalState();x.id=p.id;x.condition=p.condition;x.desiredValue=p.desiredValue;x.scopeType=p.scopeType;x.scopeTarget=p.scopeTarget;x.intensity=p.intensity;x.durationMinutes=p.durationMinutes;x.provenanceLayer=p.provenanceLayer;x.sourceRef=p.sourceRef;x.sourceConfidence=p.sourceConfidence;x.rollbackPolicy=p.rollbackPolicy;x.proposedAt=now;x.status="PROPOSED";
   s.characterGod.worldConditions.put(x.id,x);s.committedGodEventIds.add(x.id);
   return new Result(true,"world condition proposed",x);
  }
