@@ -14,8 +14,15 @@ public final class HaruVisualRenderer{
  public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
   float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
-  p.setColor(Color.argb((int)Math.max(18,58-lift*.16f),0,0,0));
-  c.drawOval(x-47*shadowScale,contactGround-8,x+47*shadowScale,contactGround+10,p);
+  String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes);
+  float shadowDir="MORNING".equals(phase)?1f:"EVENING".equals(phase)?-1f:0f;
+  float shadowLen=("MORNING".equals(phase)||"EVENING".equals(phase))?1.62f:"NIGHT".equals(phase)?.82f:1.08f;
+  float shadowDx=shadowDir*33f*shadowScale,shadowW=47f*shadowScale*shadowLen;
+  int shadowAlpha=(int)Math.max(14,("NIGHT".equals(phase)?38:56)-lift*.16f);
+  p.setColor(Color.argb(shadowAlpha,0,0,0));
+  c.drawOval(x-shadowW+shadowDx,contactGround-7,x+shadowW+shadowDx,contactGround+10,p);
+  p.setColor(Color.argb(Math.max(8,shadowAlpha/3),18,26,24));
+  c.drawOval(x-shadowW*.72f+shadowDx*.75f,contactGround-4,x+shadowW*.72f+shadowDx*.75f,contactGround+7,p);
 
   Bitmap sheet=assets.get(v.asset);
   if(sheet==null)sheet=assets.get("girl_idle_right");
