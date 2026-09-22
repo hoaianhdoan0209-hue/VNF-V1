@@ -23,15 +23,15 @@ adb shell pm clear "$PKG" >/dev/null
 
 wait_for_vnf_focus() {
   local focus=""
-  for _ in $(seq 1 45); do
-    focus="$(adb shell dumpsys window 2>/dev/null | grep -m1 'mCurrentFocus' || true)"
+  for _ in $(seq 1 30); do
+    focus="$(adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 8 || true)"
     if [[ "$focus" == *"$PKG"* ]]; then
       return 0
     fi
     sleep 1
   done
-  echo "VNF never became the focused runtime window. Last focus: $focus" >&2
-  adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 8 >&2 || true
+  echo "VNF never became the active runtime app. Window state:" >&2
+  printf '%s\n' "$focus" >&2
   return 1
 }
 
