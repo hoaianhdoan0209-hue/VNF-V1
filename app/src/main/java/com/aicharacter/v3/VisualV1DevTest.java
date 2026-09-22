@@ -98,7 +98,7 @@ public final class VisualV1DevTest {
               game.contains("drawLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
     }
 
-    private static String read(Path p)throws IOException{return Files.readString(p,StandardCharsets.UTF_8);}
+    private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
     private static void check(boolean pass,String label,List<String>ok,List<String>bad){(pass?ok:bad).add(label);}
     private static String pct(double v){return String.format(Locale.ROOT,"%.1f%%",v*100);}
     private static String hex(byte[] a){StringBuilder b=new StringBuilder();for(byte x:a)b.append(String.format("%02x",x&255));return b.toString();}
@@ -120,7 +120,7 @@ public final class VisualV1DevTest {
                 pos+=len+4;if("IEND".equals(kind))break;
             }
             if(w<=0||h<=0||depth!=8||type!=3)throw new IOException("Visual V1 expects indexed 8-bit PNG: "+path);
-            byte[] raw;try(InflaterInputStream in=new InflaterInputStream(new ByteArrayInputStream(idat.toByteArray()));ByteArrayOutputStream out=new ByteArrayOutputStream()){in.transferTo(out);raw=out.toByteArray();}
+            byte[] raw;try(InflaterInputStream in=new InflaterInputStream(new ByteArrayInputStream(idat.toByteArray()));ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buf=new byte[8192];for(int n;(n=in.read(buf))!=-1;)out.write(buf,0,n);raw=out.toByteArray();}
             int stride=w,bpp=1,src=0;byte[] px=new byte[w*h],prev=new byte[stride],row=new byte[stride];
             for(int y=0;y<h;y++){
                 if(src>=raw.length)throw new IOException("short PNG data: "+path);
