@@ -76,7 +76,14 @@ public final class CharacterGodContractTest {
                 "reference only", Arrays.asList("gravity"));
         s.world.knowledgeAnchors.add(a);
 
-        assertTrue(a.hasCompleteProvenance());
+        assertFalse(a.hasCompleteProvenance());
+        WorldKnowledgeAnchor complete=new WorldKnowledgeAnchor(
+                "physics.gravity.verified","physics","real reference","fictional transform",
+                "open science","https://example.invalid/reference/gravity",
+                "2026-09-22T00:00:00Z",.85,
+                "Broad reference principle; source does not establish VNF world history or authored lore.",
+                Arrays.asList("gravity"));
+        assertTrue(complete.hasCompleteProvenance());
         assertFalse(s.knowledge.containsKey("physics.gravity"));
         assertTrue(s.memories.isEmpty());
 
@@ -106,8 +113,8 @@ public final class CharacterGodContractTest {
         GodTeachingGateway.teach(active,"DẠY CÔ ẤY: gravity",1600L);
         GodTeachingGateway.teach(offline,"DẠY CÔ ẤY: gravity",1600L);
 
-        HaruAutonomyEngine.advanceMindBody(active,60.0,1700L);
-        HaruAutonomyEngine.advanceMindBody(offline,60.0,1700L);
+        LifeSimulationKernel.beginSlice(active,60.0,1700L,LifeSimulationKernel.Mode.ACTIVE);
+        LifeSimulationKernel.beginSlice(offline,60.0,1700L,LifeSimulationKernel.Mode.OFFLINE);
 
         assertEquals(active.knowledge.getOrDefault("gravity",0),offline.knowledge.getOrDefault("gravity",0));
         assertEquals(active.memories.size(),offline.memories.size());
