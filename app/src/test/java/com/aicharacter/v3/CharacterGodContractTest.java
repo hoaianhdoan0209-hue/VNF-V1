@@ -83,7 +83,7 @@ public final class CharacterGodContractTest {
  }
 
  @Test public void partialLearningDoesNotBecomeFullyKnown(){
-  WorldState s=state();prepareEngaged(s);s.currentIntention="complex topic";
+  WorldState s=state();prepareEngaged(s);s.currentIntention="complex topic";s.personality.curiosity=.55;s.personality.patience=.55;s.emotion.calm=.55;s.body.energy=70;
   String id=offer(s,"complex topic","complex_topic",1.0,.8,Collections.emptyList(),1000L);
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));LessonState l=s.characterGod.lessons.get(id);assertEquals(HaruTeachingOpportunityEngine.Response.PARTIALLY_UNDERSTAND.name(),l.lastResponse);
   ConceptKnowledgeState k=s.characterGod.conceptKnowledge.get("complex_topic");assertNotNull(k);assertTrue(k.confidence<.75);assertFalse(s.knowledge.containsKey("complex_topic"));
