@@ -66,4 +66,17 @@ public final class VisualRegressionTest{
         assertTrue("destination must scale width and height by the same factor",girl.contains("new RectF(left,top,left+fw*sc,top+fh*sc)"));
         assertTrue("gravity may translate body ground but not resize sprite",girl.contains("bodyGround=ground-lift"));
     }
+
+    @Test public void legacyFullFrameLightingRasterIsNotCompositedOverWorld()throws Exception{
+        String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+        int from=renderer.indexOf("private void drawTimeTint");
+        int to=renderer.indexOf("private void drawUi",from);
+        assertTrue(from>=0&&to>from);
+        String tint=renderer.substring(from,to);
+        assertFalse("legacy evening raster must not overlay the authored biome scene",tint.contains("light_evening"));
+        assertFalse("legacy night raster must not overlay the authored biome scene",tint.contains("light_night"));
+        assertFalse("legacy Home full-frame raster must not overlay the authored biome scene",tint.contains("home_warm_light"));
+        assertTrue("time-of-day must remain a procedural tint, not a second background",tint.contains("new LinearGradient"));
+    }
+
 }
