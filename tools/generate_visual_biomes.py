@@ -8,12 +8,12 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v7-cinematic-light-2026-09"
+REV="authored-organic-biome-v8-living-color-2026-09"
 C={
- "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
- "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
- "lakeside":((84,128,151),(191,202,174),(48,72,72),(75,108,83),(58,87,67),(213,187,122)),
- "grove":((54,87,84),(137,151,116),(32,52,48),(63,91,62),(45,69,51),(181,158,99))
+ "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
+ "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
+ "lakeside":((77,130,158),(203,207,176),(43,72,76),(77,114,89),(57,92,70),(226,193,126)),
+ "grove":((45,82,78),(145,158,118),(26,47,43),(61,94,63),(42,72,50),(192,166,99))
 }
 
 def mix(a,b,t): return tuple(int(a[i]*(1-t)+b[i]*t) for i in range(3))
@@ -162,6 +162,65 @@ def _signature_detail(base,mask,r,kind,biome):
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
 
+def _micro_life(base,mask,r,kind,biome):
+    ov=Image.new("RGBA",base.size,(0,0,0,0)); d=ImageDraw.Draw(ov)
+    w,h=base.size
+
+    def bird(x,y,scale,col,alpha):
+        d.arc((x-scale*2,y-scale,x,y+scale),190,345,fill=(*col,alpha),width=max(1,scale//2))
+        d.arc((x,y-scale,x+scale*2,y+scale),195,350,fill=(*col,alpha),width=max(1,scale//2))
+
+    def butterfly(x,y,scale,col,alpha):
+        d.ellipse((x-scale*2,y-scale,x,y+scale),fill=(*col,alpha))
+        d.ellipse((x,y-scale,x+scale*2,y+scale),fill=(*col,alpha))
+        d.rectangle((x,y-1,x+1,y+2),fill=(45,50,40,alpha))
+
+    if kind=="sky" and biome in ("home","garden","lakeside"):
+        col={"home":(65,75,72),"garden":(70,82,75),"lakeside":(54,78,83)}[biome]
+        groups={"home":[(250,150,3),(275,144,2),(1170,205,2)],
+                "garden":[(215,170,2),(245,163,3),(1110,185,2)],
+                "lakeside":[(970,145,3),(1005,138,2),(1280,208,2)]}[biome]
+        for x,y,sc in groups: bird(x,y,sc,col,70)
+
+    if biome=="garden" and kind in ("mid","foreground"):
+        for _ in range(18 if kind=="mid" else 12):
+            x=r.randint(90,w-90); y=r.randint(330,610)
+            if 610<x<990 and y>500: continue
+            col=r.choice(((255,199,155),(255,220,191),(208,194,255),(245,176,186)))
+            butterfly(x,y,r.choice((2,2,3)),col,r.randint(45,85))
+
+    if biome=="lakeside":
+        if kind=="mid":
+            # dragonflies near reeds
+            for _ in range(12):
+                x=r.choice((r.randint(80,420),r.randint(w-420,w-80))); y=r.randint(445,610)
+                col=r.choice(((187,226,220),(221,207,153),(176,211,224)))
+                d.line((x-5,y,x+5,y),fill=(*col,70),width=1)
+                d.line((x,y-5,x,y+5),fill=(*col,52),width=1)
+        elif kind=="ground":
+            # a few lily highlights sell the water depth
+            for x,y in ((518,674),(1070,686),(1112,702)):
+                d.ellipse((x-9,y-3,x+10,y+4),fill=(132,173,114,70))
+                d.line((x,y,x+8,y-3),fill=(205,226,167,55),width=1)
+
+    if biome=="home" and kind=="mid":
+        # tiny chimney sparks / warm motes
+        for _ in range(18):
+            x=r.randint(615,735); y=r.randint(340,505)
+            if r.random()<.7:
+                d.ellipse((x-1,y-1,x+2,y+2),fill=(255,203,118,r.randint(30,62)))
+
+    if biome=="grove" and kind in ("mid","foreground"):
+        for _ in range(18):
+            x=r.randint(80,w-80); y=r.randint(280,650)
+            if kind=="foreground" and 620<x<980 and y>520: continue
+            col=r.choice(((218,230,146),(167,224,169),(236,199,117)))
+            butterfly(x,y,r.choice((1,2)),col,r.randint(26,56))
+
+    if mask is not None and kind!="sky":
+        ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
+    return Image.alpha_composite(base,ov)
+
 def _cinematic_light(base,mask,kind,biome):
     w,h=base.size
     light=Image.new("RGBA",(w,h),(0,0,0,0))
@@ -241,6 +300,7 @@ def save(im,a,path):
     r=random.Random("hires-"+name)
     rgba=_masked_texture(rgba,mask,r,kind,biome)
     rgba=_signature_detail(rgba,mask,r,kind,biome)
+    rgba=_micro_life(rgba,mask,r,kind,biome)
     rgba=_cinematic_light(rgba,mask,kind,biome)
     # Subtle tonal polish differs by depth. No blur on authored geometry.
     if kind=="sky":
