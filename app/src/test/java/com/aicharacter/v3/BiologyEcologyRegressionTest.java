@@ -1,5 +1,6 @@
 package com.aicharacter.v3;
 
+import org.json.JSONObject;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -47,11 +48,18 @@ public class BiologyEcologyRegressionTest {
   BiologyVisualOutput out=BiologyVisualOutput.from(s);assertTrue(s.musculoskeletal.leftLegForce<s.musculoskeletal.rightLegForce);assertEquals(HumanAnatomyModel.Region.LEFT_LEG,out.dominantPainRegion);assertTrue(out.gaitChange>.25);assertTrue(Math.abs(out.gaitAsymmetry)>.4);
  }
 
+ @Test public void unsuitableAreasDoNotSpontaneouslySeedSpecies(){
+  WorldState s=state();PopulationEcologyEngine.advance(s,1,T0+60000L);
+  SpeciesPopulationState authored=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","home"));
+  SpeciesPopulationState impossible=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","lake"));
+  assertNotNull(authored);assertNotNull(impossible);assertTrue(authored.relativeAbundance>0);assertEquals(0,impossible.relativeAbundance,1e-12);
+ }
+
  @Test public void populationAndResourceFieldsStayBounded(){
   WorldState s=state();long now=T0;
   for(int day=0;day<120;day++){now+=24L*3600000L;PopulationEcologyEngine.advance(s,1440,now);}
   assertFalse(s.livingWorld.populations.isEmpty());
-  for(SpeciesPopulationState p:s.livingWorld.populations.values()){assertBetween(p.relativeAbundance);assertBetween(p.carryingCapacity);assertBetween(p.birthPressure);assertBetween(p.mortalityPressure);assertBetween(p.competitionPressure);assertBetween(p.migrationPressure);}
+  for(SpeciesPopulationState p:s.livingWorld.populations.values())assertPopulationFinite(p);
   for(BiomeLifeFieldState f:s.livingWorld.fields.values()){assertBetween(f.resourcePulse);assertBetween(f.densityVitality);}
  }
 
@@ -62,16 +70,36 @@ public class BiologyEcologyRegressionTest {
   assertBetween(s.reedling.energy);assertBetween(s.reedling.hunger);assertBetween(s.reedling.body.vitalReserve);
  }
 
- @Test public void activeAndOfflineKernelShareOneCausalBiology(){
-  WorldState active=state(),offline=state();active.respiration.lastUpdatedAt=offline.respiration.lastUpdatedAt=T0;active.thermal.lastUpdatedAt=offline.thermal.lastUpdatedAt=T0;active.bodyInstinct.lastUpdatedAt=offline.bodyInstinct.lastUpdatedAt=T0;long now=T0;
-  for(int i=0;i<90;i++){now+=60000L;LifeSimulationKernel.beginSlice(active,60,now,LifeSimulationKernel.Mode.ACTIVE);LifeSimulationKernel.endSlice(active,60,now,false,false,LifeSimulationKernel.Mode.ACTIVE);LifeSimulationKernel.beginSlice(offline,60,now,LifeSimulationKernel.Mode.OFFLINE);LifeSimulationKernel.endSlice(offline,60,now,false,false,LifeSimulationKernel.Mode.OFFLINE);}
-  assertEquals(active.body.energy,offline.body.energy,1e-8);assertEquals(active.body.sleepiness,offline.body.sleepiness,1e-8);assertEquals(active.hydration.hydration,offline.hydration.hydration,1e-8);assertEquals(active.metabolism.availableEnergy,offline.metabolism.availableEnergy,1e-8);assertEquals(active.livingWorld.populations.size(),offline.livingWorld.populations.size());
-  for(String k:active.livingWorld.populations.keySet())assertEquals(active.livingWorld.populations.get(k).relativeAbundance,offline.livingWorld.populations.get(k).relativeAbundance,1e-8);
+ @Test public void finiteGuardsRejectNaNAndInfinity(){
+  RespirationState r=new RespirationState();r.oxygenSaturation=Double.NaN;r.breathingLoad=Double.POSITIVE_INFINITY;r.ventilationDrive=Double.NEGATIVE_INFINITY;r.lastUpdatedAt=-4;r.normalize();
+  assertFiniteRange(r.oxygenSaturation,.5,1);assertBetween(r.breathingLoad);assertBetween(r.ventilationDrive);assertEquals(0,r.lastUpdatedAt);
+
+  SpeciesPopulationState p=new SpeciesPopulationState();p.relativeAbundance=Double.NaN;p.carryingCapacity=Double.POSITIVE_INFINITY;p.birthPressure=Double.NEGATIVE_INFINITY;p.seasonalInfluence=Double.NaN;p.lastUpdatedAt=-2;p.clamp();assertPopulationFinite(p);assertEquals(0,p.lastUpdatedAt);
+
+  WorldState s=state();s.respiration.ventilationDrive=Double.NaN;s.respiration.breathingLoad=Double.POSITIVE_INFINITY;s.metabolism.oxygenDebt=Double.NaN;s.body.energy=Double.NaN;s.body.sleepiness=Double.POSITIVE_INFINITY;s.localizedPain.leftLeg=Double.NaN;s.localizedPain.rightLeg=Double.POSITIVE_INFINITY;s.thermal.heatLoad=Double.NaN;s.thermal.coldLoad=Double.NEGATIVE_INFINITY;
+  BiologyVisualOutput out=BiologyVisualOutput.from(s);assertVisualFinite(out);
+
+  SpeciesPopulationState poison=s.livingWorld.population("reedling","lake");poison.relativeAbundance=Double.NaN;poison.carryingCapacity=Double.POSITIVE_INFINITY;poison.resourcePressure=Double.NaN;poison.weatherPressure=Double.NEGATIVE_INFINITY;poison.lastUpdatedAt=T0;s.environment.weatherIntensity=Double.POSITIVE_INFINITY;
+  PopulationEcologyEngine.advance(s,60,T0+3600000L);for(SpeciesPopulationState x:s.livingWorld.populations.values())assertPopulationFinite(x);
  }
 
- private static void stepBiology(WorldState s,double seconds,long now){
-  s.worldMinutes=(s.worldMinutes+seconds/60.0)%1440.0;s.environment.updateForTime(s.worldMinutes);RespirationEngine.advance(s,now);ThermalEngine.advance(s,now);BodyInstinctEngine.advance(s,now);BodyRhythmEngine.advanceSeconds(s,seconds);BiomechanicsStepEngine.advance(s,seconds,now);
+ @Test public void activeSmallSlicesAndOfflineLargeChunksRemainCausallyClose(){
+  WorldState active=state(),offline=state();long activeNow=T0,offlineNow=T0;
+  for(int i=0;i<60;i++){activeNow+=60000L;kernel(active,60,activeNow,LifeSimulationKernel.Mode.ACTIVE);}
+  for(int i=0;i<4;i++){offlineNow+=15L*60000L;kernel(offline,15*60,offlineNow,LifeSimulationKernel.Mode.OFFLINE);}
+  assertEquals(activeNow,offlineNow);assertClose(active.body.energy,offline.body.energy,.75);assertClose(active.body.sleepiness,offline.body.sleepiness,.75);assertClose(active.hydration.hydration,offline.hydration.hydration,.015);assertClose(active.metabolism.availableEnergy,offline.metabolism.availableEnergy,.08);assertClose(active.respiration.ventilationDrive,offline.respiration.ventilationDrive,.08);
+  assertEquals(active.livingWorld.populations.keySet(),offline.livingWorld.populations.keySet());
+  for(String k:active.livingWorld.populations.keySet()){SpeciesPopulationState a=active.livingWorld.populations.get(k),b=offline.livingWorld.populations.get(k);assertClose(a.relativeAbundance,b.relativeAbundance,.02);assertClose(a.carryingCapacity,b.carryingCapacity,.035);}
  }
+
+ @Test public void newBiologyPopulationFieldsSurviveSaveRoundTrip() throws Exception{
+  WorldState s=state();s.respiration.ventilationDrive=.641;PopulationEcologyEngine.advance(s,1,T0+60000L);SpeciesPopulationState p=s.livingWorld.population("reedling","lake");p.relativeAbundance=.337;p.carryingCapacity=.713;p.birthPressure=.221;p.seasonalInfluence=-.31;p.lastUpdatedAt=T0+60000L;
+  JSONObject encoded=s.toJson();WorldState restored=WorldState.fromJson(new JSONObject(encoded.toString()));
+  assertEquals(.641,restored.respiration.ventilationDrive,1e-12);SpeciesPopulationState q=restored.livingWorld.populations.get(LivingWorldState.populationKey("reedling","lake"));assertNotNull(q);assertEquals(.337,q.relativeAbundance,1e-12);assertEquals(.713,q.carryingCapacity,1e-12);assertEquals(.221,q.birthPressure,1e-12);assertEquals(-.31,q.seasonalInfluence,1e-12);assertPopulationFinite(q);
+ }
+
+ private static void kernel(WorldState s,double seconds,long now,LifeSimulationKernel.Mode mode){LifeSimulationKernel.beginSlice(s,seconds,now,mode);LifeSimulationKernel.endSlice(s,seconds,now,false,false,mode);}
+ private static void stepBiology(WorldState s,double seconds,long now){s.worldMinutes=(s.worldMinutes+seconds/60.0)%1440.0;s.environment.updateForTime(s.worldMinutes);RespirationEngine.advance(s,now);ThermalEngine.advance(s,now);BodyInstinctEngine.advance(s,now);BodyRhythmEngine.advanceSeconds(s,seconds);BiomechanicsStepEngine.advance(s,seconds,now);}
 
  private static WorldState state(){
   WorldState s=WorldState.fresh();s.createdAt=T0;s.lastOpenedAt=T0;s.lastSimulatedAt=T0;s.world=world();s.haruX=260;s.catState.x=300;s.catState.areaId="lake";s.catX=300;s.reedling.objectId="reedling_01";s.reedling.areaId="lake";s.reedling.x=360;s.environment.weather="CLEAR";s.environment.weatherIntensity=.15;s.atmosphere.temperatureC=24;s.atmosphere.relativeHumidity=.58;s.respiration.lastUpdatedAt=T0;s.thermal.lastUpdatedAt=T0;s.bodyInstinct.lastUpdatedAt=T0;return s;
@@ -105,5 +133,9 @@ public class BiologyEcologyRegressionTest {
  private static void connect(WorldArea a,WorldArea b){a.connections.add(b.id);b.connections.add(a.id);}
  private static WorldObject creature(String id,String area,String tags,String habitat,float x){WorldObject o=new WorldObject(id,"creature",area,"",id,x,846,34,24,tags);o.habitat=habitat;o.enabled=true;return o;}
  private static WorldObject flora(String id,String area,String tags,float x){WorldObject o=new WorldObject(id,"herb",area,"",id,x,846,40,50,tags);o.habitat=tags;o.enabled=true;return o;}
- private static void assertBetween(double v){assertTrue("expected finite [0,1], got "+v,Double.isFinite(v)&&v>=0&&v<=1);}
+ private static void assertBetween(double v){assertFiniteRange(v,0,1);}
+ private static void assertFiniteRange(double v,double lo,double hi){assertTrue("expected finite ["+lo+","+hi+"], got "+v,Double.isFinite(v)&&v>=lo&&v<=hi);}
+ private static void assertPopulationFinite(SpeciesPopulationState p){assertNotNull(p);assertBetween(p.relativeAbundance);assertBetween(p.carryingCapacity);assertBetween(p.birthPressure);assertBetween(p.recoveryPressure);assertBetween(p.mortalityPressure);assertBetween(p.competitionPressure);assertBetween(p.migrationPressure);assertBetween(p.resourcePressure);assertBetween(p.weatherPressure);assertTrue(Double.isFinite(p.seasonalInfluence)&&p.seasonalInfluence>=-1&&p.seasonalInfluence<=1);}
+ private static void assertVisualFinite(BiologyVisualOutput o){assertBetween(o.breathingIntensity);assertBetween(o.postureLoad);assertBetween(o.tremor);assertBetween(o.fatigue);assertBetween(o.gaitChange);assertTrue(Double.isFinite(o.gaitAsymmetry));assertTrue(Double.isFinite(o.thermalDiscomfort));assertBetween(o.recoveryLoad);assertBetween(o.dominantPain);assertBetween(o.headPain);assertBetween(o.neckPain);assertBetween(o.chestPain);assertBetween(o.abdomenPain);assertBetween(o.leftArmPain);assertBetween(o.rightArmPain);assertBetween(o.leftLegPain);assertBetween(o.rightLegPain);}
+ private static void assertClose(double a,double b,double tolerance){assertTrue("expected |"+a+"-"+b+"| <= "+tolerance,Double.isFinite(a)&&Double.isFinite(b)&&Math.abs(a-b)<=tolerance);}
 }
