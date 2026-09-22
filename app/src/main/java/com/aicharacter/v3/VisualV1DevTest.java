@@ -96,6 +96,13 @@ public final class VisualV1DevTest {
         check(game.contains("drawLayer(c,area+\"_sky\"")&&game.contains("drawLayer(c,area+\"_distant\"")&&
               game.contains("drawLayer(c,area+\"_mid\"")&&game.contains("drawLayer(c,area+\"_ground\"")&&
               game.contains("drawLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+        int tintStart=game.indexOf("private void drawTimeTint(Canvas c)");
+        int tintEnd=tintStart<0?-1:game.indexOf(" private void drawUi",tintStart);
+        String tint=tintStart>=0&&tintEnd>tintStart?game.substring(tintStart,tintEnd):"";
+        check(!tint.contains("light_evening")&&!tint.contains("light_night")&&!tint.contains("home_warm_light"),
+              "drawTimeTint forbids legacy full-frame light rasters",ok,bad);
+        check(tint.contains("LinearGradient")&&tint.contains("drawRect(0,0,2400,1080"),
+              "time-of-day compositing remains procedural gradient/tint",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
