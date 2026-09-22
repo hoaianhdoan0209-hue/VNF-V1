@@ -142,8 +142,8 @@ public final class VisualV1DevTest {
     private static int paeth(int a,int b,int c){int p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);return pa<=pb&&pa<=pc?a:pb<=pc?b:c;}
 
     private static final class Png{
-        final int w,h;final byte[] px,alpha;
-        Png(int w,int h,byte[]px,byte[]alpha){this.w=w;this.h=h;this.px=px;this.alpha=alpha;}
+        final int w,h;final byte[] px,alpha;final boolean alphaPerPixel;
+        Png(int w,int h,byte[]px,byte[]alpha,boolean alphaPerPixel){this.w=w;this.h=h;this.px=px;this.alpha=alpha;this.alphaPerPixel=alphaPerPixel;}
         static Png read(Path path)throws Exception{
             byte[] b=Files.readAllBytes(path);
             if(b.length<24||b[0]!=(byte)137||b[1]!=80||b[2]!=78||b[3]!=71)throw new IOException("not PNG: "+path);
@@ -156,9 +156,10 @@ public final class VisualV1DevTest {
                 else if("IDAT".equals(kind))idat.write(b,pos,len);
                 pos+=len+4;if("IEND".equals(kind))break;
             }
-            if(w<=0||h<=0||depth!=8||type!=3)throw new IOException("Visual V1 expects indexed 8-bit PNG: "+path);
+            if(w<=0||h<=0||depth!=8||!(type==0||type==2||type==3||type==4||type==6))throw new IOException("Visual V1 expects 8-bit PNG (indexed/RGB/RGBA): "+path);
+            int bpp=type==6?4:type==2?3:type==4?2:1,stride=w*bpp;
             byte[] raw;try(InflaterInputStream in=new InflaterInputStream(new ByteArrayInputStream(idat.toByteArray()));ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buf=new byte[8192];for(int n;(n=in.read(buf))!=-1;)out.write(buf,0,n);raw=out.toByteArray();}
-            int stride=w,bpp=1,src=0;byte[] px=new byte[w*h],prev=new byte[stride],row=new byte[stride];
+            int src=0;byte[] unpacked=new byte[stride*h],prev=new byte[stride],row=new byte[stride];
             for(int y=0;y<h;y++){
                 if(src>=raw.length)throw new IOException("short PNG data: "+path);
                 int filter=raw[src++]&255;
@@ -167,11 +168,23 @@ public final class VisualV1DevTest {
                     int z=switch(filter){case 0->v;case 1->v+a;case 2->v+up;case 3->v+((a+up)>>>1);case 4->v+paeth(a,up,ul);default->throw new IOException("bad PNG filter "+filter);};
                     row[x]=(byte)z;
                 }
-                System.arraycopy(row,0,px,y*w,w);byte[] tmp=prev;prev=row;row=tmp;
+                System.arraycopy(row,0,unpacked,y*stride,stride);byte[] tmp=prev;prev=row;row=tmp;
             }
-            return new Png(w,h,px,trns);
+            if(type==3){
+                byte[] px=new byte[w*h];for(int y=0;y<h;y++)System.arraycopy(unpacked,y*stride,px,y*w,w);
+                return new Png(w,h,px,trns,false);
+            }
+            byte[] px=new byte[w*h],aout=new byte[w*h];
+            for(int i=0;i<w*h;i++){
+                int off=i*bpp,r,g,bl,a=255;
+                if(type==0){r=g=bl=unpacked[off]&255;}
+                else if(type==4){r=g=bl=unpacked[off]&255;a=unpacked[off+1]&255;}
+                else{r=unpacked[off]&255;g=unpacked[off+1]&255;bl=unpacked[off+2]&255;if(type==6)a=unpacked[off+3]&255;}
+                px[i]=(byte)((r*3+g*5+bl*7+(r>>>4)+(bl>>>3))&255);aout[i]=(byte)a;
+            }
+            return new Png(w,h,px,aout,true);
         }
-        boolean opaqueAt(int x,int y){int idx=px[y*w+x]&255;return idx>=alpha.length||(alpha[idx]&255)>8;}
+        boolean opaqueAt(int x,int y){int pos=y*w+x;if(alphaPerPixel)return(alpha[pos]&255)>8;int idx=px[pos]&255;return idx>=alpha.length||(alpha[idx]&255)>8;}
         double coverage(){long n=0;for(int y=0;y<h;y++)for(int x=0;x<w;x++)if(opaqueAt(x,y))n++;return n/(double)(w*h);}
         double frameCoverage(int frame){int fw=w/12,x0=frame*fw;return count(x0,x0+fw,0,h)/(double)(fw*h);}
         int count(int x0,int x1,int y0,int y1){int n=0;for(int y=Math.max(0,y0);y<Math.min(h,y1);y++)for(int x=Math.max(0,x0);x<Math.min(w,x1);x++)if(opaqueAt(x,y))n++;return n;}
@@ -181,4 +194,5 @@ public final class VisualV1DevTest {
         int bottomColumnGroups(int x0,int x1){boolean on=false;int groups=0,y0=(int)(h*.87);for(int x=x0;x<x1;x++){boolean hit=false;for(int y=y0;y<h;y++)if(opaqueAt(x,y)){hit=true;break;}if(hit&&!on)groups++;on=hit;}return groups;}
         static int i32(byte[]b,int p){return((b[p]&255)<<24)|((b[p+1]&255)<<16)|((b[p+2]&255)<<8)|(b[p+3]&255);}
     }
+}
 }
