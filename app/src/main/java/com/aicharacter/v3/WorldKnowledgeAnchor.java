@@ -51,7 +51,17 @@ public final class WorldKnowledgeAnchor {
     }
 
     public boolean hasCompleteProvenance(){
-        return !id.isEmpty()&&!domain.isEmpty()&&!sourceFamily.isEmpty()&&!sourceRef.isEmpty()&&!retrievedAt.isEmpty()&&!limits.isEmpty();
+        if(blank(id)||blank(domain)||blank(realAnchor)||blank(fantasyRule)||blank(sourceFamily)||blank(sourceRef))return false;
+        String retrieved=retrievedAt==null?"":retrievedAt.trim();
+        if(retrieved.isEmpty()||"UNKNOWN_BUNDLED_REFERENCE".equalsIgnoreCase(retrieved)||
+                "UNKNOWN".equalsIgnoreCase(retrieved)||"UNSPECIFIED".equalsIgnoreCase(retrieved))return false;
+        if(!Double.isFinite(confidence)||confidence<0||confidence>1)return false;
+        String limitation=limits==null?"":limits.trim();
+        if(limitation.isEmpty())return false;
+        String normalized=limitation.toLowerCase(Locale.ROOT);
+        if(normalized.contains("not supplied")||normalized.contains("unavailable")||
+                normalized.equals("reference only"))return false;
+        return true;
     }
 
     public static String diagnostic(WorldModel w){
