@@ -26,7 +26,7 @@ jobs:
           set -euo pipefail
           rm -rf /tmp/visual-v1-test
           mkdir -p /tmp/visual-v1-test
-          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
+          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/MinimalHudLayout.java app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
           java -cp /tmp/visual-v1-test com.aicharacter.v3.VisualV1DevTest .
 
       - name: Prepare Android SDK 35

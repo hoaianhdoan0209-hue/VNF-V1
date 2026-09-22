@@ -30,6 +30,7 @@ public final class VisualV1DevTest {
         checkLayeredBiomes(root,ok,bad);
         checkHaruAssets(root,ok,bad);
         checkRendererContracts(root,ok,bad);
+        checkMobileHud(root,ok,bad);
         System.out.println("V1 VISUAL TEST\nPASS "+ok.size()+" / FAIL "+bad.size());
         for(String x:ok)System.out.println("✓ "+x);
         for(String x:bad)System.out.println("✗ "+x);
@@ -103,6 +104,26 @@ public final class VisualV1DevTest {
               "drawTimeTint forbids legacy full-frame light rasters",ok,bad);
         check(tint.contains("LinearGradient")&&tint.contains("drawRect(0,0,2400,1080"),
               "time-of-day compositing remains procedural gradient/tint",ok,bad);
+    }
+
+    private static void checkMobileHud(Path root,List<String>ok,List<String>bad)throws Exception{
+        float[][] screens={{1280,720,2f},{1440,720,2f},{1560,720,2f},{960,540,1.5f},{854,480,1f}};
+        String[] names={"16:9","18:9","19.5:9","small","small-16:9"};
+        for(int i=0;i<screens.length;i++){
+            float w=screens[i][0],h=screens[i][1],d=screens[i][2];MinimalHudLayout.Layout u=MinimalHudLayout.forScreen(w,h,d);
+            MinimalHudLayout.Box[] boxes={u.status,u.god,u.chat,u.mic};
+            boolean inside=true,overlap=false;for(MinimalHudLayout.Box b:boxes)inside&=b.inside(w,h,Math.max(6f,d*4f));
+            for(int a=0;a<boxes.length;a++)for(int b=a+1;b<boxes.length;b++)overlap|=boxes[a].overlaps(boxes[b]);
+            check(inside,names[i]+" HUD stays clear of screen edges",ok,bad);
+            check(!overlap,names[i]+" HUD has no overlapping controls/text",ok,bad);
+            check(u.god.width()/d>=36&&u.chat.width()/d>=36&&u.mic.width()/d>=36,names[i]+" icon hit targets remain usable",ok,bad);
+        }
+        String game=read(root.resolve("app/src/main/java/com/aicharacter/v3/GameView.java"));
+        int start=game.indexOf("private void drawUi(Canvas c)"),end=start<0?-1:game.indexOf(" public String assetDiagnostic()",start);
+        String ui=start>=0&&end>start?game.substring(start,end):"";
+        check(!ui.contains("LIÊN HỆ THẦN")&&!ui.contains("\"NÓI\"")&&!ui.contains("\"MIC\""),"main HUD contains no long text buttons",ok,bad);
+        check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&ui.contains("HudIconRenderer.GOD"),"chat/mic/God are icon controls",ok,bad);
+        check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
