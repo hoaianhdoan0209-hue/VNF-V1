@@ -50,6 +50,26 @@ assert_no_system_overlay() {
   fi
 }
 
+wait_for_runtime_canvas() {
+  local xml="/tmp/vnf-window.xml"
+  for _ in $(seq 1 45); do
+    rm -f "$xml"
+    adb shell uiautomator dump /sdcard/vnf-window.xml >/dev/null 2>&1 || true
+    adb pull /sdcard/vnf-window.xml "$xml" >/dev/null 2>&1 || true
+    if [[ -s "$xml" ]] && grep -q "$PKG" "$xml"; then
+      # Startup/safe-mode screens are TextViews whose visible text starts with VNF.
+      # The actual GameView is canvas-driven and exposes no such TextView text.
+      if ! grep -q 'text="VNF' "$xml"; then
+        return 0
+      fi
+    fi
+    sleep 2
+  done
+  echo "VNF stayed on the startup/safe screen; runtime canvas never became ready." >&2
+  [[ -f "$xml" ]] && cat "$xml" >&2 || true
+  return 1
+}
+
 capture() {
   local name="$1" biome="$2" pose="$3" target="$4"
   adb shell am force-stop "$PKG" || true
@@ -58,7 +78,8 @@ capture() {
     --es vnf_debug_biome "$biome" \
     --es vnf_debug_pose "$pose" >/dev/null
   wait_for_vnf_focus
-  sleep 5
+  wait_for_runtime_canvas
+  sleep 2
   wait_for_vnf_focus
   assert_no_system_overlay
   adb exec-out screencap -p > "$target/$name.png"
