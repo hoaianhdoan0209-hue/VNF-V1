@@ -1,27 +1,62 @@
 package com.aicharacter.v3;
 import android.graphics.*;
 
-/** Presentation-only Haru renderer. Keeps anatomical proportions fixed; state changes posture, never body scale. */
+/**
+ * Presentation-only Haru renderer.
+ * Uses authored pixel-art frames at one uniform scale. Biology may translate/rotate posture subtly,
+ * but never changes body width/height or world truth.
+ */
 public final class HaruVisualRenderer{
+ static final float BODY_SCALE=1.34f;
  private HaruVisualRenderer(){}
- public static void draw(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
-  float lift=Math.max(0,contactGround-bodyGround),shadow=Math.max(.48f,1-lift/240f);p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(true);p.setColor(Color.argb((int)Math.max(18,58-lift*.16f),0,0,0));c.drawOval(x-43*shadow,contactGround-7,x+43*shadow,contactGround+8,p);
-  float energy=s.body==null?100:s.body.energy,pain=s.body==null?0:s.body.pain;float fatigue=Math.max(0f,Math.min(1f,(45f-energy)/45f)),ache=Math.max(0f,Math.min(1f,pain/65f));float breath=(float)Math.sin(anim*(1.55+fatigue*.35))*(.7f+fatigue*.8f),tremor=(float)Math.sin(anim*19.0)*Math.min(1.25f,ache*.75f+fatigue*.4f);float lean=s.bodyRig==null?0:(float)Math.max(-.16,Math.min(.16,s.bodyRig.spineLean));lean+=fatigue*.055f+ache*.04f;boolean right=v.state!=GirlAnimationController.State.WALK_LEFT&&v.state!=GirlAnimationController.State.SEARCH_LEFT;float dir=right?1f:-1f;
-  c.save();c.translate(tremor,0);if(v.state==GirlAnimationController.State.SLEEP)drawRest(c,p,x,bodyGround,dir,breath);else if(v.state==GirlAnimationController.State.SIT)drawSit(c,p,x,bodyGround,dir,lean,breath);else if(v.state==GirlAnimationController.State.CROUCH)drawCrouch(c,p,x,bodyGround,dir,lean,breath);else drawStand(c,p,s,v,x,bodyGround,dir,lean,breath,anim);c.restore();p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);p.setStrokeWidth(1);p.setAntiAlias(false);
+
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
+  float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift);
+  p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
+  p.setColor(Color.argb((int)Math.max(18,58-lift*.16f),0,0,0));
+  c.drawOval(x-47*shadowScale,contactGround-8,x+47*shadowScale,contactGround+10,p);
+
+  Bitmap sheet=assets.get(v.asset);
+  if(sheet==null){BlockBodyRenderer.drawHuman(c,p,s,x,bodyGround);return;}
+
+  int frames=Math.max(1,v.frames),fw=Math.max(1,sheet.getWidth()/frames),fh=sheet.getHeight();
+  int frame=frameIndex(s,v,anim,frames);
+  float sc=BODY_SCALE,ax=v.anchorX*fw*sc;
+  float left=x-ax,top=GirlAnimationController.renderTop(bodyGround,fh,sc,v.anchorY);
+
+  float postureX=0,postureY=0,rotation=0;
+  BodyRigState rig=s.bodyRig;
+  if(rig!=null){postureX+=(float)Math.max(-5,Math.min(5,rig.spineLean*18.0+rig.pelvisTilt*7.0));rotation+=(float)Math.max(-2.6,Math.min(2.6,rig.spineLean*11.0));}
+  BodyInstinctState bi=s.bodyInstinct;
+  if(bi!=null){
+   double respiratory=s.respiration==null?0:s.respiration.breathingLoad;
+   double oxygen=s.respiration==null?1:s.respiration.oxygenSaturation;
+   double pain=s.localizedPain==null?0:s.localizedPain.maxLoad();
+   postureY+=(float)Math.min(8,bi.fatigueDroop*4.2+pain*3.4+Math.max(0,.93-oxygen)*8.0);
+   postureY+=(float)Math.sin(anim*(1.55+bi.breathDrive*1.4+respiratory*.9))*(.45f+(float)Math.min(1.2,bi.breathDrive+respiratory));
+   postureX+=(float)Math.sin(anim*19.0)*Math.min(1.4f,(float)bi.shiver*1.25f);
+   rotation+=(float)Math.sin(anim*.55)*Math.min(1.2f,(float)pain*.7f);
+  }
+
+  Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
+  RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
+  c.save();
+  c.translate(postureX,postureY);
+  c.rotate(rotation,x,bodyGround);
+  p.setAlpha((int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness)));
+  c.drawBitmap(sheet,src,dst,p);
+  p.setAlpha(255);
+  c.restore();
  }
- private static void drawStand(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float g,float dir,float lean,float breath,float anim){
-  float hipY=g-88,waistY=g-130,shoulderY=g-174+Math.abs(lean)*18,headY=shoulderY-43;float deg=lean*26*dir;c.save();c.rotate(deg,x,hipY);float phase=s.bodyRig==null?0:(float)(s.bodyRig.stridePhase*Math.PI*2),stride=v.isWalk()?(float)Math.sin(phase)*18:0;
-  leg(c,p,x-12,hipY,x-14+stride*.42f,g-45,x-13+stride,g,Color.rgb(45,55,61));leg(c,p,x+12,hipY,x+14-stride*.42f,g-45,x+13-stride,g,Color.rgb(50,61,67));shoe(c,p,x-13+stride,g,dir);shoe(c,p,x+13-stride,g,dir);
-  neck(c,p,x,shoulderY,headY);torso(c,p,x,hipY,waistY,shoulderY,breath);arms(c,p,v,x,shoulderY,hipY,dir,stride);head(c,p,x+dir*2,headY,dir);c.restore();
+
+ static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
+  if(frames<=1)return 0;
+  if(v.isWalk()&&s.bodyRig!=null){
+   int f=(int)Math.floor(s.bodyRig.stridePhase*frames);
+   f%=frames;if(f<0)f+=frames;return f;
+  }
+  int f=(int)(anim*Math.max(.1f,v.fps))%frames;return f<0?f+frames:f;
  }
- private static void drawSit(Canvas c,Paint p,float x,float g,float dir,float lean,float breath){float hipY=g-56,shoulderY=g-132,headY=shoulderY-40;c.save();c.rotate(lean*18*dir,x,hipY);leg(c,p,x-12,hipY,x-31*dir,g-28,x-45*dir,g-3,Color.rgb(45,55,61));leg(c,p,x+10,hipY,x+12*dir,g-25,x+30*dir,g-2,Color.rgb(50,61,67));shoe(c,p,x-45*dir,g-3,dir);shoe(c,p,x+30*dir,g-2,dir);neck(c,p,x,shoulderY,headY);torso(c,p,x,hipY,hipY-38,shoulderY,breath);armLine(c,p,x-24,shoulderY+8,x-30*dir,hipY-4,x-8*dir,hipY+18);armLine(c,p,x+24,shoulderY+8,x+28*dir,hipY-6,x+10*dir,hipY+18);head(c,p,x+dir*3,headY,dir);c.restore();}
- private static void drawCrouch(Canvas c,Paint p,float x,float g,float dir,float lean,float breath){float hipY=g-63,shoulderY=g-136,headY=shoulderY-39;c.save();c.rotate((lean+.06f)*20*dir,x,hipY);leg(c,p,x-11,hipY,x-34*dir,g-37,x-26*dir,g,Color.rgb(45,55,61));leg(c,p,x+11,hipY,x+20*dir,g-38,x+36*dir,g,Color.rgb(50,61,67));shoe(c,p,x-26*dir,g,dir);shoe(c,p,x+36*dir,g,dir);neck(c,p,x,shoulderY,headY);torso(c,p,x,hipY,hipY-37,shoulderY,breath);armLine(c,p,x-24,shoulderY+8,x-30*dir,g-72,x-18*dir,g-42);armLine(c,p,x+24,shoulderY+8,x+28*dir,g-78,x+13*dir,g-47);head(c,p,x+dir*4,headY,dir);c.restore();}
- private static void drawRest(Canvas c,Paint p,float x,float g,float dir,float breath){float y=g-25;c.save();c.rotate(-4*dir,x,y);p.setColor(Color.rgb(45,55,61));c.drawRoundRect(x-68,y-18,x+70,y+2,12,12,p);p.setColor(Color.rgb(72,103,104));c.drawRoundRect(x-46,y-43-breath*.2f,x+43,y-11,15,15,p);p.setColor(Color.rgb(213,178,151));c.drawCircle(x+dir*61,y-30,21,p);p.setColor(Color.rgb(49,42,43));c.drawArc(new RectF(x+dir*61-24,y-55,x+dir*61+24,y-8),190,170,true,p);c.restore();}
- private static void torso(Canvas c,Paint p,float x,float hipY,float waistY,float shoulderY,float breath){Path t=new Path();t.moveTo(x-30,shoulderY+breath);t.cubicTo(x-27,waistY-25,x-20,waistY,x-23,hipY);t.lineTo(x+23,hipY);t.cubicTo(x+20,waistY,x+27,waistY-25,x+30,shoulderY+breath);t.close();p.setColor(Color.rgb(73,109,108));c.drawPath(t,p);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.2f);p.setColor(Color.argb(130,31,48,50));c.drawPath(t,p);p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(80,210,225,214));c.drawRoundRect(x-4,shoulderY+8,x+2,hipY-11,3,3,p);}
- private static void neck(Canvas c,Paint p,float x,float shoulderY,float headY){p.setColor(Color.rgb(210,174,146));c.drawRoundRect(x-8,headY+18,x+8,shoulderY+8,7,7,p);}
- private static void head(Canvas c,Paint p,float x,float y,float dir){p.setColor(Color.rgb(214,179,151));c.drawOval(x-21,y-24,x+21,y+24,p);p.setColor(Color.rgb(48,40,41));Path hair=new Path();hair.moveTo(x-23,y-7);hair.cubicTo(x-26,y-34,x+5,y-35,x+22,y-15);hair.lineTo(x+19,y+4);hair.cubicTo(x+11,y-7,x+1,y-13,x-23,y-7);hair.close();c.drawPath(hair,p);c.drawRoundRect(x-23,y-10,x-14,y+31,5,5,p);p.setColor(Color.rgb(66,54,52));c.drawCircle(x+dir*7,y-2,1.6f,p);p.setColor(Color.argb(100,180,108,105));c.drawOval(x+dir*8-3,y+9,x+dir*8+4,y+11,p);}
- private static void arms(Canvas c,Paint p,GirlAnimationController.Visual v,float x,float shoulderY,float hipY,float dir,float stride){if(v.state==GirlAnimationController.State.THINK){armLine(c,p,x-24,shoulderY+9,x-34*dir,shoulderY+50,x+dir*4,shoulderY+18);armLine(c,p,x+24,shoulderY+9,x+30*dir,hipY-20,x+18*dir,hipY+4);return;}if(v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT){armLine(c,p,x+dir*24,shoulderY+9,x+dir*37,shoulderY+35,x+dir*18,shoulderY-7);armLine(c,p,x-dir*24,shoulderY+9,x-dir*27,hipY-24,x-dir*17,hipY+4);return;}if(v.state==GirlAnimationController.State.REACT){armLine(c,p,x-24,shoulderY+9,x-31*dir,shoulderY+45,x-7*dir,shoulderY+65);armLine(c,p,x+24,shoulderY+9,x+30*dir,shoulderY+43,x+8*dir,shoulderY+63);return;}float swing=v.isWalk()?stride*.75f:0;armLine(c,p,x-24,shoulderY+9,x-28-swing*.45f,shoulderY+52,x-18-swing,hipY-5);armLine(c,p,x+24,shoulderY+9,x+28+swing*.45f,shoulderY+52,x+18+swing,hipY-5);}
- private static void armLine(Canvas c,Paint p,float sx,float sy,float ex,float ey,float hx,float hy){p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(15);p.setColor(Color.rgb(73,109,108));c.drawLine(sx,sy,ex,ey,p);p.setStrokeWidth(12);p.setColor(Color.rgb(210,174,146));c.drawLine(ex,ey,hx,hy,p);p.setStyle(Paint.Style.FILL);c.drawCircle(hx,hy,6,p);}
- private static void leg(Canvas c,Paint p,float hx,float hy,float kx,float ky,float fx,float fy,int color){p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(18);p.setColor(color);c.drawLine(hx,hy,kx,ky,p);c.drawLine(kx,ky,fx,fy-4,p);p.setStyle(Paint.Style.FILL);}
- private static void shoe(Canvas c,Paint p,float x,float y,float dir){p.setColor(Color.rgb(32,38,42));float a=x-11,b=x+dir*14;c.drawRoundRect(Math.min(a,b),y-8,Math.max(a,b),y+3,5,5,p);}
+ static float shadowScale(float lift){return Math.max(.55f,1f-Math.max(0,lift)/260f);}
+ static float fixedBodyScale(){return BODY_SCALE;}
 }
