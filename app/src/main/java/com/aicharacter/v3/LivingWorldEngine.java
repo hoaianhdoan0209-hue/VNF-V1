@@ -3,7 +3,7 @@ package com.aicharacter.v3;
 public final class LivingWorldEngine{
  private LivingWorldEngine(){}
  public static void advance(WorldState s,double minutes,long now){
-  if(s==null||s.world==null||minutes<=0)return;if(s.livingWorld==null)s.livingWorld=new LivingWorldState();for(WorldArea a:s.world.areas)advanceField(s,a,minutes,now);advanceReedling(s,minutes,now);
+  if(s==null||s.world==null||minutes<=0)return;if(s.livingWorld==null)s.livingWorld=new LivingWorldState();for(WorldArea a:s.world.areas)advanceField(s,a,minutes,now);PopulationEcologyEngine.advance(s,minutes,now);advanceReedling(s,minutes,now);
   for(WorldObject o:s.world.objects){if(isLivingFlora(o))advanceFlora(s,o,minutes,now);else if(isGenericCreature(o,s))advanceCreature(s,o,minutes,now);}
  }
  public static boolean isLivingFlora(WorldObject o){return o!=null&&o.enabled&&("herb".equals(o.type)||o.tags!=null&&(o.tags.contains("vegetation")||o.tags.contains("moss")||o.tags.contains("tree")))&&!"creature".equals(o.type);}

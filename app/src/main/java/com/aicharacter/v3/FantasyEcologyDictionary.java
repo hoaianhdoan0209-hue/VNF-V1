@@ -12,8 +12,10 @@ public final class FantasyEcologyDictionary{
  }
  private FantasyEcologyDictionary(){}
  private static void add(SpeciesEcologyProfile p){P.put(p.key,p);}
- public static SpeciesEcologyProfile forObject(WorldObject o){if(o==null)return null;for(String k:P.keySet())if(hasTag(o.tags,k)||o.id.startsWith(k))return P.get(k);return null;}
+ public static SpeciesEcologyProfile forObject(WorldObject o){String key=keyForObject(o);return key.isEmpty()?null:P.get(key);}
+ public static String keyForObject(WorldObject o){if(o==null)return"";for(String k:P.keySet())if(hasTag(o.tags,k)||o.id.startsWith(k))return k;return"";}
  public static SpeciesEcologyProfile get(String k){return P.get(k);}
+ public static Collection<SpeciesEcologyProfile> all(){return Collections.unmodifiableCollection(P.values());}
  public static boolean anyTag(String csv,String tags){if(csv==null||tags==null)return false;for(String q:csv.split(","))if(hasTag(tags,q))return true;return false;}
  public static boolean hasTag(String csv,String tag){if(csv==null||tag==null)return false;String q=tag.trim().toLowerCase(Locale.ROOT);for(String s:csv.split(","))if(s.trim().toLowerCase(Locale.ROOT).equals(q))return true;return false;}
 }
