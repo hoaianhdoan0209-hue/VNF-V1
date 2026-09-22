@@ -6,9 +6,9 @@ import java.util.*;
 /** Read-only knowledge lookup with explicit layer/provenance separation. */
 public final class GodKnowledgeQueryEngine {
  public static final class Result{
-  public final String id,layer,summary,sourceFamily,sourceRef,retrievedAt,limits;public final double confidence;
-  Result(String id,String layer,String summary,String family,String ref,String retrieved,double confidence,String limits){this.id=id;this.layer=layer;this.summary=summary;this.sourceFamily=family;this.sourceRef=ref;this.retrievedAt=retrieved;this.confidence=confidence;this.limits=limits;}
-  public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("id",id);j.put("layer",layer);j.put("summary",summary);j.put("sourceFamily",sourceFamily);j.put("sourceRef",sourceRef);j.put("retrievedAt",retrievedAt);j.put("confidence",confidence<0?JSONObject.NULL:confidence);j.put("limits",limits);j.put("worldTruth","VNF_WORLD_TRUTH".equals(layer));}catch(Exception ignored){}return j;}
+  public final String id,layer,summary,sourceFamily,sourceRef,retrievedAt,limits;public final double confidence;public final boolean provenanceComplete;
+  Result(String id,String layer,String summary,String family,String ref,String retrieved,double confidence,String limits){this.id=id;this.layer=layer;this.summary=summary;this.sourceFamily=family;this.sourceRef=ref;this.retrievedAt=retrieved;this.confidence=confidence;this.limits=limits;this.provenanceComplete=complete(layer,family,ref,retrieved,confidence,limits);}
+  public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("id",id);j.put("layer",layer);j.put("summary",summary);j.put("sourceFamily",sourceFamily);j.put("sourceRef",sourceRef);j.put("retrievedAt",retrievedAt);j.put("confidence",confidence<0?JSONObject.NULL:confidence);j.put("limits",limits);j.put("provenanceComplete",provenanceComplete);j.put("worldTruth","VNF_WORLD_TRUTH".equals(layer));}catch(Exception ignored){}return j;}
  }
  private GodKnowledgeQueryEngine(){}
 
@@ -33,6 +33,7 @@ public final class GodKnowledgeQueryEngine {
   return out;
  }
  public static JSONArray toJson(List<Result>rs){JSONArray a=new JSONArray();if(rs!=null)for(Result r:rs)a.put(r.toJson());return a;}
+ private static boolean complete(String layer,String family,String ref,String retrieved,double confidence,String limits){if("VNF_WORLD_TRUTH".equals(layer))return ref!=null&&!ref.isEmpty();String r=retrieved==null?"":retrieved.trim(),l=limits==null?"":limits.trim().toLowerCase(Locale.ROOT);return family!=null&&!family.trim().isEmpty()&&ref!=null&&!ref.trim().isEmpty()&&confidence>=0&&confidence<=1&&!r.isEmpty()&&!"UNKNOWN_BUNDLED_REFERENCE".equalsIgnoreCase(r)&&!l.isEmpty()&&!l.contains("not supplied")&&!l.contains("unavailable")&&!l.equals("reference only");}
  private static final class Scored{final WorldKnowledgeAnchor anchor;final double score;Scored(WorldKnowledgeAnchor a,double s){anchor=a;score=s;}}
  private static String norm(String s){return (s==null?"":s).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]+"," ").trim();}
  private static double overlap(String q,String hay){if(q.isEmpty()||hay.isEmpty())return 0;double score=0;for(String t:q.split("\\s+"))if(t.length()>2&&hay.contains(t))score+=1;return score;}
