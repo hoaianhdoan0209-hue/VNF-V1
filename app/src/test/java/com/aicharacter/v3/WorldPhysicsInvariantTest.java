@@ -142,6 +142,42 @@ public final class WorldPhysicsInvariantTest {
   assertFinitePhysics(s.girlPhysics);
  }
 
+ @Test public void worldSaveRoundTripRepairsPhysicsNaNMassAndVelocity() throws Exception{
+  WorldState s=flat();
+  s.girlPhysics.massKg=Double.NaN;
+  s.girlPhysics.velocityX=Double.NaN;
+  s.girlPhysics.velocityY=Double.POSITIVE_INFINITY;
+  s.catPhysics.massKg=Double.NaN;
+  s.catPhysics.velocityX=Double.NEGATIVE_INFINITY;
+  s.catPhysics.velocityY=Double.NaN;
+
+  org.json.JSONObject json=s.toJson();
+  org.json.JSONObject girl=json.getJSONObject("girlPhysics");
+  org.json.JSONObject cat=json.getJSONObject("catPhysics");
+  assertTrue(Double.isFinite(girl.getDouble("massKg")));
+  assertTrue(Double.isFinite(girl.getDouble("velocityX")));
+  assertTrue(Double.isFinite(girl.getDouble("velocityY")));
+  assertTrue(Double.isFinite(cat.getDouble("massKg")));
+  assertTrue(Double.isFinite(cat.getDouble("velocityX")));
+  assertTrue(Double.isFinite(cat.getDouble("velocityY")));
+  assertEquals(50.0,girl.getDouble("massKg"),1e-9);
+  assertEquals(4.2,cat.getDouble("massKg"),1e-9);
+
+  String serialized=json.toString();
+  assertFalse(serialized.contains("NaN"));
+  assertFalse(serialized.contains("Infinity"));
+
+  WorldState restored=WorldState.fromJson(new org.json.JSONObject(serialized));
+  assertFinitePhysics(restored.girlPhysics);
+  assertFinitePhysics(restored.catPhysics);
+  assertEquals(50.0,restored.girlPhysics.massKg,1e-9);
+  assertEquals(4.2,restored.catPhysics.massKg,1e-9);
+  assertEquals(0.0,restored.girlPhysics.velocityX,1e-9);
+  assertEquals(0.0,restored.girlPhysics.velocityY,1e-9);
+  assertEquals(0.0,restored.catPhysics.velocityX,1e-9);
+  assertEquals(0.0,restored.catPhysics.velocityY,1e-9);
+ }
+
  @Test public void globalAtmosphereDoesNotFollowHaruBiome(){
   WorldState left=twoBiome(),right=twoBiome();
   left.haruX=100;right.haruX=1000;
