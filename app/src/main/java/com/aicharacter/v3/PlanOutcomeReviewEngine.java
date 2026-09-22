@@ -20,6 +20,7 @@ public final class PlanOutcomeReviewEngine {
   if(pref!=null)preference=pref.value;
   p.lastOutcomeReview="POST_OUTCOME_REVIEW: memory="+m.memoryId+
    " valence="+fmt(m.valence)+" expectation="+fmt(expectation)+" preference="+fmt(preference);
+  HaruAffordanceEngine.reviewPlan(s,p,m,now);
   PlanCausalAudit.reviewed(s,p,now,p.lastOutcomeReview);
   return true;
  }

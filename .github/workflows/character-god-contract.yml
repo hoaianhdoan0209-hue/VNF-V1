@@ -1,0 +1,28 @@
+name: Character God Contract
+
+on:
+  push:
+    branches:
+      - team/character-god-v1
+  pull_request:
+    branches:
+      - mong/god-session-ui
+
+jobs:
+  character-god-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Set up Gradle 8.14.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.1'
+      - name: Contract tests and debug build
+        run: gradle --no-daemon testDebugUnitTest assembleDebug

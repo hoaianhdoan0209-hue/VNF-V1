@@ -21,6 +21,8 @@ public final class GodWorldAccess {
             out.put("runtimeRevision",RuntimeContentStore.revision(c));
             out.put("contentUpdaterConfigured",VnfOnlineConfig.contentUpdaterConfigured());
             out.put("checkpointAvailable",RuntimeContentStore.latestCheckpoint(c)!=null);
+            out.put("capabilities",GodCapabilityModel.toJson());
+            out.put("worldObservation",GodObservationSnapshot.build(s));
 
             JSONArray objects=new JSONArray();
             if(s.world!=null && s.world.objects!=null){
