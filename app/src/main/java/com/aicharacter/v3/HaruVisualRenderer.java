@@ -11,6 +11,31 @@ public final class HaruVisualRenderer{
  static final int AUTHORED_FRAME_W=144,AUTHORED_FRAME_H=216;
  private HaruVisualRenderer(){}
 
+ public static void drawReflection(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float strength,boolean water){
+  if(strength<=.01f)return;
+  Bitmap sheet=assets.get(v.asset);if(sheet==null)sheet=assets.get("girl_idle_right");if(sheet==null)return;
+  int frames=Math.max(1,v.frames),fw=Math.max(1,sheet.getWidth()/frames),fh=sheet.getHeight(),frame=frameIndex(s,v,anim,frames);
+  float sc=BODY_SCALE,ax=v.anchorX*fw*sc,left=x-ax,top=GirlAnimationController.renderTop(bodyGround,fh,sc,v.anchorY);
+  Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
+  RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
+  float squash=water?.66f:.54f,wobble=water?(float)Math.sin(anim*.82f)*3.2f:(float)Math.sin(anim*.37f)*1.1f;
+  String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes);
+  int tint=water?("NIGHT".equals(phase)?Color.rgb(95,132,168):Color.rgb(128,168,172)):Color.rgb(111,128,119);
+  p.setFilterBitmap(false);p.setShader(null);p.setStyle(Paint.Style.FILL);
+  c.save();
+  c.clipRect(x-fw*sc*.72f,contactGround-1,x+fw*sc*.72f,1080);
+  c.translate(wobble,contactGround*(1f+squash));
+  c.scale(1f,-squash,1f,1f);
+  p.setColorFilter(new PorterDuffColorFilter(tint,PorterDuff.Mode.SRC_ATOP));
+  p.setAlpha((int)Math.max(8,Math.min(80,(water?62:38)*strength)));
+  c.drawBitmap(sheet,src,dst,p);
+  p.setColorFilter(null);p.setAlpha(255);
+  c.restore();
+  // Horizontal breakup prevents a mirror-perfect copy and visually binds it to the surface.
+  p.setStyle(Paint.Style.FILL);
+  int bands=water?7:4;
+  for(int i=0;i<bands;i++){float y=contactGround+10+i*(water?17f:13f),phaseWave=(float)Math.sin(anim*(.65f+i*.03f)+i*.9f),ww=(water?52:38)+(i%3)*18f;p.setColor(Color.argb((int)Math.max(3,(water?15:8)*strength),water?184:145,water?211:162,water?211:153));c.drawRoundRect(x-ww+phaseWave*9,y,x+ww+phaseWave*9,y+(water?2.2f:1.5f),1,1,p);}
+ }
  public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
   float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
