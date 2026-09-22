@@ -116,6 +116,8 @@ workflows:
           include: true
           source: true
     environment:
+      groups:
+        - github_credentials
       java: 17
       android_signing:
         - vnf-release
@@ -163,6 +165,26 @@ workflows:
           test -x "$APK_SIGNER"
           "$APK_SIGNER" verify --verbose --print-certs "$APK"
           shasum -a 256 "$APK"
+      - name: Publish phone test prerelease
+        script: |
+          set -eu
+          : "${GITHUB_TOKEN:?github_credentials did not provide GITHUB_TOKEN}"
+          command -v gh >/dev/null
+          export GH_TOKEN="$GITHUB_TOKEN"
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          TAG="v1.0.1-rc1"
+          ASSET_NAME="VNF-1.0.1-rc1-phone-test.apk"
+          SHA256=$(shasum -a 256 "$APK" | awk '{print $1}')
+          SIZE=$(stat -f%z "$APK")
+          META="$CM_BUILD_DIR/vnf-phone-test.json"
+          node -e 'const fs=require("fs"); const [p,sha,size,commit]=process.argv.slice(1); fs.writeFileSync(p,JSON.stringify({versionCode:116,versionName:"1.0.1-rc1",sha256:sha,size:Number(size),commit,channel:"phone-test"},null,2)+"\\n")' "$META" "$SHA256" "$SIZE" "$CM_COMMIT"
+          if gh release view "$TAG" --repo "$CM_REPO_SLUG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK#$ASSET_NAME" "$META#vnf-phone-test.json" --clobber --repo "$CM_REPO_SLUG"
+            gh release edit "$TAG" --title "VNF 1.0.1 RC1 Phone Test" --notes "Signed phone-test build. Pre-release only; does not replace the stable updater channel." --prerelease --repo "$CM_REPO_SLUG"
+          else
+            gh release create "$TAG" "$APK#$ASSET_NAME" "$META#vnf-phone-test.json" --target "$CM_COMMIT" --title "VNF 1.0.1 RC1 Phone Test" --notes "Signed phone-test build. Pre-release only; does not replace the stable updater channel." --prerelease --repo "$CM_REPO_SLUG"
+          fi
+          echo "Published phone-test prerelease $TAG"
     artifacts:
       - app/build/outputs/apk/release/app-release.apk
       - app/build/reports/**
