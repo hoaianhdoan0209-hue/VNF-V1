@@ -35,7 +35,7 @@ def verifyUpdaterReleaseInvariant=tasks.register('verifyUpdaterReleaseInvariant'
 
 tasks.matching { it.name == 'assembleRelease' || it.name == 'bundleRelease' }.configureEach { dependsOn(verifyUpdaterReleaseInvariant); doFirst { if(!releaseSigningConfigured) throw new GradleException('Stable VNF release signing is not configured. Refusing to create an unsigned/self-update-incompatible release.') } }
 
-dependencies { implementation 'androidx.core:core:1.15.0'; testImplementation 'junit:junit:4.13.2' }
+dependencies { implementation 'androidx.core:core:1.15.0'; testImplementation 'junit:junit:4.13.2'; testImplementation 'org.json:json:20240303' }
 
 // Read-only source snapshot for the online God technical-diagnostics channel.
 def vnfGodCodeAssetsDir=file("$buildDir/generated/vnfGodCodeAssets")
