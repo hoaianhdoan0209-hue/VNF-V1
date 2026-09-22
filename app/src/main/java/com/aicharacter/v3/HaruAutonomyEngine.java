@@ -14,6 +14,9 @@ public final class HaruAutonomyEngine {private static final long DECISION_INTERV
   if(s.environment!=null)s.environment.updateForTime(s.worldMinutes);
   if(s.emotion!=null)s.emotion.decay(Math.pow(.997,seconds));
   if(s.mood!=null)s.mood.decay(Math.pow(.9997,seconds));
+  // Same causal learning boundary in ACTIVE and OFFLINE slices. God only
+  // creates the external offer; Haru owns whether it becomes lived learning.
+  HaruTeachingOpportunityEngine.observe(s,now);
  }
 
  /**
