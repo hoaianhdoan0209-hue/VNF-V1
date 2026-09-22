@@ -17,7 +17,7 @@ public final class VisualRegressionTest{
     }
 
     private static String read(Path p)throws Exception{
-        return Files.readString(p,StandardCharsets.UTF_8);
+        return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);
     }
 
     @Test public void foregroundParallaxCannotExposeBlankRightEdge(){
