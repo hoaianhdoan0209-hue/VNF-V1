@@ -83,8 +83,8 @@ def make(name,c,seed):
  for x in range(0,800,13):
   if r.random()<.75:grass(d,r,x,359,r.randint(9,22),42,58)
  save(im,a,os.path.join(OUT,name+"_ground.png"))
- im,d,a=img(c);tree(d,r,20,360,175,17,45);tree(d,r,780,360,175,17,45)
- for x in list(range(-5,180,12))+list(range(620,805,12)):grass(d,r,x,360,r.randint(28,82),30,49)
+ im,d,a=img(c);tree(d,r,20,360,188,17,45);tree(d,r,780,360,188,17,45);blob(d,r,58,322,45,26,30,49,14);blob(d,r,742,322,45,26,30,49,14)
+ for x in list(range(-5,205,10))+list(range(595,805,10)):grass(d,r,x,360,r.randint(30,90),30,49)
  save(im,a,os.path.join(OUT,name+"_foreground.png"))
 for i,(n,c) in enumerate(C.items()):make(n,c,4100+i*100)
 for n in C:
