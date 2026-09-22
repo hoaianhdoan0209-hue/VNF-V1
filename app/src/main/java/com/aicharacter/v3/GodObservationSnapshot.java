@@ -43,7 +43,7 @@ public final class GodObservationSnapshot {
  private static String energyBand(double v){return v<20?"exhausted":v<40?"tired":v<70?"steady":"energetic";}
  private static String painBand(double v){return v<8?"none_visible":v<25?"mild":v<55?"guarded":"severe";}
  private static String sleepBand(double v){return v<25?"alert":v<55?"somewhat_sleepy":v<80?"sleepy":"very_sleepy";}
- private static String breathingBand(RespirationState r){if(r==null)return"unknown";double v=0;try{v=r.breathingEffort;}catch(Throwable ignored){}return band(v);}
+ private static String breathingBand(RespirationState r){if(r==null)return"unknown";double v=0;try{v=r.breathingLoad;}catch(Throwable ignored){}return band(v);}
  private static String temperatureBand(double c){if(!Double.isFinite(c))return"unknown";return c<8?"very_cold":c<18?"cool":c<29?"mild":c<37?"hot":"very_hot";}
  private static String humidityBand(double h){if(!Double.isFinite(h))return"unknown";return h<.25?"dry":h<.55?"comfortable":h<.8?"humid":"saturated";}
  private static String pressureBand(double p){if(!Double.isFinite(p))return"unknown";return p<85?"low":p>108?"high":"normal";}
