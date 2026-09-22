@@ -84,6 +84,8 @@ public final class VisualV1DevTest {
         check(idle.count(0,fw,(int)(idle.h*.68),idle.h)>260,"Haru has visible legs/feet region",ok,bad);
         check(idle.outerMidCount(0,fw)>40,"Haru arms separate from torso silhouette",ok,bad);
         check(idle.bottomColumnGroups(0,fw)>=2,"Haru has two distinct grounded foot silhouettes",ok,bad);
+        check(idle.uniqueColors(0,fw,0,(int)(idle.h*.36))>=9,"Haru face/hair region has authored color detail",ok,bad);
+        check(idle.uniqueColors(0,fw,(int)(idle.h*.30),(int)(idle.h*.72))>=10,"Haru clothing/body region has authored color detail",ok,bad);
     }
 
     private static void checkRendererContracts(Path root,List<String>ok,List<String>bad)throws Exception{
@@ -96,7 +98,9 @@ public final class VisualV1DevTest {
         check(manifest.contains("\"lakeside_sky\""),"Lakeside sky asset is registered",ok,bad);
         check(game.contains("drawLayer(c,area+\"_sky\"")&&game.contains("drawLayer(c,area+\"_distant\"")&&
               game.contains("drawLayer(c,area+\"_mid\"")&&game.contains("drawLayer(c,area+\"_ground\"")&&
-              game.contains("drawLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+              game.contains("drawForegroundLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+        check(game.contains("BackdropPolishRenderer.draw(")&&game.contains("BackdropPolishRenderer.drawGround("),"all biome scenes receive subtle depth/detail polish",ok,bad);
+        check(game.contains("bg.setAlpha(198)")&&game.contains("cam*1.03f"),"foreground is visually restrained and does not dominate Haru",ok,bad);
         int tintStart=game.indexOf("private void drawTimeTint(Canvas c)");
         int tintEnd=tintStart<0?-1:game.indexOf(" private void drawUi",tintStart);
         String tint=tintStart>=0&&tintEnd>tintStart?game.substring(tintStart,tintEnd):"";
@@ -123,7 +127,7 @@ public final class VisualV1DevTest {
         String ui=start>=0&&end>start?game.substring(start,end):"";
         check(!ui.contains("LIÊN HỆ THẦN")&&!ui.contains("\"NÓI\"")&&!ui.contains("\"MIC\""),"main HUD contains no long text buttons",ok,bad);
         check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&ui.contains("HudIconRenderer.GOD"),"chat/mic/God are icon controls",ok,bad);
-        check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);
+        check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);\n        String icon=read(root.resolve("app/src/main/java/com/aicharacter/v3/HudIconRenderer.java"));\n        check(icon.contains("pressed?176:104")&&icon.contains("c.translate(0,1.2f*d)"),"icon controls have a clear pressed state",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
@@ -167,7 +171,7 @@ public final class VisualV1DevTest {
         double frameCoverage(int frame){int fw=w/12,x0=frame*fw;return count(x0,x0+fw,0,h)/(double)(fw*h);}
         int count(int x0,int x1,int y0,int y1){int n=0;for(int y=Math.max(0,y0);y<Math.min(h,y1);y++)for(int x=Math.max(0,x0);x<Math.min(w,x1);x++)if(opaqueAt(x,y))n++;return n;}
         int[] bounds(int x0,int x1){int minX=x1,minY=h,maxX=x0,maxY=0;for(int y=0;y<h;y++)for(int x=x0;x<x1;x++)if(opaqueAt(x,y)){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}return new int[]{minX,minY,maxX+1,maxY+1};}
-        int outerMidCount(int x0,int x1){int fw=x1-x0,l=x0+(int)(fw*.34),r=x0+(int)(fw*.66),y0=(int)(h*.32),y1=(int)(h*.68),n=0;for(int y=y0;y<y1;y++)for(int x=x0;x<x1;x++)if((x<l||x>=r)&&opaqueAt(x,y))n++;return n;}
+        int outerMidCount(int x0,int x1){int fw=x1-x0,l=x0+(int)(fw*.34),r=x0+(int)(fw*.66),y0=(int)(h*.32),y1=(int)(h*.68),n=0;for(int y=y0;y<y1;y++)for(int x=x0;x<x1;x++)if((x<l||x>=r)&&opaqueAt(x,y))n++;return n;}\n        int uniqueColors(int x0,int x1,int y0,int y1){boolean[] seen=new boolean[256];int n=0;for(int y=Math.max(0,y0);y<Math.min(h,y1);y++)for(int x=Math.max(0,x0);x<Math.min(w,x1);x++){int q=px[y*w+x]&255;if(opaqueAt(x,y)&&!seen[q]){seen[q]=true;n++;}}return n;}
         int bottomColumnGroups(int x0,int x1){boolean on=false;int groups=0,y0=(int)(h*.87);for(int x=x0;x<x1;x++){boolean hit=false;for(int y=y0;y<h;y++)if(opaqueAt(x,y)){hit=true;break;}if(hit&&!on)groups++;on=hit;}return groups;}
         static int i32(byte[]b,int p){return((b[p]&255)<<24)|((b[p+1]&255)<<16)|((b[p+2]&255)<<8)|(b[p+3]&255);}
     }
