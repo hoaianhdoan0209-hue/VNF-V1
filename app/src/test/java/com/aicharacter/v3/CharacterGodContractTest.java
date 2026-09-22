@@ -101,6 +101,21 @@ public final class CharacterGodContractTest {
         assertTrue(diagnostic.contains("REAL-WORLD REFERENCE"));
     }
 
+    @Test public void teachingUsesSameActiveOfflineCausalPath(){
+        WorldState active=state(),offline=state();
+        GodTeachingGateway.teach(active,"DẠY CÔ ẤY: gravity",1600L);
+        GodTeachingGateway.teach(offline,"DẠY CÔ ẤY: gravity",1600L);
+
+        HaruAutonomyEngine.advanceMindBody(active,60.0,1700L);
+        HaruAutonomyEngine.advanceMindBody(offline,60.0,1700L);
+
+        assertEquals(active.knowledge.getOrDefault("gravity",0),offline.knowledge.getOrDefault("gravity",0));
+        assertEquals(active.memories.size(),offline.memories.size());
+        assertEquals(active.worldHistory.size(),offline.worldHistory.size());
+        assertEquals(active.personality.curiosity,offline.personality.curiosity,0.0);
+        assertEquals(active.currentIntention,offline.currentIntention);
+    }
+
     @Test public void godCanAnswerBroadKnowledgeWithoutContaminatingSaveTruth(){
         WorldState s=state();
         int history=s.worldHistory.size(),memories=s.memories.size(),knowledge=s.knowledge.size();
