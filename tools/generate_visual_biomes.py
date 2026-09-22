@@ -7,8 +7,8 @@ PRE=os.path.join(ROOT,"app/build/visual-preview")
 os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
-OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v9-material-depth-2026-09"
+OUT_W,OUT_H=2400,1080
+REV="authored-organic-biome-v9-native-2400x1080-2026-09"
 C={
  "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
  "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
@@ -695,7 +695,7 @@ for n in C:
     fg=Image.open(os.path.join(OUT,n+"_foreground.png")).convert("RGBA")
     aa=fg.getchannel("A").point(lambda x:int(x*198/255)); fg.putalpha(aa)
     preview=Image.alpha_composite(base,fg)
-    # Preview is already full-resolution because each authored layer is 1600x720.
+    # Preview is native world resolution: each authored layer is 2400x1080.
     preview.save(os.path.join(PRE,n+".png"),optimize=True,compress_level=6)
 
 mp=os.path.join(ROOT,"app/src/main/assets/visual/asset_manifest.json")
