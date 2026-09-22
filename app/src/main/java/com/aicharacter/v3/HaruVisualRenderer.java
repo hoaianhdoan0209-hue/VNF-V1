@@ -53,7 +53,16 @@ public final class HaruVisualRenderer{
   c.save();
   c.translate(postureX,postureY);
   c.rotate(rotation,x,bodyGround);
-  p.setAlpha((int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness)));
+  int bodyAlpha=(int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness));
+  int rimColor="MORNING".equals(phase)?Color.rgb(255,214,158):"EVENING".equals(phase)?Color.rgb(255,166,105):"NIGHT".equals(phase)?Color.rgb(152,188,232):Color.rgb(222,229,205);
+  float rimDx="MORNING".equals(phase)?-3.5f:"EVENING".equals(phase)?3.5f:"NIGHT".equals(phase)?1.5f:-1.5f;
+  float rimDy="NIGHT".equals(phase)?-2.5f:-1f;
+  RectF rimDst=new RectF(dst.left+rimDx,dst.top+rimDy,dst.right+rimDx,dst.bottom+rimDy);
+  p.setColorFilter(new PorterDuffColorFilter(rimColor,PorterDuff.Mode.SRC_IN));
+  p.setAlpha("NIGHT".equals(phase)?42:34);
+  c.drawBitmap(sheet,src,rimDst,p);
+  p.setColorFilter(null);
+  p.setAlpha(bodyAlpha);
   c.drawBitmap(sheet,src,dst,p);
   p.setAlpha(255);
   c.restore();
