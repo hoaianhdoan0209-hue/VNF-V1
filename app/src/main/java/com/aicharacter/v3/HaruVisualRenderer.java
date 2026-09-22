@@ -92,6 +92,16 @@ public final class HaruVisualRenderer{
   p.setColorFilter(null);
   p.setAlpha(bodyAlpha);
   c.drawBitmap(sheet,src,dst,p);
+  int localColor=Color.TRANSPARENT,localAlpha=0;
+  if("home_shelter".equals(area)){
+   WorldObject shelter=s.world==null?null:s.world.object("shelter_01");
+   float dist=shelter==null?260f:Math.abs(s.haruX-shelter.x),near=Math.max(0f,1f-dist/520f);
+   if(near>0){localColor=Color.rgb(255,184,103);localAlpha=(int)((14+("NIGHT".equals(phase)?38:"EVENING".equals(phase)?28:14))*near);}
+  }else if("garden_path".equals(area)){localColor=Color.rgb(219,232,181);localAlpha=14;}
+  else if("quiet_grove".equals(area)){localColor=Color.rgb(160,204,164);localAlpha=18;}
+  else{localColor=Color.rgb(151,202,216);localAlpha=20;}
+  if(s.environment!=null&&"RAIN".equals(s.environment.weather)){localColor=Color.rgb(137,176,197);localAlpha=Math.max(localAlpha,20);}
+  if(localAlpha>0){p.setColorFilter(new PorterDuffColorFilter(localColor,PorterDuff.Mode.SRC_ATOP));p.setAlpha(Math.min(52,localAlpha));c.drawBitmap(sheet,src,dst,p);p.setColorFilter(null);}
   p.setAlpha(255);
   c.restore();
  }
