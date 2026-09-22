@@ -23,6 +23,19 @@ public final class WorldPhysicsInvariantTest {
   return s;
  }
 
+ private static WorldState twoBiome(){
+  WorldState s=flat();
+  s.world=new WorldModel();
+  BiomeProfile warm=new BiomeProfile();warm.id="warm";warm.baseTemperatureC=29;warm.baseMoisture=.35;
+  BiomeProfile cool=new BiomeProfile();cool.id="cool";cool.baseTemperatureC=18;cool.baseMoisture=.78;
+  s.world.biomes.put(warm.id,warm);s.world.biomes.put(cool.id,cool);
+  WorldArea a=new WorldArea("warm_area","warm","warm",0,600,846,true,"dry");
+  WorldArea b=new WorldArea("cool_area","cool","cool",600,1200,846,true,"water,wet_margin");
+  a.biomeId=warm.id;b.biomeId=cool.id;a.elevationM=20;b.elevationM=220;
+  s.world.areas.add(a);s.world.areas.add(b);
+  return s;
+ }
+
  @Test public void unsupportedFallUsesGravity(){
   WorldState s=flat();
   WholeBodyPhysicsEngine.loseGroundSupport(s,"girl",1.0,0,T0);
@@ -99,18 +112,76 @@ public final class WorldPhysicsInvariantTest {
   assertTrue(a.airDensityKgM3>=.55&&a.airDensityKgM3<=1.60);
  }
 
- @Test public void activeOfflineKernelParity(){
+ @Test public void atmosphereAndPhysicsRepairNaNInfinity(){
+  WorldState s=flat();
+  s.atmosphere.oxygenFraction=Double.NaN;
+  s.atmosphere.carbonDioxideFraction=Double.POSITIVE_INFINITY;
+  s.atmosphere.pressureKPa=Double.NEGATIVE_INFINITY;
+  s.atmosphere.temperatureC=Double.NaN;
+  s.atmosphere.relativeHumidity=Double.POSITIVE_INFINITY;
+  s.atmosphere.airQuality=Double.NaN;
+  s.atmosphere.airDensityKgM3=Double.NaN;
+  s.girlPhysics.massKg=Double.NaN;
+  s.girlPhysics.velocityX=Double.POSITIVE_INFINITY;
+  s.girlPhysics.velocityY=Double.NaN;
+  s.girlPhysics.centerOfMassX=Double.NaN;
+  s.girlPhysics.centerOfMassY=Double.NEGATIVE_INFINITY;
+  s.girlPhysics.groundClearanceM=Double.NaN;
+  s.girlPhysics.groundReaction=Double.POSITIVE_INFINITY;
+  s.girlPhysics.traction=Double.NaN;
+  s.girlPhysics.balance=Double.POSITIVE_INFINITY;
+  s.girlPhysics.supportLeft=Double.NaN;
+  s.girlPhysics.supportRight=Double.NEGATIVE_INFINITY;
+  s.girlPhysics.slipVelocity=Double.NaN;
+  s.girlPhysics.slipSeverity=Double.POSITIVE_INFINITY;
+  s.girlPhysics.fallBodyHeightM=Double.NaN;
+  StateInvariantChecker.normalize(s,T0);
+  assertFiniteAtmosphere(s.atmosphere);
+  assertFinitePhysics(s.girlPhysics);
+  WholeBodyPhysicsEngine.prepare(s,"girl",.1,T0+100);
+  assertFinitePhysics(s.girlPhysics);
+ }
+
+ @Test public void globalAtmosphereDoesNotFollowHaruBiome(){
+  WorldState left=twoBiome(),right=twoBiome();
+  left.haruX=100;right.haruX=1000;
+  long end=T0+10L*60000L;
+  LifeSimulationKernel.syncClock(left,end);LifeSimulationKernel.syncClock(right,end);
+  AtmosphereEvolutionEngine.advance(left,end);AtmosphereEvolutionEngine.advance(right,end);
+  assertEquals(left.atmosphere.temperatureC,right.atmosphere.temperatureC,1e-12);
+  assertEquals(left.atmosphere.relativeHumidity,right.atmosphere.relativeHumidity,1e-12);
+  assertEquals(left.atmosphere.pressureKPa,right.atmosphere.pressureKPa,1e-12);
+  assertEquals(left.environment.cloudCover,right.environment.cloudCover,1e-12);
+  assertNotEquals(EcologyEngine.localTemperatureC(left,left.world.area("warm_area")),
+                  EcologyEngine.localTemperatureC(left,left.world.area("cool_area")),1e-6);
+ }
+
+ @Test public void activeOfflinePartitionParityWithWeatherWetnessAndFall(){
   WorldState active=flat(),offline=flat();
-  long end=T0+60000L;
-  LifeSimulationKernel.beginSlice(active,60,end,LifeSimulationKernel.Mode.ACTIVE);
-  LifeSimulationKernel.endSlice(active,60,end,false,false,LifeSimulationKernel.Mode.ACTIVE);
-  LifeSimulationKernel.beginSlice(offline,60,end,LifeSimulationKernel.Mode.OFFLINE);
-  LifeSimulationKernel.endSlice(offline,60,end,false,false,LifeSimulationKernel.Mode.OFFLINE);
-  assertEquals(active.atmosphere.temperatureC,offline.atmosphere.temperatureC,1e-9);
-  assertEquals(active.atmosphere.relativeHumidity,offline.atmosphere.relativeHumidity,1e-9);
-  assertEquals(active.environment.cloudCover,offline.environment.cloudCover,1e-9);
+  configureRainAndFall(active);configureRainAndFall(offline);
+
+  for(int i=1;i<=12;i++){
+   long now=T0+i*5000L;
+   LifeSimulationKernel.beginSlice(active,5,now,LifeSimulationKernel.Mode.ACTIVE);
+   LifeSimulationKernel.endSlice(active,5,now,false,false,LifeSimulationKernel.Mode.ACTIVE);
+  }
+  for(int i=1;i<=3;i++){
+   long now=T0+i*20000L;
+   LifeSimulationKernel.beginSlice(offline,20,now,LifeSimulationKernel.Mode.OFFLINE);
+   LifeSimulationKernel.endSlice(offline,20,now,false,false,LifeSimulationKernel.Mode.OFFLINE);
+  }
+
+  assertEquals(active.atmosphere.temperatureC,offline.atmosphere.temperatureC,.12);
+  assertEquals(active.atmosphere.relativeHumidity,offline.atmosphere.relativeHumidity,.025);
+  assertEquals(active.atmosphere.pressureKPa,offline.atmosphere.pressureKPa,.02);
+  assertEquals(active.environment.cloudCover,offline.environment.cloudCover,.035);
+  assertEquals(active.environment.wind,offline.environment.wind,.035);
+  assertEquals(active.worldWetness,offline.worldWetness,.035);
   assertEquals(active.girlPhysics.grounded,offline.girlPhysics.grounded);
-  assertEquals(active.worldWetness,offline.worldWetness,1e-9);
+  assertEquals(active.girlPhysics.groundClearanceM,offline.girlPhysics.groundClearanceM,.01);
+  assertEquals(active.girlPhysics.velocityY,offline.girlPhysics.velocityY,.02);
+  assertTrue(active.worldWetness>.20);
+  assertTrue(active.girlPhysics.grounded);
  }
 
  @Test public void atmosphereSameTimestampIsIdempotent(){
@@ -124,5 +195,26 @@ public final class WorldPhysicsInvariantTest {
   assertEquals(p,s.atmosphere.pressureKPa,1e-12);
   assertEquals(c,s.environment.cloudCover,1e-12);
   assertEquals(w,s.environment.wind,1e-12);
+ }
+
+ private static void configureRainAndFall(WorldState s){
+  s.environment.weather="RAIN";s.environment.weatherIntensity=.85;s.environment.cloudCover=.92;s.environment.wind=.25;s.environment.weatherSince=T0;s.environment.lastAtmosphereUpdateAt=T0;
+  s.atmosphere.relativeHumidity=.88;s.atmosphere.temperatureC=22.5;s.atmosphere.syncDerived();
+  s.worldWetness=.20;
+  WholeBodyPhysicsEngine.loseGroundSupport(s,"girl",.65,.18,T0);
+ }
+
+ private static void assertFiniteAtmosphere(AtmosphereState a){
+  assertTrue(Double.isFinite(a.oxygenFraction));assertTrue(Double.isFinite(a.inertGasFraction));assertTrue(Double.isFinite(a.carbonDioxideFraction));
+  assertTrue(Double.isFinite(a.pressureKPa));assertTrue(Double.isFinite(a.temperatureC));assertTrue(Double.isFinite(a.relativeHumidity));
+  assertTrue(Double.isFinite(a.airQuality));assertTrue(Double.isFinite(a.airDensityKgM3));
+ }
+
+ private static void assertFinitePhysics(PhysicsBodyState p){
+  assertTrue(Double.isFinite(p.massKg));assertTrue(Double.isFinite(p.velocityX));assertTrue(Double.isFinite(p.velocityY));
+  assertTrue(Double.isFinite(p.centerOfMassX));assertTrue(Double.isFinite(p.centerOfMassY));assertTrue(Double.isFinite(p.groundClearanceM));
+  assertTrue(Double.isFinite(p.groundReaction));assertTrue(Double.isFinite(p.traction));assertTrue(Double.isFinite(p.balance));
+  assertTrue(Double.isFinite(p.supportLeft));assertTrue(Double.isFinite(p.supportRight));assertTrue(Double.isFinite(p.landingInstability));
+  assertTrue(Double.isFinite(p.slipVelocity));assertTrue(Double.isFinite(p.slipSeverity));assertTrue(Double.isFinite(p.fallBodyHeightM));
  }
 }

@@ -1,8 +1,8 @@
 package com.aicharacter.v3;
 /**
- * Evolves physical atmosphere/environment from persisted world state.
- * Uses EnvironmentState.lastAtmosphereUpdateAt as the causal cursor so active/offline share one timeline.
- * No Haru cognition, memory, personality or intention is written here.
+ * Evolves the persisted GLOBAL/background atmosphere.
+ * Contract: target values are world-scale and MUST NOT depend on Haru position.
+ * Biome/water/shelter microclimate is derived separately by EcologyEngine.
  */
 public final class AtmosphereEvolutionEngine{
  private AtmosphereEvolutionEngine(){}
@@ -10,33 +10,23 @@ public final class AtmosphereEvolutionEngine{
  public static void advance(WorldState s,long now){
   if(s==null||s.environment==null)return;
   if(s.atmosphere==null)s.atmosphere=new AtmosphereState();
+  s.atmosphere.syncDerived();
   EnvironmentState e=s.environment;
   long prior=e.lastAtmosphereUpdateAt>0?e.lastAtmosphereUpdateAt:(s.lastSimulatedAt>0?s.lastSimulatedAt:now);
   if(now<=prior){
-   s.atmosphere.syncDerived();
    if(e.lastAtmosphereUpdateAt<=0)e.lastAtmosphereUpdateAt=prior;
    return;
   }
 
   double minutes=(now-prior)/60000.0;
-  WorldArea area=s.world==null?null:s.world.areaAt(s.haruX);
-  BiomeProfile biome=area==null||s.world==null?null:s.world.biome(area.biomeId);
-  double elevationM=area==null?0:Math.max(-400,area.elevationM);
-  double baseTemp=biome==null?24:biome.baseTemperatureC;
   double hour=((s.worldMinutes/60.0)%24.0+24.0)%24.0;
-  double diurnal=Math.sin((hour-9.0)/24.0*Math.PI*2.0)*2.8;
-  double exposure=WorldSemantics.exposure(area);
-  double priorRain="RAIN".equals(e.weather)?e.weatherIntensity:0;
-  double tempTarget=baseTemp+diurnal*exposure-priorRain*1.8-e.wind*.45-Math.max(0,elevationM)*.0035;
-  if(area!=null&&!area.weatherExposed)tempTarget=tempTarget*.35+22*.65;
+  double diurnal=Math.sin((hour-9.0)/24.0*Math.PI*2.0)*2.4;
+  double priorRain="RAIN".equals(e.weather)?finite01(e.weatherIntensity):0;
 
-  double biomeMoisture=biome==null?.48:biome.baseMoisture;
-  double localMoisture=biomeMoisture+(area==null?0:area.localMoistureOffset);
-  if(hasTag(area,"water")||hasTag(area,"wet_margin"))localMoisture+=.08;
-  if(hasTag(area,"mist"))localMoisture+=.04;
-  localMoisture=cl(localMoisture);
-  double humidityTarget=cl(.20+localMoisture*.66+priorRain*.16-e.wind*.04);
-  double pressureTarget=101.325*Math.exp(-elevationM/8434.5);
+  WorldClimate climate=worldClimate(s);
+  double tempTarget=climate.baseTemperatureC+diurnal-priorRain*1.4-finite01(e.wind)*.35;
+  double humidityTarget=cl(.22+climate.baseMoisture*.62+priorRain*.16-finite01(e.wind)*.04);
+  double pressureTarget=101.325*Math.exp(-climate.meanElevationM/8434.5);
 
   s.atmosphere.temperatureC=follow(s.atmosphere.temperatureC,tempTarget,minutes,18);
   s.atmosphere.relativeHumidity=follow(s.atmosphere.relativeHumidity,humidityTarget,minutes,12);
@@ -53,16 +43,16 @@ public final class AtmosphereEvolutionEngine{
     a.active=false;
     WorldEventBus.publishId(s,now,"atmo_end_"+a.id,"ATMOSPHERIC_PERTURBATION_ENDED","environment","The atmospheric disturbance dissipated.");
    }else{
-    force=a.influenceAt(now);
-    evolution=a.evolution;
+    force=finite01(a.influenceAt(now));
+    evolution=Double.isFinite(a.evolution)?a.evolution:0;
    }
   }
 
-  double naturalCloud=cl((s.atmosphere.relativeHumidity-.42)*1.12+localMoisture*.20);
+  double naturalCloud=cl((s.atmosphere.relativeHumidity-.42)*1.08+climate.baseMoisture*.18);
   double cloudTarget=cl(naturalCloud+force*.34+evolution*.035);
-  double windTarget=cl(.08+Math.abs(tempTarget-s.atmosphere.temperatureC)*.022+cloudTarget*.08+force*.42+evolution*.02);
-  e.cloudCover=follow(cl(e.cloudCover),cloudTarget,minutes,20);
-  e.wind=follow(cl(e.wind),windTarget,minutes,28);
+  double windTarget=cl(.08+Math.abs(tempTarget-s.atmosphere.temperatureC)*.020+cloudTarget*.08+force*.42+evolution*.02);
+  e.cloudCover=follow(finite01(e.cloudCover),cloudTarget,minutes,20);
+  e.wind=follow(finite01(e.wind),windTarget,minutes,28);
 
   double rainPotential=e.cloudCover*.70+s.atmosphere.relativeHumidity*.25+force*.18;
   String previous=e.weather==null?"CLEAR":e.weather;
@@ -72,22 +62,43 @@ public final class AtmosphereEvolutionEngine{
   if(!next.equals(previous)){
    e.weather=next;
    e.weatherSince=now;
-   WorldEventBus.publishId(s,now,"atmo_weather_"+Long.toHexString(now)+"_"+next,"WEATHER",next,"Physical atmospheric conditions crossed into "+next+".");
+   WorldEventBus.publishId(s,now,"atmo_weather_"+Long.toHexString(now)+"_"+next,"WEATHER",next,"Global atmospheric conditions crossed into "+next+".");
   }else e.weather=next;
 
   s.atmosphere.syncDerived();
   e.lastAtmosphereUpdateAt=now;
  }
 
- private static boolean hasTag(WorldArea a,String q){
-  if(a==null||a.tags==null||q==null)return false;
-  for(String x:a.tags.split(","))if(q.equalsIgnoreCase(x.trim()))return true;
-  return false;
+ private static WorldClimate worldClimate(WorldState s){
+  if(s==null||s.world==null||s.world.areas.isEmpty())return new WorldClimate(24,.50,0);
+  double temp=0,moisture=0,elevation=0,weight=0;
+  for(WorldArea area:s.world.areas){
+   if(area==null)continue;
+   BiomeProfile b=s.world.biome(area.biomeId);
+   double span=Math.max(1,area.right-area.left);
+   double t=b==null?24:b.baseTemperatureC;
+   double m=b==null?.50:b.baseMoisture;
+   temp+=t*span;
+   moisture+=cl(m)*span;
+   elevation+=Math.max(-400,area.elevationM)*span;
+   weight+=span;
+  }
+  if(weight<=0)return new WorldClimate(24,.50,0);
+  return new WorldClimate(temp/weight,moisture/weight,elevation/weight);
  }
+
+ private static final class WorldClimate{
+  final double baseTemperatureC,baseMoisture,meanElevationM;
+  WorldClimate(double t,double m,double e){baseTemperatureC=t;baseMoisture=m;meanElevationM=e;}
+ }
+
  private static double follow(double v,double target,double minutes,double tauMin){
-  if(minutes<=0)return v;
+  v=Double.isFinite(v)?v:target;
+  target=Double.isFinite(target)?target:v;
+  if(minutes<=0||!Double.isFinite(minutes))return v;
   double k=1-Math.exp(-minutes/Math.max(.05,tauMin));
   return v+(target-v)*k;
  }
+ private static double finite01(double v){return Double.isFinite(v)?cl(v):0;}
  private static double cl(double v){return Math.max(0,Math.min(1,v));}
 }

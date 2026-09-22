@@ -8,6 +8,7 @@ public final class WholeBodyPhysicsEngine{
   if(s==null||dt<=0)return;
   PhysicsBodyState p="cat".equals(actor)?s.catPhysics:s.girlPhysics;
   if(p==null)return;
+  p.normalizeFinite("cat".equals(actor)?4.2:50);
   double actorX="cat".equals(actor)?s.catState.x:s.haruX;
   double wet=Math.max(0,Math.min(1,s.worldWetness));
   double slope=Math.abs(GroundGeometry.slope(s,actorX));
