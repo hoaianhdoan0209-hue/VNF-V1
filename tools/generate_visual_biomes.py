@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v6-landmarks-2026-09"
+REV="authored-organic-biome-v7-cinematic-light-2026-09"
 C={
  "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
  "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
@@ -162,6 +162,76 @@ def _signature_detail(base,mask,r,kind,biome):
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
 
+def _cinematic_light(base,mask,kind,biome):
+    w,h=base.size
+    light=Image.new("RGBA",(w,h),(0,0,0,0))
+    d=ImageDraw.Draw(light)
+
+    # High-resolution lighting pass only. Geometry remains crisp; blur is limited
+    # to translucent illumination so the scene reads as polished rather than soft.
+    cfg={
+        "home":{"warm":(255,184,105),"cool":(77,109,125),"source":(1320,120)},
+        "garden":{"warm":(255,214,150),"cool":(97,133,145),"source":(1275,105)},
+        "lakeside":{"warm":(238,205,143),"cool":(102,157,177),"source":(230,110)},
+        "grove":{"warm":(204,225,163),"cool":(48,81,72),"source":(820,115)}
+    }[biome]
+    warm,cool=cfg["warm"],cfg["cool"]
+    sx,sy=cfg["source"]
+
+    if kind=="sky":
+        # broad ambient color separation
+        for radius,alpha in ((430,20),(300,26),(190,34)):
+            d.ellipse((sx-radius,sy-radius,sx+radius,sy+radius),fill=(*warm,alpha))
+        d.rectangle((0,int(h*.58),w,h),fill=(*warm,8))
+        d.rectangle((0,0,w,int(h*.35)),fill=(*cool,7))
+    elif kind=="distant":
+        # atmospheric perspective: distant planes receive haze, never foreground blur
+        d.rectangle((0,int(h*.42),w,h),fill=(*cool,10))
+        d.rectangle((0,int(h*.62),w,h),fill=(*warm,7))
+    elif kind=="mid":
+        # directional soft key from the authored light source
+        cone=Image.new("RGBA",(w,h),(0,0,0,0)); cd=ImageDraw.Draw(cone)
+        if biome=="home":
+            cd.polygon([(sx-170,90),(sx+80,90),(980,h),(720,h)],fill=(*warm,14))
+            cd.ellipse((320,455,520,640),fill=(*warm,20))
+        elif biome=="garden":
+            cd.polygon([(sx-210,80),(sx+100,80),(1020,h),(690,h)],fill=(*warm,13))
+            cd.ellipse((690,455,920,625),fill=(*warm,12))
+        elif biome=="lakeside":
+            cd.polygon([(sx-80,70),(sx+170,70),(770,h),(430,h)],fill=(*warm,12))
+            cd.rectangle((575,545,1030,640),fill=(*cool,8))
+        else:
+            for cx,ww,aa in ((610,115,16),(820,92,22),(1010,132,13)):
+                cd.polygon([(cx-ww,85),(cx+ww,85),(cx+ww//3,h),(cx-ww//3,h)],fill=(*warm,aa))
+        cone=cone.filter(ImageFilter.GaussianBlur(26))
+        light=Image.alpha_composite(light,cone)
+    elif kind=="ground":
+        # contact glow and subtle lower-frame bounce
+        d.rectangle((0,int(h*.72),w,h),fill=(*warm,7 if biome!="grove" else 5))
+        if biome=="lakeside":
+            d.ellipse((570,610,1035,760),fill=(*warm,12))
+        elif biome=="garden":
+            d.ellipse((540,570,1060,760),fill=(*warm,8))
+        elif biome=="home":
+            d.ellipse((330,575,960,760),fill=(*warm,9))
+    elif kind=="foreground":
+        # near-camera foliage should frame, not flatten, the center
+        edge=Image.new("RGBA",(w,h),(0,0,0,0)); ed=ImageDraw.Draw(edge)
+        ed.ellipse((-260,220,380,h+180),fill=(*cool,20))
+        ed.ellipse((w-380,220,w+260,h+180),fill=(*cool,20))
+        if biome in ("home","garden"):
+            ed.ellipse((-220,390,300,h+80),fill=(*warm,10))
+            ed.ellipse((w-300,390,w+220,h+80),fill=(*warm,10))
+        edge=edge.filter(ImageFilter.GaussianBlur(34))
+        light=Image.alpha_composite(light,edge)
+
+    if kind in ("sky","distant","ground"):
+        light=light.filter(ImageFilter.GaussianBlur(18 if kind=="sky" else 12))
+
+    if mask is not None and kind!="sky":
+        light.putalpha(ImageChops.multiply(light.getchannel("A"),mask))
+    return Image.alpha_composite(base,light)
+
 def save(im,a,path):
     name=os.path.basename(path).replace(".png","")
     biome,kind=name.split("_",1)
@@ -171,6 +241,7 @@ def save(im,a,path):
     r=random.Random("hires-"+name)
     rgba=_masked_texture(rgba,mask,r,kind,biome)
     rgba=_signature_detail(rgba,mask,r,kind,biome)
+    rgba=_cinematic_light(rgba,mask,kind,biome)
     # Subtle tonal polish differs by depth. No blur on authored geometry.
     if kind=="sky":
         rgba=ImageEnhance.Color(rgba).enhance(1.10)
