@@ -1,4 +1,4 @@
-from PIL import Image,ImageDraw
+from PIL import Image,ImageDraw,ImageFilter,ImageEnhance,ImageChops
 import os,sys,math,random,json,hashlib
 
 ROOT=os.path.abspath(sys.argv[1] if len(sys.argv)>1 else ".")
@@ -7,7 +7,8 @@ PRE=os.path.join(ROOT,"app/build/visual-preview")
 os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
-REV="authored-organic-biome-v3-2026-09"
+OUT_W,OUT_H=1600,720
+REV="authored-organic-biome-v4-hires-2026-09"
 C={
  "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
  "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
@@ -36,7 +37,65 @@ def layer(c,opaque=False):
             d.line((0,y,W,y),fill=1+int(15*y/(H-1)))
     return im,d,alpha
 
-def save(im,a,path): im.save(path,optimize=True,compress_level=9,transparency=a)
+def _masked_texture(base,mask,r,kind,biome):
+    ov=Image.new("RGBA",base.size,(0,0,0,0)); d=ImageDraw.Draw(ov)
+    w,h=base.size
+    if kind=="sky":
+        # atmospheric glow and horizon haze; true RGBA is intentional
+        glow={"home":(255,205,132),"garden":(255,217,154),"lakeside":(208,231,242),"grove":(174,210,174)}[biome]
+        gx,gy={"home":(1285,112),"garden":(1290,108),"lakeside":(220,108),"grove":(800,130)}[biome]
+        for rad,alpha in ((150,12),(105,18),(65,25)):
+            d.ellipse((gx-rad,gy-rad,gx+rad,gy+rad),fill=(*glow,alpha))
+        for i in range(10):
+            y=390+i*15
+            d.rectangle((0,y,w,y+8),fill=(*glow,max(2,10-i)))
+    else:
+        # layer-local micro texture, masked so transparency stays clean
+        count={"distant":420,"mid":620,"ground":1100,"foreground":780}.get(kind,350)
+        light={"home":(232,205,146),"garden":(234,219,154),"lakeside":(196,224,219),"grove":(184,202,155)}[biome]
+        dark={"home":(45,54,43),"garden":(49,72,48),"lakeside":(42,66,65),"grove":(28,43,38)}[biome]
+        for _ in range(count):
+            x=r.randrange(w); y=r.randrange(h)
+            if r.random()<.56:
+                col=(*light,r.randint(10,32))
+            else:
+                col=(*dark,r.randint(8,25))
+            if kind in ("ground","foreground") and y<h*.55: continue
+            sz=r.choice((1,1,2,2,3))
+            d.rectangle((x,y,x+sz,y+r.choice((0,1,2))),fill=col)
+        if kind=="distant":
+            fog={"home":(214,205,174),"garden":(222,214,175),"lakeside":(205,224,220),"grove":(146,169,145)}[biome]
+            for i in range(5):
+                y=390+i*18
+                d.rectangle((0,y,w,y+10),fill=(*fog,max(3,15-i*2)))
+        if kind=="foreground":
+            # soft edge vignette from authored foreground only, center remains open
+            shade=(12,20,17,0)
+            for pad,alpha in ((0,36),(40,24),(80,14)):
+                d.rectangle((0,0,170-pad,h),fill=(12,20,17,alpha))
+                d.rectangle((w-170+pad,0,w,h),fill=(12,20,17,alpha))
+    if mask is not None:
+        ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
+    return Image.alpha_composite(base,ov)
+
+def save(im,a,path):
+    name=os.path.basename(path).replace(".png","")
+    biome,kind=name.split("_",1)
+    rgba=im.convert("RGBA").resize((OUT_W,OUT_H),Image.Resampling.NEAREST)
+    # Preserve authored transparent layers while allowing richer light/texture detail.
+    mask=rgba.getchannel("A")
+    r=random.Random("hires-"+name)
+    rgba=_masked_texture(rgba,mask,r,kind,biome)
+    # Subtle tonal polish differs by depth. No blur on authored geometry.
+    if kind=="sky":
+        rgba=ImageEnhance.Color(rgba).enhance(1.06)
+        rgba=ImageEnhance.Contrast(rgba).enhance(1.03)
+    elif kind in ("mid","foreground"):
+        rgba=ImageEnhance.Contrast(rgba).enhance(1.07)
+        rgba=ImageEnhance.Color(rgba).enhance(1.08)
+    else:
+        rgba=ImageEnhance.Color(rgba).enhance(1.04)
+    rgba.save(path,optimize=True,compress_level=9)
 
 def cluster(d,r,x,y,rx,ry,lo,hi,count=20):
     for _ in range(count):
@@ -301,7 +360,9 @@ for n in C:
         base=Image.alpha_composite(base,Image.open(os.path.join(OUT,n+"_"+l+".png")).convert("RGBA"))
     fg=Image.open(os.path.join(OUT,n+"_foreground.png")).convert("RGBA")
     aa=fg.getchannel("A").point(lambda x:int(x*198/255)); fg.putalpha(aa)
-    Image.alpha_composite(base,fg).resize((1600,720),Image.Resampling.NEAREST).save(os.path.join(PRE,n+".png"))
+    preview=Image.alpha_composite(base,fg)
+    # Preview is already full-resolution because each authored layer is 1600x720.
+    preview.save(os.path.join(PRE,n+".png"),optimize=True,compress_level=6)
 
 mp=os.path.join(ROOT,"app/src/main/assets/visual/asset_manifest.json")
 with open(mp,encoding="utf-8") as fh: j=json.load(fh)
