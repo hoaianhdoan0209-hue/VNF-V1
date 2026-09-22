@@ -102,3 +102,67 @@ workflows:
       - app/build/outputs/apk/release/app-release.apk
       - vnf-release.json
       - app/build/reports/**
+
+
+  vnf-phone-test-signed:
+    name: VNF Phone Test Signed RC
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'phone-test/v1.0.1-rc1'
+          include: true
+          source: true
+    environment:
+      java: 17
+      android_signing:
+        - vnf-release
+      vars:
+        PACKAGE_NAME: "com.aicharacter.v3"
+        GRADLE_VERSION: "8.14.1"
+    scripts:
+      - name: Verify stable signing identity
+        script: |
+          set -eu
+          : "${CM_KEYSTORE_PATH:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PATH}"
+          : "${CM_KEYSTORE_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PASSWORD}"
+          : "${CM_KEY_ALIAS:?Codemagic signing identity vnf-release did not provide CM_KEY_ALIAS}"
+          : "${CM_KEY_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEY_PASSWORD}"
+          test -s "$CM_KEYSTORE_PATH"
+      - name: Set Android SDK location
+        script: |
+          set -e
+          if [ -n "$ANDROID_SDK_ROOT" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"; elif [ -n "$ANDROID_HOME" ]; then echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"; fi
+          java -version
+      - name: Run visual acceptance gate
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          rm -rf /tmp/visual-v1-test
+          mkdir -p /tmp/visual-v1-test
+          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
+          java -cp /tmp/visual-v1-test com.aicharacter.v3.VisualV1DevTest .
+      - name: Test and build signed phone RC
+        script: |
+          set -eu
+          cd "$CM_BUILD_DIR"
+          if [ -x "./gradlew" ]; then GRADLE="./gradlew"; else
+            DIST_ROOT="$HOME/.vnf-gradle"; DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"; ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"; mkdir -p "$DIST_ROOT"
+            if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
+            GRADLE="$DIST_DIR/bin/gradle"
+          fi
+          "$GRADLE" :app:testDebugUnitTest :app:assembleRelease --stacktrace
+          test -f "$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+      - name: Verify signed APK metadata
+        script: |
+          set -eu
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          APK_SIGNER="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APK_SIGNER"
+          "$APK_SIGNER" verify --verbose --print-certs "$APK"
+          shasum -a 256 "$APK"
+    artifacts:
+      - app/build/outputs/apk/release/app-release.apk
+      - app/build/reports/**
