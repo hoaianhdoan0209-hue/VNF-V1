@@ -79,28 +79,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            set -eu
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
-            mkdir -p app/build/visual-runtime/biomes app/build/visual-runtime/haru-poses
-            capture () {
-              name="$1"; biome="$2"; pose="$3"; out="$4"
-              adb shell am force-stop com.aicharacter.v3 || true
-              adb shell pm clear com.aicharacter.v3 >/dev/null
-              adb shell am start -W -S -n com.aicharacter.v3/.MainActivity --es vnf_debug_biome "$biome" --es vnf_debug_pose "$pose" >/dev/null
-              sleep 6
-              adb exec-out screencap -p > "$out/$name.png"
-              test -s "$out/$name.png"
-              test "$(stat -c%s "$out/$name.png")" -gt 10000
-            }
-            capture home home idle_right app/build/visual-runtime/biomes
-            capture garden garden idle_right app/build/visual-runtime/biomes
-            capture lakeside lakeside idle_right app/build/visual-runtime/biomes
-            capture grove grove idle_right app/build/visual-runtime/biomes
-            for pose in idle_right idle_left walk_right walk_left sit crouch sleep think reaction search_right search_left; do
-              capture "$pose" home "$pose" app/build/visual-runtime/haru-poses
-            done
-            ls -lh app/build/visual-runtime/biomes app/build/visual-runtime/haru-poses
+          script: bash tools/capture_visual_runtime.sh
 
       - name: Upload runtime visual QA screenshots
         uses: actions/upload-artifact@v4
