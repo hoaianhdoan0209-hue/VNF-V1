@@ -7,7 +7,8 @@ import android.graphics.*;
  * but never changes body width/height or world truth.
  */
 public final class HaruVisualRenderer{
- static final float BODY_SCALE=1.34f;
+ static final float BODY_SCALE=1.42f;
+ static final int AUTHORED_FRAME_W=144,AUTHORED_FRAME_H=216;
  private HaruVisualRenderer(){}
 
  public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
@@ -17,7 +18,9 @@ public final class HaruVisualRenderer{
   c.drawOval(x-47*shadowScale,contactGround-8,x+47*shadowScale,contactGround+10,p);
 
   Bitmap sheet=assets.get(v.asset);
-  if(sheet==null){BlockBodyRenderer.drawHuman(c,p,s,x,bodyGround);return;}
+  if(sheet==null)sheet=assets.get("girl_idle_right");
+  if(sheet==null)return;
+  p.setFilterBitmap(false);
 
   int frames=Math.max(1,v.frames),fw=Math.max(1,sheet.getWidth()/frames),fh=sheet.getHeight();
   int frame=frameIndex(s,v,anim,frames);
@@ -59,4 +62,6 @@ public final class HaruVisualRenderer{
  }
  static float shadowScale(float lift){return Math.max(.55f,1f-Math.max(0,lift)/260f);}
  static float fixedBodyScale(){return BODY_SCALE;}
+ static int authoredFrameWidth(){return AUTHORED_FRAME_W;}
+ static int authoredFrameHeight(){return AUTHORED_FRAME_H;}
 }

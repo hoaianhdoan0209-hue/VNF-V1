@@ -20,6 +20,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Run Visual V1 acceptance test
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/visual-v1-test
+          mkdir -p /tmp/visual-v1-test
+          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
+          java -cp /tmp/visual-v1-test com.aicharacter.v3.VisualV1DevTest .
+
       - name: Prepare Android SDK 35
         shell: bash
         run: |

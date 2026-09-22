@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "milestone": "V0.99A",
+  "version": 4,
+  "milestone": "V0.99C",
   "logicalViewport": [
     2400,
     1080
@@ -12,10 +12,10 @@
         "asset": "girl_idle_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.94
@@ -25,8 +25,8 @@
         "asset": "girl_walk_left",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
         "fps": 7,
         "anchor": [
@@ -38,8 +38,8 @@
         "asset": "girl_walk_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
         "fps": 7,
         "anchor": [
@@ -51,10 +51,10 @@
         "asset": "girl_sit_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.94
@@ -64,10 +64,10 @@
         "asset": "girl_crouch_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.94
@@ -77,10 +77,10 @@
         "asset": "girl_sleep_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.82
@@ -90,10 +90,10 @@
         "asset": "girl_think_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.94
@@ -103,10 +103,10 @@
         "asset": "girl_react_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
-        "fps": 2.0,
+        "fps": 2,
         "anchor": [
           0.5,
           0.94
@@ -116,8 +116,8 @@
         "asset": "girl_search_right",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
         "fps": 3.2,
         "anchor": [
@@ -129,8 +129,8 @@
         "asset": "girl_search_left",
         "frames": 12,
         "frameSize": [
-          192,
-          288
+          144,
+          216
         ],
         "fps": 3.2,
         "anchor": [
@@ -197,287 +197,287 @@
       "id": "garden_distant",
       "path": "app/src/main/res/drawable-nodpi/garden_distant.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 13288,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "9f4522dc1e1be89114edd2008bcb83cda82b3f20d9ffbed10e94e1dbae9bb1f4"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "garden_foreground",
       "path": "app/src/main/res/drawable-nodpi/garden_foreground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 9771,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "fea7ac7c25cfbb98a9add759ae1e5aeccf408d3790a502e8d21e0fb2637e0225"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "garden_ground",
       "path": "app/src/main/res/drawable-nodpi/garden_ground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 11403,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "58ac60833afd0f73195a4ba813b1babc04d74dea82cfbd3c33ceda5a5210f2a1"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "garden_mid",
       "path": "app/src/main/res/drawable-nodpi/garden_mid.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 12227,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "29ddab393a12806d8827c40f408997a0c2a4179942f845defe233a0e6cd729b2"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "garden_sky",
       "path": "app/src/main/res/drawable-nodpi/garden_sky.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7481,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "0822f60a403ca73b96ccfee02530bd1ec640821ed373997c76d751777235eefd"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "girl_crouch_right",
       "path": "app/src/main/res/drawable-nodpi/girl_crouch_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 7933,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "c0873bb1f5f3ce32fbc966e9022313ed6643c373477f2d1804820c9cfb4f22ee"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_idle_left",
       "path": "app/src/main/res/drawable-nodpi/girl_idle_left.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 8690,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "b283d0ccd89dbdb89b2e45f5366df80ceb9e87f85bf7e9f7c7999a68e0be52a4"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_idle_right",
       "path": "app/src/main/res/drawable-nodpi/girl_idle_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 8695,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "f454a30b4614c0b3dbac21ba166387edc821e65bc19735a275b1b5153249f7cb"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_react_right",
       "path": "app/src/main/res/drawable-nodpi/girl_react_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 9206,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "ad7d3c098ab179bb6860581ba5a586ba4617b7ab736a08d9e58f4dcbfa854eb7"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_search_left",
       "path": "app/src/main/res/drawable-nodpi/girl_search_left.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 8713,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "0597724566ac263ef6013060323f1c9cae062dff97e2d7671ccee6bee6dac4c7"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_search_right",
       "path": "app/src/main/res/drawable-nodpi/girl_search_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 9215,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "f6cd374a8c8e12e8bdba034026ead627cfed548d5192838b9fabb678693abc5e"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_sit_right",
       "path": "app/src/main/res/drawable-nodpi/girl_sit_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 7026,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "75d52faf2797debe4d48348965c5f327b4809792ebef22d4bcb935fa48bd53b0"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_sleep_right",
       "path": "app/src/main/res/drawable-nodpi/girl_sleep_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 6731,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "8046f7e7550d334e5590df1df59f24693e1e52f27a2a1eec9b18033b5986ef94"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_think_right",
       "path": "app/src/main/res/drawable-nodpi/girl_think_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 7757,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "ef039a45c87485a97831e0ea2ba234d18eb34960452c1f108ed5cc09253eb87d"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_walk_left",
       "path": "app/src/main/res/drawable-nodpi/girl_walk_left.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 10682,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "de9f4f9708e252b1759da92022da8f56e918f4454018c636aad4240f3d9ed5e2"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "girl_walk_right",
       "path": "app/src/main/res/drawable-nodpi/girl_walk_right.png",
       "dimensions": [
-        2304,
-        288
+        1728,
+        216
       ],
-      "bytes": 10809,
+      "bytes": 373661,
       "decodedBytes": 2654208,
-      "sha256": "aacc5fe7a19a98164005ff67eb94f153bab6b85a1b2a6369aa545341251079ad"
+      "visualRevision": "haru-full-silhouette-2026-09"
     },
     {
       "id": "grove_distant",
       "path": "app/src/main/res/drawable-nodpi/grove_distant.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 13533,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "092e4d44a4749e51c347240507b67197b8ab18dd3c83bc749f15a08e59dd16de"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "grove_foreground",
       "path": "app/src/main/res/drawable-nodpi/grove_foreground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 9131,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "042ebeeeadba9d3bec4cd7f2bd99157f0b3dedd25fed3660ee7f0f2ac3c53200"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "grove_ground",
       "path": "app/src/main/res/drawable-nodpi/grove_ground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 11394,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "3b1dc0f8208f4bf1d8acbd64cfe14f6913c57cc24be618d992f6975e3fd6ed54"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "grove_mid",
       "path": "app/src/main/res/drawable-nodpi/grove_mid.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 17849,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "65d0e903b70c472e8062460da9a84825dd5325d20fef4741acbbd0a784410789"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "grove_sky",
       "path": "app/src/main/res/drawable-nodpi/grove_sky.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7452,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "0ae2c851c75d76c92a578313db3e1efba1819258d0806e801f838c95ec3158a9"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_distant",
       "path": "app/src/main/res/drawable-nodpi/home_distant.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 13477,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "b183429d2a7f2a87a50e7eee0f9259feea33fb2147937ed710dcbf64272c4245"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_foreground",
       "path": "app/src/main/res/drawable-nodpi/home_foreground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 9131,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "30378ee3cd6f4e9ef4a5051f95a8af3b1da1344c63b7f5b6ff54866983d0cc2e"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_ground",
       "path": "app/src/main/res/drawable-nodpi/home_ground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 11342,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "003de3f2da33ecb524a0fa1b2f4eb0b788e87d4e6da5cb5334f2064f8f9f1c3f"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_mid",
       "path": "app/src/main/res/drawable-nodpi/home_mid.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 13711,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "3cd54f44c3f98b036381d87329381322b06d1c88165c748879114efb07b648f9"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_sky",
       "path": "app/src/main/res/drawable-nodpi/home_sky.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7475,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "c30a5df6cb315ecc9207299e4ee35173069bb5ab70c0aba6bb4e47d3dd3b974f"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "home_warm_light",
@@ -538,100 +538,100 @@
       "id": "lakeside_distant",
       "path": "app/src/main/res/drawable-nodpi/lakeside_distant.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 13434,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "ac6620a1ce9139cb0841eaac868e68aa3bf86c72aadaa4c439f06a4831dfd6a5"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_foreground",
       "path": "app/src/main/res/drawable-nodpi/lakeside_foreground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 9140,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "b512dc353aee933685eb56459c2057ccf50796d8038578e9e0d416cc47daaaf9"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_ground",
       "path": "app/src/main/res/drawable-nodpi/lakeside_ground.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 11362,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "116844e7cd775a039d3730703db682c6674163e42f6fa2fa1835230a664ae81f"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_mid",
       "path": "app/src/main/res/drawable-nodpi/lakeside_mid.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 10364,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "366a63dee2dac83c103c070a7ee9927d0083cde6f335ba8743a5bf9b6d9af1bd"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_sky",
       "path": "app/src/main/res/drawable-nodpi/lakeside_sky.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7536,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "5d08eccd72528a77ad58a927e26b127d280c15d24af74e90adc38bb75b5c136a"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_water_0",
       "path": "app/src/main/res/drawable-nodpi/lakeside_water_0.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7057,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "1ba104a7ff32fce416ba7615f81bda1f21184546e0175b59b26b3ab111c07738"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_water_1",
       "path": "app/src/main/res/drawable-nodpi/lakeside_water_1.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7097,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "95aa7e7cba16f477f100328a7b3125329668be886c7a693f8280398b6bf8c1fa"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_water_2",
       "path": "app/src/main/res/drawable-nodpi/lakeside_water_2.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7029,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "260fbdd4aa1ce3f51ed5be31b329fec3eaee6e28af2c60d3fdd93b52247efdb8"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "lakeside_water_3",
       "path": "app/src/main/res/drawable-nodpi/lakeside_water_3.png",
       "dimensions": [
-        1600,
-        720
+        800,
+        360
       ],
-      "bytes": 7074,
+      "bytes": 288728,
       "decodedBytes": 4608000,
-      "sha256": "d3edb2170072a2b1a57038cf54a3713a73a584c42d0a9963de06ec8d0998a7a4"
+      "visualRevision": "layered-pixel-art-2026-09"
     },
     {
       "id": "light_evening",
@@ -875,5 +875,6 @@
       "decodedBytes": 302400,
       "sha256": "f830ce30ef5aa74626736e4953c0d76c2d98fba82f809fc8fed7191e77363b22"
     }
-  ]
+  ],
+  "visualRevision": "layered-pixel-art-2026-09"
 }
