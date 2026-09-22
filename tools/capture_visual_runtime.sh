@@ -45,6 +45,7 @@ capture() {
   wait_for_vnf_focus
   sleep 5
   wait_for_vnf_focus
+  assert_no_system_overlay
   adb exec-out screencap -p > "$target/$name.png"
   test -s "$target/$name.png"
   test "$(stat -c%s "$target/$name.png")" -gt 10000
