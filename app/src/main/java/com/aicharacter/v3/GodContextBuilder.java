@@ -43,7 +43,7 @@ public final class GodContextBuilder {
                     JSONObject x=new JSONObject();
                     x.put("id",a.id);x.put("domain",a.domain);x.put("realAnchor",a.realAnchor);
                     x.put("fantasyRule",a.fantasyRule);x.put("sourceFamily",a.sourceFamily);x.put("sourceRef",a.sourceRef);
-                    x.put("retrievedAt",a.retrievedAt);x.put("confidence",a.confidence<0?JSONObject.NULL:a.confidence);x.put("limits",a.limits);
+                    x.put("retrievedAt",a.retrievedAt);x.put("confidence",a.confidence<0?JSONObject.NULL:a.confidence);x.put("limits",a.limits);x.put("provenanceComplete",a.hasCompleteProvenance());
                     x.put("layer","REAL_REFERENCE");x.put("worldTruth",false);
                     library.put(x);
                 }
