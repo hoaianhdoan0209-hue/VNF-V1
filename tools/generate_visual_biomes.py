@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v5-cinematic-2026-09"
+REV="authored-organic-biome-v6-landmarks-2026-09"
 C={
  "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
  "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
@@ -320,6 +320,12 @@ def draw_mid(name,c,r):
         d.line((206,251,206,268),fill=61,width=1)
         d.line((198,259,215,259),fill=61,width=1)
         d.rectangle((113,285,242,292),fill=33)
+        # porch lantern + tiny table make home feel inhabited
+        d.line((230,247,230,286),fill=31,width=2)
+        d.rectangle((224,252,236,264),fill=68)
+        d.rectangle((226,254,234,262),fill=74)
+        d.line((246,278,270,278),fill=42,width=3)
+        d.line((250,278,248,290),fill=40,width=2); d.line((266,278,268,290),fill=40,width=2)
         d.line((92,286,286,282),fill=44,width=4); d.line((516,282,792,286),fill=44,width=4)
         for x in list(range(105,286,30))+list(range(522,793,30)):
             d.line((x,272,x,298),fill=43,width=2)
@@ -344,6 +350,12 @@ def draw_mid(name,c,r):
         for x in range(322,483,22): d.line((x,251,x,282),fill=44,width=2)
         d.rectangle((362,278,438,285),fill=47)
         d.rectangle((370,286,377,300),fill=45); d.rectangle((423,286,430,300),fill=45)
+        # small stone fountain sits behind Haru's readable center
+        d.ellipse((382,244,418,253),fill=52)
+        d.rectangle((389,252,411,265),fill=51)
+        d.ellipse((383,260,417,270),fill=55)
+        d.line((400,238,400,247),fill=64,width=2)
+        d.arc((394,235,406,247),180,355,fill=67,width=1)
     elif name=="lakeside":
         tree(d,r,44,320,184); tree(d,r,758,320,172)
         for x in list(range(0,230,9))+list(range(584,800,9)):
@@ -357,6 +369,10 @@ def draw_mid(name,c,r):
         for x in range(0,150,24): d.ellipse((x,310,x+20,324),fill=r.randint(34,42))
         for x,y in [(286,271),(520,259),(548,282)]:
             d.arc((x,y,x+18,y+9),180,355,fill=66,width=1)
+        # rowboat parked away from center; adds scale without blocking Haru
+        d.polygon([(604,286),(676,281),(690,288),(617,294)],fill=42)
+        d.line((621,287,674,284),fill=60,width=2)
+        d.line((643,283,657,270),fill=45,width=2)
     else:
         for x in (38,90,145,655,715,770):
             tx,ty=trunk(d,r,x,330,r.randint(195,282),r.randint(6,10),r.randint(18,24))
@@ -371,6 +387,11 @@ def draw_mid(name,c,r):
         for x in (78,116,205,592,684,738):
             d.rectangle((x,306,x+2,315),fill=38)
             d.ellipse((x-4,302,x+6,308),fill=r.randint(68,74))
+        # fallen mossy log and exposed roots reinforce the old-growth grove identity
+        d.polygon([(48,300),(225,292),(241,302),(62,313)],fill=23)
+        d.line((64,302,222,295),fill=39,width=3)
+        for x in (72,108,151,193,225):
+            d.line((x,306,x+r.randint(-12,12),322),fill=r.randint(22,31),width=2)
     save(im,a,os.path.join(OUT,name+"_mid.png"))
 
 def draw_ground(name,c,r):
@@ -382,11 +403,18 @@ def draw_ground(name,c,r):
         for x in range(20,780,38):
             if 290<x<520: continue
             d.ellipse((x,318+r.randint(-5,10),x+r.randint(8,17),326+r.randint(1,12)),fill=r.randint(47,56))
+        # scattered stepping stones and small yard props
+        for x,y,rw in [(92,333,10),(132,345,13),(625,334,12),(690,347,9)]:
+            d.ellipse((x-rw,y-3,x+rw,y+4),fill=r.randint(55,62))
         dither_patch(d,r,(0,300,799,359),44,54,95)
     elif name=="garden":
         stone_path(d,r,404,430)
         d.rectangle((38,296,260,324),fill=47); d.rectangle((540,296,770,324),fill=47)
         flowers(d,r,45,250,318,56); flowers(d,r,548,760,318,58)
+        # irregular garden stones avoid a flat lawn read
+        for _ in range(16):
+            x=r.choice((r.randint(55,245),r.randint(555,750))); y=r.randint(327,354)
+            d.ellipse((x-5,y-2,x+7,y+3),fill=r.randint(52,60))
         dither_patch(d,r,(38,298,260,324),46,54,38); dither_patch(d,r,(540,298,770,324),46,54,38)
     elif name=="lakeside":
         d.polygon([(0,278),(222,276),(292,309),(304,H),(0,H)],fill=48)
@@ -397,6 +425,11 @@ def draw_ground(name,c,r):
             if y%14==0: d.line((340,y+2,454,y+2),fill=63,width=1)
         for _ in range(12):
             x=r.randint(315,485); y=r.randint(326,356); pixel_sparkle(d,x,y,r.randint(62,70))
+        # lily pads + shore stones, kept outside Haru's center lane
+        for x,y in [(252,333),(276,344),(532,339),(556,350)]:
+            d.ellipse((x-7,y-2,x+8,y+3),fill=r.randint(43,51))
+        for x,y in [(210,326),(590,329),(618,341)]:
+            d.ellipse((x-10,y-4,x+11,y+5),fill=r.randint(50,58))
         for x in list(range(0,220,14))+list(range(580,800,14)): grass(d,r,x,H,r.randint(12,28),40,55)
     else:
         for sx in (28,102,168,631,702,774):
@@ -407,6 +440,10 @@ def draw_ground(name,c,r):
         for _ in range(22):
             x=r.choice(list(range(20,250))+list(range(560,780))); y=r.randint(305,352)
             d.rectangle((x,y,x+2,y+4),fill=r.randint(66,73))
+        # fern silhouettes and root knots fill the side pockets, not the play lane
+        for bx in (52,104,174,626,696,752):
+            for k in range(5):
+                d.line((bx,350,bx+r.randint(-20,20),330-r.randint(0,18)),fill=r.randint(34,49),width=1)
         dither_patch(d,r,(0,300,799,359),29,46,82)
     for x in range(0,W,13):
         if r.random()<.78: grass(d,r,x,H,r.randint(8,23),42,58)
