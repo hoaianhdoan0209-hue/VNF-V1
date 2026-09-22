@@ -45,7 +45,9 @@ public final class HaruVisualRenderer{
   float shadowDir="NIGHT".equals(phase)?0f:(sunX<1200f?1f:-1f);
   float shadowLen="NIGHT".equals(phase)?.82f:.98f+(1f-sunAlt)*.74f;
   float shadowDx=shadowDir*33f*shadowScale,shadowW=47f*shadowScale*shadowLen;
-  int shadowAlpha=(int)Math.max(14,("NIGHT".equals(phase)?38:56)-lift*.16f);
+  float cloud=s.environment==null?0f:(float)Math.max(0,Math.min(1,s.environment.cloudCover));
+  float rainFactor=s.environment!=null&&"RAIN".equals(s.environment.weather)?.62f:1f;
+  int shadowAlpha=(int)Math.max(10,(("NIGHT".equals(phase)?38:56)-lift*.16f)*(1f-cloud*.38f)*rainFactor);
   p.setColor(Color.argb(shadowAlpha,0,0,0));
   c.drawOval(x-shadowW+shadowDx,contactGround-7,x+shadowW+shadowDx,contactGround+10,p);
   p.setColor(Color.argb(Math.max(8,shadowAlpha/3),18,26,24));
