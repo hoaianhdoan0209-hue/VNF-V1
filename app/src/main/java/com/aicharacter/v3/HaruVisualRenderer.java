@@ -40,8 +40,10 @@ public final class HaruVisualRenderer{
   float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
   String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes);
-  float shadowDir="MORNING".equals(phase)?1f:"EVENING".equals(phase)?-1f:0f;
-  float shadowLen=("MORNING".equals(phase)||"EVENING".equals(phase))?1.62f:"NIGHT".equals(phase)?.82f:1.08f;
+  float dayT=(float)Math.max(0,Math.min(1,(s.worldMinutes-360.0)/(14.0*60.0)));
+  float sunX=120f+2160f*dayT,sunAlt=(float)Math.max(0,Math.sin(dayT*Math.PI));
+  float shadowDir="NIGHT".equals(phase)?0f:(sunX<1200f?1f:-1f);
+  float shadowLen="NIGHT".equals(phase)?.82f:.98f+(1f-sunAlt)*.74f;
   float shadowDx=shadowDir*33f*shadowScale,shadowW=47f*shadowScale*shadowLen;
   int shadowAlpha=(int)Math.max(14,("NIGHT".equals(phase)?38:56)-lift*.16f);
   p.setColor(Color.argb(shadowAlpha,0,0,0));
