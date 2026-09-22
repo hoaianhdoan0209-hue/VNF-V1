@@ -54,7 +54,8 @@ public final class VisualV1DevTest {
                 if(!Files.isRegularFile(f)){bad.add("missing "+biome+" "+layer+" asset");continue;}
                 Png p=Png.read(f);
                 check(p.w>=800&&p.h>=360,biome+" "+layer+" is production-resolution pixel art",ok,bad);
-                check(Files.size(f)>=150000,biome+" "+layer+" is not a tiny placeholder asset",ok,bad);
+                check(Files.size(f)>=1500,biome+" "+layer+" contains real authored raster data",ok,bad);
+                check(p.uniqueColors(0,p.w,0,p.h)>=8,biome+" "+layer+" carries authored palette depth",ok,bad);
                 double cov=p.coverage();
                 double min="sky".equals(layer)?.95:"ground".equals(layer)?.18:.035;
                 check(cov>=min,biome+" "+layer+" has authored visual occupancy ("+pct(cov)+")",ok,bad);
@@ -106,6 +107,8 @@ public final class VisualV1DevTest {
         String tint=tintStart>=0&&tintEnd>tintStart?game.substring(tintStart,tintEnd):"";
         check(!tint.contains("light_evening")&&!tint.contains("light_night")&&!tint.contains("home_warm_light"),
               "drawTimeTint forbids legacy full-frame light rasters",ok,bad);
+        check(!game.contains("assets.get(\\\"light_evening\\\"")&&!game.contains("assets.get(\\\"light_night\\\"")&&!game.contains("assets.get(\\\"home_warm_light\\\""),
+              "legacy full-frame light rasters are absent from the render pipeline",ok,bad);
         check(tint.contains("LinearGradient")&&tint.contains("drawRect(0,0,2400,1080"),
               "time-of-day compositing remains procedural gradient/tint",ok,bad);
     }
