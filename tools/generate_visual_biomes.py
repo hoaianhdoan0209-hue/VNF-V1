@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v8-living-color-2026-09"
+REV="authored-organic-biome-v9-material-depth-2026-09"
 C={
  "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
  "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
@@ -162,6 +162,85 @@ def _signature_detail(base,mask,r,kind,biome):
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
 
+def _material_depth(base,mask,r,kind,biome):
+    ov=Image.new("RGBA",base.size,(0,0,0,0)); d=ImageDraw.Draw(ov)
+    w,h=base.size
+    warm={"home":(238,194,126),"garden":(242,213,154),"lakeside":(211,229,219),"grove":(186,208,157)}[biome]
+    dark={"home":(48,55,44),"garden":(52,72,48),"lakeside":(43,67,65),"grove":(26,43,37)}[biome]
+
+    if kind=="mid":
+        # directional material cues: highlights and occlusion on authored structures/foliage
+        if biome=="home":
+            # roof shingle ridges and warm timber edges
+            for y in range(382,472,14):
+                x0=215+((y//14)%2)*10
+                for x in range(x0,500,34):
+                    d.line((x,y,x+24,y+7),fill=(*dark,48),width=2)
+                    d.line((x+2,y-1,x+20,y+4),fill=(*warm,26),width=1)
+            for x in (244,309,365,449):
+                d.line((x,474,x,590),fill=(*dark,34),width=3)
+                d.line((x+4,474,x+4,590),fill=(*warm,22),width=1)
+        elif biome=="garden":
+            # carved stone/fountain + trellis highlights
+            for x in range(620,840,22):
+                d.line((x,486,x+7,560),fill=(*dark,26),width=1)
+                if x%44==0:d.line((x+3,488,x+10,540),fill=(*warm,22),width=1)
+            for rr,aa in ((72,18),(55,26),(38,34)):
+                d.ellipse((800-rr,492-rr*.22,800+rr,492+rr*.22),outline=(*warm,aa),width=2)
+        elif biome=="lakeside":
+            # pier grain, boat rim and wet edge
+            for x in range(615,995,28):
+                d.line((x,584,x+18,603),fill=(*dark,42),width=2)
+                d.line((x+2,582,x+14,592),fill=(*warm,20),width=1)
+            d.line((1205,569,1380,555),fill=(*warm,34),width=2)
+            d.line((1220,585,1370,572),fill=(*dark,34),width=2)
+        else:
+            # bark ridges, moss edge and old wood fissures
+            for x in list(range(65,330,24))+list(range(1290,1540,26)):
+                y0=r.randint(220,360)
+                d.line((x,y0,x+r.randint(-10,10),650),fill=(*dark,r.randint(28,48)),width=r.choice((1,2,3)))
+                d.line((x+4,y0+12,x+r.randint(-6,12),620),fill=(*warm,r.randint(12,24)),width=1)
+            for x in range(95,485,34):
+                y=596+r.randint(-8,8)
+                d.line((x,y,x+28,y-r.randint(1,6)),fill=(*warm,22),width=2)
+    elif kind=="ground":
+        # near-ground roughness increases toward camera
+        count=260 if biome!="lakeside" else 180
+        for _ in range(count):
+            y=r.randint(int(h*.76),h-3)
+            t=(y-h*.76)/(h*.24)
+            x=r.randint(0,w-1)
+            alpha=int(10+26*t)
+            if biome=="lakeside" and 560<x<1040:
+                ww=r.randint(5,22)
+                d.line((x,y,min(w-1,x+ww),y),fill=(*warm,alpha),width=1)
+            else:
+                ww=r.randint(1,5); hh=r.randint(0,2)
+                col=warm if r.random()<.42 else dark
+                d.rectangle((x,y,min(w-1,x+ww),min(h-1,y+hh)),fill=(*col,alpha))
+    elif kind=="foreground":
+        # rim catches and dense occlusion sell depth at the camera edge
+        for side in ("l","r"):
+            x0=(0,330) if side=="l" else (w-330,w-1)
+            for _ in range(90):
+                x=r.randint(*x0); y=r.randint(int(h*.38),h-5)
+                length=r.randint(4,18)
+                lean=r.randint(-7,7)
+                if r.random()<.46:
+                    d.line((x,y,x+lean,y-length),fill=(*warm,r.randint(18,42)),width=r.choice((1,2)))
+                else:
+                    d.line((x,y,x+lean,y-length),fill=(*dark,r.randint(18,38)),width=r.choice((1,2,3)))
+    elif kind=="distant":
+        # controlled atmospheric desaturation, preserving silhouettes
+        d.rectangle((0,int(h*.48),w,h),fill=(*warm,5))
+        for _ in range(70):
+            x=r.randint(0,w-1); y=r.randint(int(h*.38),int(h*.74))
+            d.line((x,y,x+r.randint(6,24),y),fill=(*warm,r.randint(5,12)),width=1)
+
+    if mask is not None and kind!="sky":
+        ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
+    return Image.alpha_composite(base,ov)
+
 def _micro_life(base,mask,r,kind,biome):
     ov=Image.new("RGBA",base.size,(0,0,0,0)); d=ImageDraw.Draw(ov)
     w,h=base.size
@@ -300,6 +379,7 @@ def save(im,a,path):
     r=random.Random("hires-"+name)
     rgba=_masked_texture(rgba,mask,r,kind,biome)
     rgba=_signature_detail(rgba,mask,r,kind,biome)
+    rgba=_material_depth(rgba,mask,r,kind,biome)
     rgba=_micro_life(rgba,mask,r,kind,biome)
     rgba=_cinematic_light(rgba,mask,kind,biome)
     # Subtle tonal polish differs by depth. No blur on authored geometry.
