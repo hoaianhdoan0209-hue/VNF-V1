@@ -33,22 +33,18 @@ wait_for_focus() {
   return 1
 }
 
-wait_for_canvas() {
-  local xml="/tmp/vnf-window.xml"
-  for _ in $(seq 1 45); do
-    rm -f "$xml"
-    adb shell uiautomator dump /sdcard/vnf-window.xml >/dev/null 2>&1 || true
-    adb pull /sdcard/vnf-window.xml "$xml" >/dev/null 2>&1 || true
-    if [[ -s "$xml" ]]; then
-      if grep -q "$PKG" "$xml" && ! grep -q 'text="VNF' "$xml"; then
-        return 0
-      fi
-    fi
-    sleep 2
+dump_runtime_debug() {
+  echo "Window state:" >&2
+  adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 12 >&2 || true
+  echo "Recent VNF logcat:" >&2
+  adb logcat -d -t 260 2>/dev/null | grep -E "$PKG|AndroidRuntime|FATAL EXCEPTION|OutOfMemoryError" | tail -n 120 >&2 || true
+}
+
+wait_for_stable_focus() {
+  for _ in $(seq 1 3); do
+    wait_for_focus || { dump_runtime_debug; return 1; }
+    sleep 1
   done
-  echo "Runtime canvas did not become ready." >&2
-  [[ -s "$xml" ]] && cat "$xml" >&2 || true
-  return 1
 }
 
 install_apk() {
@@ -87,10 +83,12 @@ capture() {
 
   timeout 30s adb shell am start -W -S -n "$ACTIVITY"     --es vnf_debug_biome "$biome"     --es vnf_debug_pose "$pose" >/dev/null
 
-  wait_for_focus
-  wait_for_canvas
-  sleep 3
-  wait_for_focus
+  # UIAutomator can destabilize the headless API-35 launcher/window stack.
+  # The game is a custom Canvas, so stable foreground ownership is the correct
+  # readiness signal; immersive-mode education is already disabled above.
+  wait_for_stable_focus
+  sleep 2
+  wait_for_stable_focus
 
   adb exec-out screencap -p > "$target/$name.png"
   test -s "$target/$name.png"
