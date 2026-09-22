@@ -35,6 +35,21 @@ wait_for_vnf_focus() {
   return 1
 }
 
+assert_no_system_overlay() {
+  local state=""
+  state="$(adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 8 || true)"
+  if [[ "$state" != *"$PKG"* ]]; then
+    echo "VNF is not the active runtime app before screenshot:" >&2
+    printf '%s\n' "$state" >&2
+    return 1
+  fi
+  if [[ "$state" == *"com.android.systemui"* || "$state" == *"com.android.permissioncontroller"* ]]; then
+    echo "System overlay detected before screenshot:" >&2
+    printf '%s\n' "$state" >&2
+    return 1
+  fi
+}
+
 capture() {
   local name="$1" biome="$2" pose="$3" target="$4"
   adb shell am force-stop "$PKG" || true
