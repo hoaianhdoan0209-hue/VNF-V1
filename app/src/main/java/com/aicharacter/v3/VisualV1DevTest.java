@@ -92,10 +92,10 @@ public final class VisualV1DevTest {
         check(!renderer.contains("BlockBodyRenderer"),"primary Haru render path has no geometric fallback",ok,bad);
         check(renderer.contains("fw*sc")&&renderer.contains("fh*sc"),"Haru uses one uniform authored-body scale",ok,bad);
         check(!renderer.contains("scaleY")&&!renderer.contains("scaleX"),"biology/physics cannot squash Haru axes",ok,bad);
-        check(manifest.contains("\\"lakeside_sky\\""),"Lakeside sky asset is registered",ok,bad);
-        check(game.contains("drawLayer(c,area+\\\"_sky\\\"")&&game.contains("drawLayer(c,area+\\\"_distant\\\"")&&
-              game.contains("drawLayer(c,area+\\\"_mid\\\"")&&game.contains("drawLayer(c,area+\\\"_ground\\\"")&&
-              game.contains("drawLayer(c,area+\\\"_foreground\\\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+        check(manifest.contains("\"lakeside_sky\""),"Lakeside sky asset is registered",ok,bad);
+        check(game.contains("drawLayer(c,area+\"_sky\"")&&game.contains("drawLayer(c,area+\"_distant\"")&&
+              game.contains("drawLayer(c,area+\"_mid\"")&&game.contains("drawLayer(c,area+\"_ground\"")&&
+              game.contains("drawLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return Files.readString(p,StandardCharsets.UTF_8);}
