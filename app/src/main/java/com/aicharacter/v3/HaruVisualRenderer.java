@@ -24,8 +24,8 @@ public final class HaruVisualRenderer{
   p.setFilterBitmap(false);p.setShader(null);p.setStyle(Paint.Style.FILL);
   c.save();
   c.clipRect(x-fw*sc*.72f,contactGround-1,x+fw*sc*.72f,1080);
-  c.translate(wobble,contactGround*(1f+squash));
-  c.scale(1f,-squash,1f,1f);
+  c.translate(wobble,0);
+  c.scale(1f,-squash,x,contactGround);
   p.setColorFilter(new PorterDuffColorFilter(tint,PorterDuff.Mode.SRC_ATOP));
   p.setAlpha((int)Math.max(8,Math.min(80,(water?62:38)*strength)));
   c.drawBitmap(sheet,src,dst,p);
