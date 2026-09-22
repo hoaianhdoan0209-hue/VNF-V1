@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=1600,720
-REV="authored-organic-biome-v4-hires-2026-09"
+REV="authored-organic-biome-v5-cinematic-2026-09"
 C={
  "home":((72,109,128),(181,186,151),(48,72,66),(91,112,75),(66,83,55),(215,171,103)),
  "garden":((97,139,154),(211,202,151),(53,86,63),(95,136,75),(68,98,54),(231,184,106)),
@@ -78,6 +78,90 @@ def _masked_texture(base,mask,r,kind,biome):
         ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
     return Image.alpha_composite(base,ov)
 
+def _signature_detail(base,mask,r,kind,biome):
+    ov=Image.new("RGBA",base.size,(0,0,0,0)); d=ImageDraw.Draw(ov)
+    w,h=base.size
+
+    def glow_dot(x,y,radius,col,alpha):
+        for rr,aa in ((radius*3,alpha//5),(radius*2,alpha//3),(radius,alpha)):
+            d.ellipse((x-rr,y-rr,x+rr,y+rr),fill=(*col,max(1,aa)))
+
+    if biome=="home":
+        if kind=="mid":
+            # warm lived-in focal glow around the cottage windows/door
+            for x,y,rr in ((409,520,8),(354,535,6),(430,520,5)):
+                glow_dot(x,y,rr,(255,190,92),34)
+            for _ in range(26):
+                x=r.randint(210,560); y=r.randint(505,640)
+                if r.random()<.55: glow_dot(x,y,1,(255,221,145),r.randint(16,34))
+        elif kind=="ground":
+            for _ in range(70):
+                x=r.randint(40,w-40); y=r.randint(int(h*.77),h-8)
+                d.line((x,y,x+r.randint(-5,5),y-r.randint(2,8)),fill=(229,210,153,r.randint(12,28)),width=1)
+        elif kind=="foreground":
+            # warm near-camera rim catches on leaves
+            for _ in range(46):
+                side=r.choice(("l","r")); x=r.randint(0,250) if side=="l" else r.randint(w-250,w)
+                y=r.randint(int(h*.45),h-10)
+                glow_dot(x,y,1,(246,199,118),r.randint(18,35))
+
+    elif biome=="garden":
+        if kind in ("mid","foreground"):
+            # floating petals provide movement and a romantic authored identity
+            for _ in range(52 if kind=="foreground" else 34):
+                x=r.randint(25,w-25); y=r.randint(int(h*.33),h-20)
+                if kind=="mid" and 560<x<1040 and y>520: continue
+                col=r.choice(((255,213,208),(246,188,189),(255,228,171),(235,218,245)))
+                ww=r.randint(2,6); hh=r.randint(1,3)
+                d.ellipse((x-ww,y-hh,x+ww,y+hh),fill=(*col,r.randint(40,82)))
+        if kind=="ground":
+            for _ in range(95):
+                x=r.choice((r.randint(70,510),r.randint(1090,1530))); y=r.randint(585,705)
+                glow_dot(x,y,1,r.choice(((255,211,131),(255,186,180),(226,207,255))),r.randint(18,34))
+
+    elif biome=="lakeside":
+        if kind=="distant":
+            # fine horizon sparkle bands
+            for _ in range(90):
+                y=r.randint(455,548); x=r.randint(25,w-25)
+                ww=r.randint(4,20)
+                d.line((x,y,x+ww,y),fill=(221,241,238,r.randint(15,40)),width=1)
+        elif kind=="ground":
+            # layered water reflection, narrow in center and brighter toward horizon
+            for _ in range(110):
+                y=r.randint(632,710)
+                span=int(80+(y-632)*2.1)
+                x=r.randint(max(0,w//2-span),min(w,w//2+span))
+                ww=r.randint(5,36)
+                col=r.choice(((214,236,231),(188,222,220),(237,215,158)))
+                d.line((x,y,min(w-1,x+ww),y),fill=(*col,r.randint(18,55)),width=r.choice((1,1,2)))
+        elif kind=="foreground":
+            for _ in range(32):
+                x=r.choice((r.randint(0,300),r.randint(w-300,w))); y=r.randint(500,h-10)
+                d.line((x,y,x+r.randint(-8,8),y-r.randint(18,52)),fill=(176,203,157,r.randint(18,34)),width=2)
+
+    elif biome=="grove":
+        if kind=="sky":
+            # cinematic canopy light shafts, intentionally subtle and translucent
+            for cx,width,alpha in ((610,115,18),(805,90,24),(980,130,14)):
+                d.polygon([(cx-width,90),(cx+width,90),(cx+width//3,h),(cx-width//3,h)],fill=(205,226,166,alpha))
+        elif kind in ("mid","foreground"):
+            # spores/fireflies at varying depths
+            count=36 if kind=="mid" else 52
+            for _ in range(count):
+                x=r.randint(30,w-30); y=r.randint(220,h-30)
+                if 590<x<1010 and y>535 and kind=="foreground": continue
+                col=r.choice(((211,230,151),(238,214,125),(170,222,179)))
+                glow_dot(x,y,r.choice((1,1,2)),col,r.randint(28,62))
+        elif kind=="ground":
+            for _ in range(44):
+                x=r.choice((r.randint(20,520),r.randint(1080,w-20))); y=r.randint(590,h-10)
+                glow_dot(x,y,1,(216,209,132),r.randint(18,42))
+
+    if mask is not None and kind!="sky":
+        ov.putalpha(ImageChops.multiply(ov.getchannel("A"),mask))
+    return Image.alpha_composite(base,ov)
+
 def save(im,a,path):
     name=os.path.basename(path).replace(".png","")
     biome,kind=name.split("_",1)
@@ -86,15 +170,17 @@ def save(im,a,path):
     mask=rgba.getchannel("A")
     r=random.Random("hires-"+name)
     rgba=_masked_texture(rgba,mask,r,kind,biome)
+    rgba=_signature_detail(rgba,mask,r,kind,biome)
     # Subtle tonal polish differs by depth. No blur on authored geometry.
     if kind=="sky":
-        rgba=ImageEnhance.Color(rgba).enhance(1.06)
-        rgba=ImageEnhance.Contrast(rgba).enhance(1.03)
+        rgba=ImageEnhance.Color(rgba).enhance(1.10)
+        rgba=ImageEnhance.Contrast(rgba).enhance(1.04)
     elif kind in ("mid","foreground"):
-        rgba=ImageEnhance.Contrast(rgba).enhance(1.07)
-        rgba=ImageEnhance.Color(rgba).enhance(1.08)
+        rgba=ImageEnhance.Contrast(rgba).enhance(1.10)
+        rgba=ImageEnhance.Color(rgba).enhance(1.12)
     else:
-        rgba=ImageEnhance.Color(rgba).enhance(1.04)
+        rgba=ImageEnhance.Contrast(rgba).enhance(1.04)
+        rgba=ImageEnhance.Color(rgba).enhance(1.08)
     rgba.save(path,optimize=True,compress_level=9)
 
 def cluster(d,r,x,y,rx,ry,lo,hi,count=20):
