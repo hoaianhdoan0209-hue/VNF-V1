@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - mong/god-session-ui
+      - integration/v1.0.1
   workflow_dispatch:
 
 jobs:
@@ -19,6 +20,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Run Visual V1 acceptance test
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/visual-v1-test
+          mkdir -p /tmp/visual-v1-test
+          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
+          java -cp /tmp/visual-v1-test com.aicharacter.v3.VisualV1DevTest .
 
       - name: Prepare Android SDK 35
         shell: bash
@@ -42,11 +52,11 @@ jobs:
           unzip -q /tmp/gradle-8.14.1-bin.zip -d /tmp
           /tmp/gradle-8.14.1/bin/gradle --version
 
-      - name: Build debug APK
+      - name: Run regression tests and build debug APK
         shell: bash
         run: |
           set -euo pipefail
-          /tmp/gradle-8.14.1/bin/gradle :app:assembleDebug --stacktrace
+          /tmp/gradle-8.14.1/bin/gradle :app:testDebugUnitTest :app:assembleDebug --stacktrace
 
       - name: Verify APK
         run: test -f app/build/outputs/apk/debug/app-debug.apk
