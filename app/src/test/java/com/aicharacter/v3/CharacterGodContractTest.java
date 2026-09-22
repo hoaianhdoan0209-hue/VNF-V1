@@ -9,12 +9,12 @@ import static org.junit.Assert.*;
 
 public final class CharacterGodContractTest {
 
- @Test public void capabilityModelContainsRequiredBoundaries(){
+ @Test public void capabilityModelContainsRequiredBoundaries() throws Exception{
   for(GodCapabilityModel.Capability c:GodCapabilityModel.Capability.values())assertTrue(GodCapabilityModel.supports(c));
   assertEquals(8,GodCapabilityModel.toJson().length());
  }
 
- @Test public void godCannotRewriteHaruMindOrPastHistory(){
+ @Test public void godCannotRewriteHaruMindOrPastHistory() throws Exception{
   WorldState s=state();WorldEventBus.publishId(s,500L,"seed_event","WEATHER","environment","It rained.");
   String prior=s.worldHistory.get(0).toJson().toString();int memories=s.memories.size(),knowledge=s.knowledge.size(),skills=s.skills.size(),actions=s.learnedActions.size();double curiosity=s.personality.curiosity,calm=s.emotion.calm,trust=s.relationship.trust;String intention=s.currentIntention;
 
@@ -28,7 +28,7 @@ public final class CharacterGodContractTest {
   assertEquals(2,s.worldHistory.size());assertEquals(HaruTeachingOpportunityEngine.OFFER_TYPE,s.worldHistory.get(1).type);
  }
 
- @Test public void godObservesMultipleSubsystemsWithoutRawMindScores(){
+ @Test public void godObservesMultipleSubsystemsWithoutRawMindScores() throws Exception{
   WorldState s=state();s.environment.weather="RAIN";s.environment.wind=.7;s.atmosphere.temperatureC=31;s.atmosphere.relativeHumidity=.8;s.livingWorld.flora("flora_1");s.livingWorld.creature("fauna_1");
   s.planState.goal="understand silver moss";s.planState.status="ACTIVE";s.planState.origin="WORLD_AFFORDANCE";s.planState.steps.add("OBSERVE:mystery_flora");
   WorldEventBus.publishId(s,800L,"cause_1","WORLD_TEST","test_area","A causal test event happened.");
@@ -38,7 +38,7 @@ public final class CharacterGodContractTest {
   assertFalse(j.getJSONObject("haruVisibleCondition").has("energyRaw"));assertFalse(j.getJSONObject("haruVisibleCondition").has("personality"));
  }
 
- @Test public void knowledgeResultsPreserveLayerAndProvenance(){
+ @Test public void knowledgeResultsPreserveLayerAndProvenance() throws Exception{
   WorldState s=state();s.world.knowledgeAnchors.add(new WorldKnowledgeAnchor("physics.gravity","physics","gravity reference","fantasy gravity transform","open science","ref:gravity","2026-09-22T00:00:00Z",.91,"Broad reference only.",Collections.singletonList("gravity")));
   List<GodKnowledgeQueryEngine.Result> r=GodKnowledgeQueryEngine.query(s,"gravity",5);
   assertFalse(r.isEmpty());GodKnowledgeQueryEngine.Result x=r.get(r.size()-1);
@@ -46,7 +46,7 @@ public final class CharacterGodContractTest {
   assertFalse(s.knowledge.containsKey("physics.gravity"));assertTrue(s.memories.isEmpty());
  }
 
- @Test public void boundedWorldProposalHasScopeDurationRollbackAndNoDoubleApply(){
+ @Test public void boundedWorldProposalHasScopeDurationRollbackAndNoDoubleApply() throws Exception{
   WorldState s=state();long now=2000L;JSONObject j=new JSONObject();
   j.put("kind","god-world-condition-v2");j.put("id","wind-1");j.put("condition","WIND");j.put("desiredValue","BREEZE");j.put("scopeType","AREA");j.put("scopeTarget","test_area");j.put("intensity",.55);j.put("durationMinutes",45);j.put("provenanceLayer","GOD_PROPOSAL");j.put("sourceRef","god:proposal");j.put("rollbackPolicy","RESTORE_PREVIOUS_BASELINE");j.put("requestedAt",now);
   GodWorldEventProposal p=GodWorldEventProposal.fromJson(j,now);assertNotNull(p);
@@ -56,40 +56,40 @@ public final class CharacterGodContractTest {
   assertTrue(GodWorldEventExecutor.requestRollback(s,"wind-1",now+4).ok);assertEquals("ROLLBACK_REQUESTED",saved.status);assertTrue(GodWorldConditionContract.markRolledBack(s,"wind-1","WorldPhysicsTest",now+5));assertEquals("ROLLED_BACK",saved.status);
  }
 
- @Test public void lessonCanBeListenedTo(){
+ @Test public void lessonCanBeListenedTo() throws Exception{
   WorldState s=state();prepareEngaged(s);s.currentIntention="gravity inquiry";
   String id=offer(s,"gravity","gravity",.15,.95,Collections.emptyList(),1000L);
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));LessonState l=s.characterGod.lessons.get(id);
   assertEquals(HaruTeachingOpportunityEngine.Response.LISTEN.name(),l.lastResponse);assertEquals("LEARNED",l.status);assertNotNull(s.characterGod.conceptKnowledge.get("gravity"));assertEquals(1,s.memories.size());
  }
 
- @Test public void lessonCanBeDeferredByCurrentBodyContext(){
+ @Test public void lessonCanBeDeferredByCurrentBodyContext() throws Exception{
   WorldState s=state();prepareEngaged(s);s.body.energy=10;
   String id=offer(s,"gravity","gravity",.15,.95,Collections.emptyList(),1000L);
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));assertEquals(HaruTeachingOpportunityEngine.Response.DEFER.name(),s.characterGod.lessons.get(id).lastResponse);assertTrue(s.memories.isEmpty());assertFalse(s.characterGod.conceptKnowledge.containsKey("gravity"));
  }
 
- @Test public void lessonCanTriggerQuestionWhenPrerequisiteMissing(){
+ @Test public void lessonCanTriggerQuestionWhenPrerequisiteMissing() throws Exception{
   WorldState s=state();prepareEngaged(s);
   String id=offer(s,"orbital motion","orbit",.35,.9,Collections.singletonList("gravity"),1000L);
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));assertEquals(HaruTeachingOpportunityEngine.Response.QUESTION.name(),s.characterGod.lessons.get(id).lastResponse);assertTrue(s.characterGod.openQuestions.containsKey("q_lesson_"+id));assertTrue(s.memories.isEmpty());
  }
 
- @Test public void lessonCanBeRejectedWhenLowTrustConflictsWithEvidence(){
+ @Test public void lessonCanBeRejectedWhenLowTrustConflictsWithEvidence() throws Exception{
   WorldState s=state();prepareEngaged(s);ConceptKnowledgeState k=new ConceptKnowledgeState();k.concept="rain";k.claim="rain is wet";k.confidence=.8;s.characterGod.conceptKnowledge.put("rain",k);
   String id=offer(s,"rain claim","rain",.25,.1,Collections.emptyList(),1000L);
   s.characterGod.lessons.get(id).claim="rain is dry";
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));assertEquals(HaruTeachingOpportunityEngine.Response.REJECT.name(),s.characterGod.lessons.get(id).lastResponse);assertTrue(s.memories.isEmpty());
  }
 
- @Test public void partialLearningDoesNotBecomeFullyKnown(){
+ @Test public void partialLearningDoesNotBecomeFullyKnown() throws Exception{
   WorldState s=state();prepareEngaged(s);s.currentIntention="complex topic";s.personality.curiosity=.55;s.personality.patience=.55;s.emotion.calm=.55;s.body.energy=70;
   String id=offer(s,"complex topic","complex_topic",1.0,.8,Collections.emptyList(),1000L);
   assertTrue(HaruTeachingOpportunityEngine.observe(s,1100L));LessonState l=s.characterGod.lessons.get(id);assertEquals(HaruTeachingOpportunityEngine.Response.PARTIALLY_UNDERSTAND.name(),l.lastResponse);
   ConceptKnowledgeState k=s.characterGod.conceptKnowledge.get("complex_topic");assertNotNull(k);assertTrue(k.confidence<.75);assertFalse(s.knowledge.containsKey("complex_topic"));
  }
 
- @Test public void contradictoryCausalEvidenceCanCorrectKnowledgeBelief(){
+ @Test public void contradictoryCausalEvidenceCanCorrectKnowledgeBelief() throws Exception{
   WorldState s=state();
   MemoryEntry a=CognitionEngine.experience(s,1000L,"observation","first observation",.1,.5,"evidence");
   assertTrue(HaruKnowledgeRevisionEngine.applyEvidence(s,"sky_state","blue",1,.85,"VNF_WORLD_TRUTH","memory:"+a.memoryId,a,1000L));
@@ -100,7 +100,7 @@ public final class CharacterGodContractTest {
   assertEquals("red",s.characterGod.conceptKnowledge.get("sky_state").claim);
  }
 
- @Test public void skillDoesNotIncreaseWithoutPracticeOutcome(){
+ @Test public void skillDoesNotIncreaseWithoutPracticeOutcome() throws Exception{
   WorldState s=state();prepareEngaged(s);s.currentIntention="skill_theory:sketch";
   int size=s.skills.size(),actions=s.learnedActions.size();double before=s.skills.getOrDefault("sketch",0.0);
   String id=GodTeachingGateway.offerLesson(s,"sketch theory",Collections.singletonList("skill_theory:sketch"),"safe sketching theory",Collections.emptyList(),Collections.singletonList("explanation"),.15,"REAL_REFERENCE","art reference","ref:sketch","2026-09-22T00:00:00Z",.9,"Theory only.","SKILL_THEORY",1000L);
@@ -108,7 +108,7 @@ public final class CharacterGodContractTest {
   assertEquals(size,s.skills.size());assertEquals(actions,s.learnedActions.size());assertEquals(before,s.skills.getOrDefault("sketch",0.0),0);
  }
 
- @Test public void haruFormsMultiStepPlanFromVisibleWorldAffordance(){
+ @Test public void haruFormsMultiStepPlanFromVisibleWorldAffordance() throws Exception{
   WorldState s=state();prepareEngaged(s);HaruAffordanceEngine.observeQuestions(s,1000L);
   HaruAffordanceEngine.Candidate candidate=HaruAffordanceEngine.bestCandidate(s,1000L);assertNotNull(candidate);assertEquals("mystery_flora",candidate.objectId);
   assertTrue(HaruAffordanceEngine.beginPlanIfCompelling(s,1000L));assertEquals("WORLD_AFFORDANCE",s.planState.origin);assertEquals("affordance_inquiry",s.planState.intentionId);assertEquals("mystery_flora",s.planState.destination);assertTrue(s.planState.steps.size()>=4);assertTrue(s.planState.steps.get(2).startsWith("COMPARE_EVIDENCE:"));assertFalse(s.planState.candidateGoalId.isEmpty());
@@ -124,7 +124,7 @@ public final class CharacterGodContractTest {
   assertEquals("WORLD_AFFORDANCE",x.planState.origin);assertEquals("affordance:mystery_flora",x.planState.candidateGoalId);assertEquals("visible_object:mystery_flora",x.planState.triggerEvidenceId);assertEquals("q_world_mystery_flora",x.planState.questionId);
  }
 
- @Test public void activeOfflineModesUseSameCharacterCausalPipeline(){
+ @Test public void activeOfflineModesUseSameCharacterCausalPipeline() throws Exception{
   WorldState active=state(),offline=state();prepareEngaged(active);prepareEngaged(offline);active.currentIntention=offline.currentIntention="gravity inquiry";
   offer(active,"gravity","gravity",.2,.9,Collections.emptyList(),1600L);offer(offline,"gravity","gravity",.2,.9,Collections.emptyList(),1600L);
   LifeSimulationKernel.beginSlice(active,60,1700L,LifeSimulationKernel.Mode.ACTIVE);
@@ -135,7 +135,7 @@ public final class CharacterGodContractTest {
   assertEquals(active.planState.origin,offline.planState.origin);assertEquals(active.planState.destination,offline.planState.destination);assertEquals(active.planState.steps,offline.planState.steps);
  }
 
- @Test public void provenanceOnlyCompleteWhenRealMetadataIsPresent(){
+ @Test public void provenanceOnlyCompleteWhenRealMetadataIsPresent() throws Exception{
   WorldKnowledgeAnchor incomplete=new WorldKnowledgeAnchor("physics.gravity","physics","real reference","fictional transform","open science","gravity","UNKNOWN_BUNDLED_REFERENCE",-1,"reference only",Collections.singletonList("gravity"));
   assertFalse(incomplete.hasCompleteProvenance());
   WorldKnowledgeAnchor complete=new WorldKnowledgeAnchor("physics.gravity.verified","physics","real reference","fictional transform","open science","ref:gravity","2026-09-22T00:00:00Z",.85,"Known limits are documented.",Collections.singletonList("gravity"));
