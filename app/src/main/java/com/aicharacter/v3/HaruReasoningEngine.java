@@ -1,0 +1,150 @@
+package com.aicharacter.v3;
+
+import java.util.*;
+
+/**
+ * Evidence-based reasoning for Haru.
+ *
+ * Pipeline:
+ * perception -> self-question -> competing hypothesis -> prediction ->
+ * bounded observation experiment -> causal outcome memory -> comparison ->
+ * belief revision -> transferable general rule.
+ *
+ * This engine never writes World Truth and never treats an external reference
+ * as lived evidence. Confidence only moves after Haru has a causal memory.
+ */
+public final class HaruReasoningEngine {
+ private static final long MIN_CYCLE_MS=30_000L;
+ private static final long REOBSERVE_MS=5L*60L*1000L;
+ private static final String RULE_REVISIT="rule:safe_revisit_reduces_uncertainty";
+ private HaruReasoningEngine(){}
+
+ public static void observe(WorldState s,long now){
+  if(s==null||s.world==null)return;ensure(s);
+  HaruReasoningState rs=s.characterGod.reasoning;
+  if(rs.lastCycleAt>0&&now>=rs.lastCycleAt&&now-rs.lastCycleAt<MIN_CYCLE_MS)return;
+  rs.lastCycleAt=Math.max(rs.lastCycleAt,now);rs.cycleCount++;
+
+  HaruVisionEngine.Snapshot view=HaruVisionEngine.observe(s);
+  for(OpenQuestionState q:s.characterGod.openQuestions.values()){
+   if(q==null||q.aboutObjectId==null||q.aboutObjectId.isEmpty()||"RESOLVED".equals(q.status)||"REJECTED".equals(q.status))continue;
+   if(isSeen(view,q.aboutObjectId))ensureHypothesis(s,q,view,now);
+  }
+
+  for(HypothesisState h:rs.hypotheses.values()){
+   if(h==null||h.subjectId.isEmpty()||h.expectedAreaId.isEmpty())continue;
+   if(!h.expectedAreaId.equals(view.areaId))continue;
+   if(view.visibility<.65||view.attention<.50)continue;
+   if(h.lastEvidenceAt>0&&now>=h.lastEvidenceAt&&now-h.lastEvidenceAt<REOBSERVE_MS)continue;
+   boolean seen=isSeen(view,h.subjectId);
+   MemoryEntry m=CognitionEngine.experience(s,now,"reasoning_observation",
+     seen
+       ?"She returned to the place connected with "+h.subjectId+" and could observe it again."
+       :"She returned under clear enough conditions but could not observe "+h.subjectId+" where she expected it.",
+     seen?.10:-.06,.46,"reasoning","hypothesis",h.id,h.subjectId,seen?"support":"contradiction");
+   applyHypothesisEvidence(s,h,seen,seen?.62:.72,m,now);
+  }
+ }
+
+ public static HypothesisState ensureHypothesisForQuestion(WorldState s,String questionId,long now){
+  if(s==null||s.characterGod==null)return null;OpenQuestionState q=s.characterGod.openQuestions.get(questionId);if(q==null)return null;
+  HaruVisionEngine.Snapshot view=HaruVisionEngine.observe(s);return ensureHypothesis(s,q,view,now);
+ }
+
+ private static HypothesisState ensureHypothesis(WorldState s,OpenQuestionState q,HaruVisionEngine.Snapshot view,long now){
+  ensure(s);String id="hyp_revisit_"+clean(q.aboutObjectId);HypothesisState existing=s.characterGod.reasoning.hypotheses.get(id);if(existing!=null)return existing;
+  WorldObject o=s.world.object(q.aboutObjectId);if(o==null||!isSeen(view,o.id))return null;
+  HypothesisState h=new HypothesisState();h.id=id;h.questionId=q.questionId;h.subjectId=o.id;h.expectedAreaId=view.areaId;
+  h.proposition="Returning to "+view.areaId+" under good viewing conditions will probably let me encounter "+label(o)+" again and learn from another observation.";
+  h.alternative="The earlier sighting of "+label(o)+" may have been incidental, so returning may not provide the same evidence.";
+  h.createdAt=now;h.updatedAt=now;h.confidence=.5;s.characterGod.reasoning.hypotheses.put(h.id,h);
+  MemoryEntry seed=CognitionEngine.experience(s,now,"self_question",
+    "She compared two possibilities about "+o.id+": a repeatable local pattern versus an incidental sighting.",.04,.44,
+    "reasoning","question",q.questionId,"hypothesis",h.id,o.id);
+  h.evidenceMemoryIds.add(seed.memoryId);h.lastEvidenceAt=now;
+  ThoughtState t=new ThoughtState("Maybe "+o.id+" belongs to a repeatable local pattern; maybe the sighting was only incidental.",
+    "self_question:"+q.questionId,"affordance_inquiry",.50,.42,now);t.relatedMemories.add(seed.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
+  q.status="PARTIAL";q.lastRevisitedAt=now;q.revisits++;
+  return h;
+ }
+
+ public static void attachReasoningToPlan(WorldState s,PlanState p,long now){
+  if(s==null||p==null)return;ensure(s);
+  if(p.questionId!=null&&!p.questionId.isEmpty()){
+   HypothesisState h=ensureHypothesisForQuestion(s,p.questionId,now);
+   if(h!=null)p.reasoningHypothesisId=h.id;
+  }
+  predictPlanOutcome(s,p,now);
+ }
+
+ public static PredictionState predictPlanOutcome(WorldState s,PlanState p,long now){
+  if(s==null||p==null||p.planId==null||p.planId.isEmpty())return null;ensure(s);
+  if(p.predictionId!=null&&!p.predictionId.isEmpty()){
+   PredictionState old=s.characterGod.reasoning.predictions.get(p.predictionId);if(old!=null)return old;
+  }
+  PredictionState x=new PredictionState();x.id="pred_"+clean(p.planId);x.planId=p.planId;x.hypothesisId=p.reasoningHypothesisId==null?"":p.reasoningHypothesisId;x.subjectId=p.destination==null?"":p.destination;
+  double learned=AdaptiveBeliefEngine.planExpectation(s,p.intentionId);double base=.55+Math.max(-.22,Math.min(.22,learned*.22));
+  HypothesisState h=x.hypothesisId.isEmpty()?null:s.characterGod.reasoning.hypotheses.get(x.hypothesisId);if(h!=null)base=(base+h.confidence)/2.0;
+  x.confidence=Math.max(.18,Math.min(.86,base));x.expectedOutcome=p.goal==null||p.goal.isEmpty()?"the planned action will produce useful evidence or satisfy its goal":p.goal;
+  x.alternativeOutcome="the plan may be interrupted, fail, or produce evidence that changes the current expectation";x.createdAt=now;
+  s.characterGod.reasoning.predictions.put(x.id,x);p.predictionId=x.id;return x;
+ }
+
+ public static void reviewPlanOutcome(WorldState s,PlanState p,MemoryEntry outcome,long now){
+  if(s==null||p==null||outcome==null)return;ensure(s);
+  PredictionState pred=p.predictionId==null?null:s.characterGod.reasoning.predictions.get(p.predictionId);
+  boolean success="COMPLETED".equals(p.status);
+  if(pred!=null&&"PENDING".equals(pred.status)){
+   pred.status=success?"CONFIRMED":"DISCONFIRMED";pred.outcomeMemoryId=outcome.memoryId;pred.resolvedAt=now;
+  }
+
+  if("WORLD_AFFORDANCE".equals(p.origin)){
+   HypothesisState h=p.reasoningHypothesisId==null?null:s.characterGod.reasoning.hypotheses.get(p.reasoningHypothesisId);
+   if(success&&h!=null)applyHypothesisEvidence(s,h,true,.58,outcome,now);
+   GeneralRuleState rule=rule(s,RULE_REVISIT,"When a cautious revisit repeatedly produces useful observations, using a revisit as a low-risk inquiry strategy can transfer to a new unfamiliar subject.");
+   rule.record(p.destination,success,now);
+  }
+ }
+
+ public static double inquiryStrategyBias(WorldState s){
+  if(s==null||s.characterGod==null||s.characterGod.reasoning==null)return 0;
+  GeneralRuleState r=s.characterGod.reasoning.rules.get(RULE_REVISIT);
+  if(r==null||!"GENERALIZED".equals(r.status))return 0;
+  return Math.max(0,Math.min(.16,(r.confidence-.65)*.34+.04));
+ }
+
+ public static String currentReasoningSummary(WorldState s){
+  if(s==null||s.characterGod==null||s.characterGod.reasoning==null)return"";
+  HypothesisState best=null;for(HypothesisState h:s.characterGod.reasoning.hypotheses.values())if(h!=null&&(best==null||h.updatedAt>best.updatedAt))best=h;
+  if(best==null)return"";String certainty=best.confidence>=.72?"nghiêng về khả năng đầu":best.confidence<=.32?"nghiêng về khả năng thứ hai":"chưa đủ bằng chứng để chọn";
+  return "Mình đang so hai khả năng: "+best.proposition+" Hoặc "+best.alternative+" Hiện mình "+certainty+", nên mình muốn kiểm tra bằng trải nghiệm thật.";
+ }
+
+ public static String diagnostic(WorldState s){
+  if(s==null||s.characterGod==null||s.characterGod.reasoning==null)return"HARU REASONING unavailable";
+  HaruReasoningState r=s.characterGod.reasoning;StringBuilder b=new StringBuilder("HARU REASONING\n");
+  for(HypothesisState h:r.hypotheses.values())b.append("hyp ").append(h.id).append(" conf=").append(fmt(h.confidence)).append(" status=").append(h.status).append(" evidence=").append(h.evidenceCount).append(" revisions=").append(h.revisionCount).append('\n');
+  for(PredictionState p:r.predictions.values())b.append("pred ").append(p.id).append(" conf=").append(fmt(p.confidence)).append(" status=").append(p.status).append('\n');
+  for(GeneralRuleState g:r.rules.values())b.append("rule ").append(g.id).append(" conf=").append(fmt(g.confidence)).append(" status=").append(g.status).append(" subjects=").append(g.subjects.size()).append('\n');
+  return b.toString();
+ }
+
+ private static void applyHypothesisEvidence(WorldState s,HypothesisState h,boolean support,double weight,MemoryEntry m,long now){
+  if(m==null||!hasMemory(s,m.memoryId))return;h.apply(support,weight,m.memoryId,now);
+  OpenQuestionState q=s.characterGod.openQuestions.get(h.questionId);if(q!=null){q.lastRevisitedAt=now;q.revisits++;if(h.evidenceCount>=3&&(h.confidence>=.76||h.confidence<=.24)){q.status="RESOLVED";q.resolvedAt=now;}else q.status="PARTIAL";}
+  if("REVISED".equals(h.status)){
+   ThoughtState t=new ThoughtState("My earlier expectation about "+h.subjectId+" no longer fits the newer evidence.",
+     "contradiction:"+h.id,"compare_concept",1.0-h.informationNeed(),.58,now);t.relatedMemories.add(m.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
+  }
+ }
+
+ private static GeneralRuleState rule(WorldState s,String id,String statement){
+  GeneralRuleState r=s.characterGod.reasoning.rules.get(id);if(r==null){r=new GeneralRuleState();r.id=id;r.statement=statement;s.characterGod.reasoning.rules.put(id,r);}return r;
+ }
+ private static boolean isSeen(HaruVisionEngine.Snapshot v,String id){if(v==null||id==null)return false;for(HaruVisionEngine.Seen x:v.seen)if(id.equals(x.id))return true;return false;}
+ private static boolean hasMemory(WorldState s,String id){if(s==null||id==null)return false;for(MemoryEntry m:s.memories)if(m!=null&&id.equals(m.memoryId))return true;return false;}
+ private static String label(WorldObject o){String x=o==null?"":o.haruDescription;return x==null||x.trim().isEmpty()?(o==null?"something":o.id):x.trim();}
+ private static String clean(String s){return(s==null?"unknown":s).replaceAll("[^A-Za-z0-9._-]","_");}
+ private static String fmt(double v){return String.format(Locale.US,"%.3f",v);}
+ private static void ensure(WorldState s){if(s.characterGod==null)s.characterGod=new CharacterGodState();if(s.characterGod.reasoning==null)s.characterGod.reasoning=new HaruReasoningState();}
+}
