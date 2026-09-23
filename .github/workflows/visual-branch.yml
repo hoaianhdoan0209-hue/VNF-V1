@@ -6,13 +6,26 @@ on:
       - team/visual-v1
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   visual-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout visual branch
         uses: actions/checkout@v4
+
+      - name: Setup Python for authored biome assets
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate replacement biome raster set
+        run: |
+          python -m pip install --disable-pip-version-check pillow==11.3.0
+          python tools/generate_visual_biomes.py "$GITHUB_WORKSPACE"
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -26,7 +39,7 @@ jobs:
           set -euo pipefail
           rm -rf /tmp/visual-v1-test
           mkdir -p /tmp/visual-v1-test
-          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
+          javac -d /tmp/visual-v1-test app/src/main/java/com/aicharacter/v3/MinimalHudLayout.java app/src/main/java/com/aicharacter/v3/VisualV1DevTest.java
           java -cp /tmp/visual-v1-test com.aicharacter.v3.VisualV1DevTest .
 
       - name: Prepare Android SDK 35
@@ -58,9 +71,50 @@ jobs:
       - name: Verify APK
         run: test -f app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Enable Android emulator acceleration when available
+        shell: bash
+        run: |
+          if [ -e /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "KVM unavailable; emulator runner will use its fallback."
+          fi
+
+      - name: Capture real runtime visual QA
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -no-snapshot -no-snapshot-save -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash tools/capture_visual_runtime.sh
+
+      - name: Upload runtime visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: VNF-visual-runtime-screenshots
+          path: app/build/visual-runtime
+          if-no-files-found: error
+
       - name: Upload VNF visual debug APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: VNF-visual-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Persist approved generated biome rasters
+        run: |
+          git config user.name "vnf-visual-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add app/src/main/res/drawable-nodpi/home_*.png app/src/main/res/drawable-nodpi/garden_*.png app/src/main/res/drawable-nodpi/lakeside_*.png app/src/main/res/drawable-nodpi/grove_*.png app/src/main/assets/visual/asset_manifest.json
+          if git diff --cached --quiet; then
+            echo "Biome raster assets already match generator."
+          else
+            git commit -m "visual: replace biome rasters with organic layered art"
+            git push origin HEAD:team/visual-v1
+          fi

@@ -30,6 +30,7 @@ public final class VisualV1DevTest {
         checkLayeredBiomes(root,ok,bad);
         checkHaruAssets(root,ok,bad);
         checkRendererContracts(root,ok,bad);
+        checkMobileHud(root,ok,bad);
         System.out.println("V1 VISUAL TEST\nPASS "+ok.size()+" / FAIL "+bad.size());
         for(String x:ok)System.out.println("✓ "+x);
         for(String x:bad)System.out.println("✗ "+x);
@@ -53,7 +54,8 @@ public final class VisualV1DevTest {
                 if(!Files.isRegularFile(f)){bad.add("missing "+biome+" "+layer+" asset");continue;}
                 Png p=Png.read(f);
                 check(p.w>=800&&p.h>=360,biome+" "+layer+" is production-resolution pixel art",ok,bad);
-                check(Files.size(f)>=150000,biome+" "+layer+" is not a tiny placeholder asset",ok,bad);
+                check(Files.size(f)>=1500,biome+" "+layer+" contains real authored raster data",ok,bad);
+                check(p.uniqueColors(0,p.w,0,p.h)>=8,biome+" "+layer+" carries authored palette depth",ok,bad);
                 double cov=p.coverage();
                 double min="sky".equals(layer)?.95:"ground".equals(layer)?.18:.035;
                 check(cov>=min,biome+" "+layer+" has authored visual occupancy ("+pct(cov)+")",ok,bad);
@@ -83,6 +85,8 @@ public final class VisualV1DevTest {
         check(idle.count(0,fw,(int)(idle.h*.68),idle.h)>260,"Haru has visible legs/feet region",ok,bad);
         check(idle.outerMidCount(0,fw)>40,"Haru arms separate from torso silhouette",ok,bad);
         check(idle.bottomColumnGroups(0,fw)>=2,"Haru has two distinct grounded foot silhouettes",ok,bad);
+        check(idle.uniqueColors(0,fw,0,(int)(idle.h*.36))>=9,"Haru face/hair region has authored color detail",ok,bad);
+        check(idle.uniqueColors(0,fw,(int)(idle.h*.30),(int)(idle.h*.72))>=10,"Haru clothing/body region has authored color detail",ok,bad);
     }
 
     private static void checkRendererContracts(Path root,List<String>ok,List<String>bad)throws Exception{
@@ -95,14 +99,40 @@ public final class VisualV1DevTest {
         check(manifest.contains("\"lakeside_sky\""),"Lakeside sky asset is registered",ok,bad);
         check(game.contains("drawLayer(c,area+\"_sky\"")&&game.contains("drawLayer(c,area+\"_distant\"")&&
               game.contains("drawLayer(c,area+\"_mid\"")&&game.contains("drawLayer(c,area+\"_ground\"")&&
-              game.contains("drawLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+              game.contains("drawForegroundLayer(c,area+\"_foreground\""),"renderer uses explicit sky/distant/mid/ground/foreground depth",ok,bad);
+        check(game.contains("BackdropPolishRenderer.draw(")&&game.contains("BackdropPolishRenderer.drawGround("),"all biome scenes receive subtle depth/detail polish",ok,bad);
+        check(game.contains("bg.setAlpha(198)")&&game.contains("cam*1.03f"),"foreground is visually restrained and does not dominate Haru",ok,bad);
         int tintStart=game.indexOf("private void drawTimeTint(Canvas c)");
         int tintEnd=tintStart<0?-1:game.indexOf(" private void drawUi",tintStart);
         String tint=tintStart>=0&&tintEnd>tintStart?game.substring(tintStart,tintEnd):"";
         check(!tint.contains("light_evening")&&!tint.contains("light_night")&&!tint.contains("home_warm_light"),
               "drawTimeTint forbids legacy full-frame light rasters",ok,bad);
+        check(!game.contains("assets.get(\\\"light_evening\\\"")&&!game.contains("assets.get(\\\"light_night\\\"")&&!game.contains("assets.get(\\\"home_warm_light\\\""),
+              "legacy full-frame light rasters are absent from the render pipeline",ok,bad);
         check(tint.contains("LinearGradient")&&tint.contains("drawRect(0,0,2400,1080"),
               "time-of-day compositing remains procedural gradient/tint",ok,bad);
+    }
+
+    private static void checkMobileHud(Path root,List<String>ok,List<String>bad)throws Exception{
+        float[][] screens={{1280,720,2f},{1440,720,2f},{1560,720,2f},{960,540,1.5f},{854,480,1f}};
+        String[] names={"16:9","18:9","19.5:9","small","small-16:9"};
+        for(int i=0;i<screens.length;i++){
+            float w=screens[i][0],h=screens[i][1],d=screens[i][2];MinimalHudLayout.Layout u=MinimalHudLayout.forScreen(w,h,d);
+            MinimalHudLayout.Box[] boxes={u.status,u.god,u.chat,u.mic};
+            boolean inside=true,overlap=false;for(MinimalHudLayout.Box b:boxes)inside&=b.inside(w,h,Math.max(6f,d*4f));
+            for(int a=0;a<boxes.length;a++)for(int b=a+1;b<boxes.length;b++)overlap|=boxes[a].overlaps(boxes[b]);
+            check(inside,names[i]+" HUD stays clear of screen edges",ok,bad);
+            check(!overlap,names[i]+" HUD has no overlapping controls/text",ok,bad);
+            check(u.god.width()/d>=36&&u.chat.width()/d>=36&&u.mic.width()/d>=36,names[i]+" icon hit targets remain usable",ok,bad);
+        }
+        String game=read(root.resolve("app/src/main/java/com/aicharacter/v3/GameView.java"));
+        int start=game.indexOf("private void drawUi(Canvas c)"),end=start<0?-1:game.indexOf(" public String assetDiagnostic()",start);
+        String ui=start>=0&&end>start?game.substring(start,end):"";
+        check(!ui.contains("LIÊN HỆ THẦN")&&!ui.contains("\"NÓI\"")&&!ui.contains("\"MIC\""),"main HUD contains no long text buttons",ok,bad);
+        check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&ui.contains("HudIconRenderer.GOD"),"chat/mic/God are icon controls",ok,bad);
+        check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);
+        String icon=read(root.resolve("app/src/main/java/com/aicharacter/v3/HudIconRenderer.java"));
+        check(icon.contains("pressed?176:104")&&icon.contains("c.translate(0,1.2f*d)"),"icon controls have a clear pressed state",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
@@ -112,8 +142,8 @@ public final class VisualV1DevTest {
     private static int paeth(int a,int b,int c){int p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);return pa<=pb&&pa<=pc?a:pb<=pc?b:c;}
 
     private static final class Png{
-        final int w,h;final byte[] px,alpha;
-        Png(int w,int h,byte[]px,byte[]alpha){this.w=w;this.h=h;this.px=px;this.alpha=alpha;}
+        final int w,h;final byte[] px,alpha;final boolean alphaPerPixel;
+        Png(int w,int h,byte[]px,byte[]alpha,boolean alphaPerPixel){this.w=w;this.h=h;this.px=px;this.alpha=alpha;this.alphaPerPixel=alphaPerPixel;}
         static Png read(Path path)throws Exception{
             byte[] b=Files.readAllBytes(path);
             if(b.length<24||b[0]!=(byte)137||b[1]!=80||b[2]!=78||b[3]!=71)throw new IOException("not PNG: "+path);
@@ -126,9 +156,10 @@ public final class VisualV1DevTest {
                 else if("IDAT".equals(kind))idat.write(b,pos,len);
                 pos+=len+4;if("IEND".equals(kind))break;
             }
-            if(w<=0||h<=0||depth!=8||type!=3)throw new IOException("Visual V1 expects indexed 8-bit PNG: "+path);
+            if(w<=0||h<=0||depth!=8||!(type==0||type==2||type==3||type==4||type==6))throw new IOException("Visual V1 expects 8-bit PNG (indexed/RGB/RGBA): "+path);
+            int bpp=type==6?4:type==2?3:type==4?2:1,stride=w*bpp;
             byte[] raw;try(InflaterInputStream in=new InflaterInputStream(new ByteArrayInputStream(idat.toByteArray()));ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] buf=new byte[8192];for(int n;(n=in.read(buf))!=-1;)out.write(buf,0,n);raw=out.toByteArray();}
-            int stride=w,bpp=1,src=0;byte[] px=new byte[w*h],prev=new byte[stride],row=new byte[stride];
+            int src=0;byte[] unpacked=new byte[stride*h],prev=new byte[stride],row=new byte[stride];
             for(int y=0;y<h;y++){
                 if(src>=raw.length)throw new IOException("short PNG data: "+path);
                 int filter=raw[src++]&255;
@@ -137,16 +168,29 @@ public final class VisualV1DevTest {
                     int z=switch(filter){case 0->v;case 1->v+a;case 2->v+up;case 3->v+((a+up)>>>1);case 4->v+paeth(a,up,ul);default->throw new IOException("bad PNG filter "+filter);};
                     row[x]=(byte)z;
                 }
-                System.arraycopy(row,0,px,y*w,w);byte[] tmp=prev;prev=row;row=tmp;
+                System.arraycopy(row,0,unpacked,y*stride,stride);byte[] tmp=prev;prev=row;row=tmp;
             }
-            return new Png(w,h,px,trns);
+            if(type==3){
+                byte[] px=new byte[w*h];for(int y=0;y<h;y++)System.arraycopy(unpacked,y*stride,px,y*w,w);
+                return new Png(w,h,px,trns,false);
+            }
+            byte[] px=new byte[w*h],aout=new byte[w*h];
+            for(int i=0;i<w*h;i++){
+                int off=i*bpp,r,g,bl,a=255;
+                if(type==0){r=g=bl=unpacked[off]&255;}
+                else if(type==4){r=g=bl=unpacked[off]&255;a=unpacked[off+1]&255;}
+                else{r=unpacked[off]&255;g=unpacked[off+1]&255;bl=unpacked[off+2]&255;if(type==6)a=unpacked[off+3]&255;}
+                px[i]=(byte)((r*3+g*5+bl*7+(r>>>4)+(bl>>>3))&255);aout[i]=(byte)a;
+            }
+            return new Png(w,h,px,aout,true);
         }
-        boolean opaqueAt(int x,int y){int idx=px[y*w+x]&255;return idx>=alpha.length||(alpha[idx]&255)>8;}
+        boolean opaqueAt(int x,int y){int pos=y*w+x;if(alphaPerPixel)return(alpha[pos]&255)>8;int idx=px[pos]&255;return idx>=alpha.length||(alpha[idx]&255)>8;}
         double coverage(){long n=0;for(int y=0;y<h;y++)for(int x=0;x<w;x++)if(opaqueAt(x,y))n++;return n/(double)(w*h);}
         double frameCoverage(int frame){int fw=w/12,x0=frame*fw;return count(x0,x0+fw,0,h)/(double)(fw*h);}
         int count(int x0,int x1,int y0,int y1){int n=0;for(int y=Math.max(0,y0);y<Math.min(h,y1);y++)for(int x=Math.max(0,x0);x<Math.min(w,x1);x++)if(opaqueAt(x,y))n++;return n;}
         int[] bounds(int x0,int x1){int minX=x1,minY=h,maxX=x0,maxY=0;for(int y=0;y<h;y++)for(int x=x0;x<x1;x++)if(opaqueAt(x,y)){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}return new int[]{minX,minY,maxX+1,maxY+1};}
         int outerMidCount(int x0,int x1){int fw=x1-x0,l=x0+(int)(fw*.34),r=x0+(int)(fw*.66),y0=(int)(h*.32),y1=(int)(h*.68),n=0;for(int y=y0;y<y1;y++)for(int x=x0;x<x1;x++)if((x<l||x>=r)&&opaqueAt(x,y))n++;return n;}
+        int uniqueColors(int x0,int x1,int y0,int y1){boolean[] seen=new boolean[256];int n=0;for(int y=Math.max(0,y0);y<Math.min(h,y1);y++)for(int x=Math.max(0,x0);x<Math.min(w,x1);x++){int q=px[y*w+x]&255;if(opaqueAt(x,y)&&!seen[q]){seen[q]=true;n++;}}return n;}
         int bottomColumnGroups(int x0,int x1){boolean on=false;int groups=0,y0=(int)(h*.87);for(int x=x0;x<x1;x++){boolean hit=false;for(int y=y0;y<h;y++)if(opaqueAt(x,y)){hit=true;break;}if(hit&&!on)groups++;on=hit;}return groups;}
         static int i32(byte[]b,int p){return((b[p]&255)<<24)|((b[p+1]&255)<<16)|((b[p+2]&255)<<8)|(b[p+3]&255);}
     }
