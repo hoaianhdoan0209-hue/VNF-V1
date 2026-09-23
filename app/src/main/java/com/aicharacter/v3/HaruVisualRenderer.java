@@ -36,8 +36,9 @@ public final class HaruVisualRenderer{
   int bands=water?7:4;
   for(int i=0;i<bands;i++){float y=contactGround+10+i*(water?17f:13f),phaseWave=(float)Math.sin(anim*(.65f+i*.03f)+i*.9f),ww=(water?52:38)+(i%3)*18f;p.setColor(Color.argb((int)Math.max(3,(water?15:8)*strength),water?184:145,water?211:162,water?211:153));c.drawRoundRect(x-ww+phaseWave*9,y,x+ww+phaseWave*9,y+(water?2.2f:1.5f),1,1,p);}
  }
- public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){draw(c,p,assets,s,v,x,bodyGround,contactGround,anim,1f);}
- public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float cameraZoom){
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){draw(c,p,assets,s,v,x,bodyGround,contactGround,anim,1f,0f);}
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float cameraZoom){draw(c,p,assets,s,v,x,bodyGround,contactGround,anim,cameraZoom,0f);}
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float cameraZoom,float divinePresence){
   float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift),closeT=Math.max(0f,Math.min(1f,(cameraZoom-1f)/.56f));
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
   String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes);
@@ -77,6 +78,7 @@ public final class HaruVisualRenderer{
   Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
   RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
   if(closeT>.02f)drawCloseSubjectLight(c,p,s,dst,closeT,phase);
+  if(divinePresence>.01f)drawDivineSubjectLight(c,p,s,dst,divinePresence,closeT,phase);
   c.save();
   c.translate(postureX,postureY);
   c.rotate(rotation,x,bodyGround);
@@ -96,6 +98,7 @@ public final class HaruVisualRenderer{
   p.setAlpha(bodyAlpha);
   c.drawBitmap(sheet,src,dst,p);
   if(closeT>.04f)drawClosePortraitGrade(c,p,s,sheet,src,dst,closeT,phase,area);
+  if(divinePresence>.01f){p.setColorFilter(new PorterDuffColorFilter(Color.rgb(239,225,189),PorterDuff.Mode.SRC_ATOP));p.setAlpha((int)Math.min(42,8+30*Math.max(0,Math.min(1,divinePresence))));c.drawBitmap(sheet,src,dst,p);p.setColorFilter(null);p.setAlpha(255);}
   int localColor=Color.TRANSPARENT,localAlpha=0;
   if("home_shelter".equals(area)){
    WorldObject shelter=s.world==null?null:s.world.object("shelter_01");
@@ -111,6 +114,14 @@ public final class HaruVisualRenderer{
   c.restore();
  }
 
+ private static void drawDivineSubjectLight(Canvas c,Paint p,WorldState s,RectF dst,float divinePresence,float closeT,String phase){
+  float d=Math.max(0f,Math.min(1f,divinePresence)),cx=dst.centerX(),faceY=dst.top+dst.height()*.235f,torsoY=dst.top+dst.height()*.48f;
+  int warm="NIGHT".equals(phase)?Color.rgb(199,215,236):Color.rgb(246,226,184),cool="NIGHT".equals(phase)?Color.rgb(132,181,214):Color.rgb(179,214,207);
+  p.setStyle(Paint.Style.FILL);p.setAntiAlias(true);
+  float fr=dst.width()*(.52f+.08f*closeT);p.setShader(new RadialGradient(cx,faceY,fr,Color.argb((int)(18*d),Color.red(warm),Color.green(warm),Color.blue(warm)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.drawCircle(cx,faceY,fr,p);p.setShader(null);
+  float tr=dst.width()*(.78f+.10f*closeT);p.setShader(new RadialGradient(cx,torsoY,tr,Color.argb((int)(10*d),Color.red(cool),Color.green(cool),Color.blue(cool)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.drawCircle(cx,torsoY,tr,p);p.setShader(null);p.setAntiAlias(false);
+ }
+
  private static void drawLayeredContactShadow(Canvas c,Paint p,float x,float ground,float shadowW,float shadowDx,int alpha,float closeT){
   p.setStyle(Paint.Style.FILL);
   p.setColor(Color.argb(Math.max(7,alpha/4),0,0,0));c.drawOval(x-shadowW*1.14f+shadowDx,ground-10,x+shadowW*1.14f+shadowDx,ground+13,p);
@@ -120,7 +131,7 @@ public final class HaruVisualRenderer{
 
  private static void drawClosePortraitGrade(Canvas c,Paint p,WorldState s,Bitmap sheet,Rect src,RectF dst,float closeT,String phase,String area){
   int key;if("NIGHT".equals(phase))key=Color.rgb(156,188,228);else if("EVENING".equals(phase))key=Color.rgb(255,183,126);else if("MORNING".equals(phase))key=Color.rgb(255,220,171);else if("quiet_grove".equals(area))key=Color.rgb(188,217,176);else key=Color.rgb(222,226,201);
-  int lower="NIGHT".equals(phase)?Color.rgb(36,53,78):Color.rgb(84,78,66);
+  double humidity=s.atmosphere==null?.55:Math.max(0,Math.min(1,s.atmosphere.relativeHumidity));boolean rain=s.environment!=null&&"RAIN".equals(s.environment.weather);if(rain){key=Color.rgb(184,209,218);}else if(humidity>.76&&!"NIGHT".equals(phase)){key=Color.rgb(207,222,205);}int lower="NIGHT".equals(phase)?Color.rgb(36,53,78):rain?Color.rgb(63,77,84):Color.rgb(84,78,66);
   c.save();c.clipRect(dst.left,dst.top,dst.right,dst.top+dst.height()*.58f);p.setColorFilter(new PorterDuffColorFilter(key,PorterDuff.Mode.SRC_ATOP));p.setAlpha((int)(8+18*closeT));c.drawBitmap(sheet,src,dst,p);c.restore();
   c.save();c.clipRect(dst.left,dst.top+dst.height()*.54f,dst.right,dst.bottom);p.setColorFilter(new PorterDuffColorFilter(lower,PorterDuff.Mode.SRC_ATOP));p.setAlpha((int)(5+10*closeT));c.drawBitmap(sheet,src,dst,p);c.restore();
   p.setColorFilter(null);p.setAlpha(255);
