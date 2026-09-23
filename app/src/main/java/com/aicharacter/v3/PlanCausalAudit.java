@@ -2,7 +2,9 @@ package com.aicharacter.v3;
 
 /**
  * V3 causal ledger for one plan lifecycle.
- * Arrival -> physical action -> learned outcome -> post-outcome review.
+ * Normal execution is arrival -> physical action -> learned outcome -> post-outcome review.
+ * A terminal pre-action obstacle may instead produce learned outcome -> review, because
+ * Haru can learn that a route/target became impossible without inventing an action.
  */
 public final class PlanCausalAudit {
  private PlanCausalAudit(){}
@@ -37,7 +39,7 @@ public final class PlanCausalAudit {
  public static boolean valid(WorldState s,PlanState p){
   if(p==null)return true;
   if(p.actionResolvedAt>0&&p.arrivedAt<=0)return false;
-  if(p.outcomeLearnedAt>0&&p.actionResolvedAt<=0)return false;
+  if(p.outcomeLearnedAt>0&&p.actionResolvedAt<=0&&!p.terminal())return false;
   if(p.postOutcomeReviewedAt>0&&p.outcomeLearnedAt<=0)return false;
   if(p.arrivedAt>0&&p.actionResolvedAt>0&&p.actionResolvedAt<p.arrivedAt)return false;
   if(p.actionResolvedAt>0&&p.outcomeLearnedAt>0&&p.outcomeLearnedAt<p.actionResolvedAt)return false;
@@ -74,7 +76,7 @@ public final class PlanCausalAudit {
    "arrival="+p.arrivedAt+" -> action="+p.actionResolvedAt+" -> learned="+p.outcomeLearnedAt+" -> review="+p.postOutcomeReviewedAt+"\n"+
    "memory="+(p.outcomeMemoryId.isEmpty()?"<none>":p.outcomeMemoryId)+" valid="+valid(s,p)+"\n"+
    "review="+(p.lastOutcomeReview==null||p.lastOutcomeReview.isEmpty()?"<none>":p.lastOutcomeReview)+"\n"+
-   "contract=arrival precedes action; action precedes learning; learned evidence precedes next-life review";
+   "contract=normal action: arrival -> action -> learning -> review; terminal pre-action obstacle: learning -> review; no fabricated action/arrival";
  }
 
  public static MemoryEntry findMemory(WorldState s,String id){
