@@ -129,7 +129,7 @@ public final class VisualV1DevTest {
         int start=game.indexOf("private void drawUi(Canvas c)"),end=start<0?-1:game.indexOf(" public String assetDiagnostic()",start);
         String ui=start>=0&&end>start?game.substring(start,end):"";
         check(!ui.contains("LIÊN HỆ THẦN")&&!ui.contains("\"NÓI\"")&&!ui.contains("\"MIC\""),"main HUD contains no long text buttons",ok,bad);
-        check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&ui.contains("HudIconRenderer.GOD"),"chat/mic/God are icon controls",ok,bad);
+        check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&(ui.contains("HudIconRenderer.GOD")||ui.contains("HudIconRenderer.drawGodButton")),"chat/mic/God are icon controls",ok,bad);
         check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);
         String icon=read(root.resolve("app/src/main/java/com/aicharacter/v3/HudIconRenderer.java"));
         check(icon.contains("pressed?176:104")&&icon.contains("c.translate(0,1.2f*d)"),"icon controls have a clear pressed state",ok,bad);
