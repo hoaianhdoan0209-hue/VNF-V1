@@ -64,13 +64,13 @@ public final class HaruVisualRenderer{
   float sc=BODY_SCALE,ax=v.anchorX*fw*sc;
   float left=x-ax,top=GirlAnimationController.renderTop(bodyGround,fh,sc,v.anchorY);
 
-  float postureX=0,postureY=0,rotation=0;
+  float postureX=0,postureY=0,rotation=0;HaruMotionStyleEngine.Style motion=HaruMotionStyleEngine.derive(s,v,anim);postureX+=motion.translateX;postureY+=motion.translateY;rotation+=motion.rotationDeg;
   BodyRigState rig=s.bodyRig;
   if(rig!=null){postureX+=(float)Math.max(-5,Math.min(5,rig.spineLean*18.0+rig.pelvisTilt*7.0));rotation+=(float)Math.max(-2.6,Math.min(2.6,rig.spineLean*11.0));}
   BiologyVisualOutput bio=BiologyVisualOutput.from(s);
-  float breath=(float)Math.sin(anim*(1.35+bio.breathingIntensity*2.2))*(.35f+(float)bio.breathingIntensity*1.55f);
+  float breath=(float)Math.sin(anim*(1.35+bio.breathingIntensity*2.2))*(.35f+(float)bio.breathingIntensity*1.55f)*motion.breathScale;
   float thermalTremor=(float)Math.abs(bio.thermalDiscomfort)*.32f;
-  postureY+=(float)Math.min(8.0,bio.postureLoad*4.5+bio.fatigue*2.0+bio.dominantPain*2.6+bio.recoveryLoad*.8)+breath;
+  postureY+=(float)Math.min(8.0,bio.postureLoad*4.5+bio.fatigue*2.0+bio.dominantPain*2.6+bio.recoveryLoad*.8)+breath+motion.settle*1.4f;
   postureX+=(float)Math.sin(anim*(17.0+bio.tremor*7.0))*Math.min(1.5f,(float)(bio.tremor*1.3+thermalTremor));
   rotation+=(float)Math.max(-1.3,Math.min(1.3,bio.gaitAsymmetry*1.05+Math.sin(anim*.55)*bio.dominantPain*.55));
   if(HaruExpressionEngine.supports(v.state)){HaruExpressionEngine.Visual expression=HaruExpressionEngine.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));postureY+=(float)(expression.headDropPx*.42);postureX+=(float)(expression.gazeX*expression.intensity*.35);rotation+=(float)(expression.headTiltDeg*.18);}
