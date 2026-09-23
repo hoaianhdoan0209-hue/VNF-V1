@@ -72,6 +72,7 @@ public final class HaruVisualRenderer{
   postureY+=(float)Math.min(8.0,bio.postureLoad*4.5+bio.fatigue*2.0+bio.dominantPain*2.6+bio.recoveryLoad*.8)+breath;
   postureX+=(float)Math.sin(anim*(17.0+bio.tremor*7.0))*Math.min(1.5f,(float)(bio.tremor*1.3+thermalTremor));
   rotation+=(float)Math.max(-1.3,Math.min(1.3,bio.gaitAsymmetry*1.05+Math.sin(anim*.55)*bio.dominantPain*.55));
+  if(HaruExpressionEngine.supports(v.state)){HaruExpressionEngine.Visual expression=HaruExpressionEngine.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));postureY+=(float)(expression.headDropPx*.42);postureX+=(float)(expression.gazeX*expression.intensity*.35);rotation+=(float)(expression.headTiltDeg*.18);}
 
   Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
   RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
