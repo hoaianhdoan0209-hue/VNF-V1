@@ -153,8 +153,11 @@ public final class HaruReasoningEngine {
  }
 
  private static void applyHypothesisEvidence(WorldState s,HypothesisState h,boolean support,double weight,MemoryEntry m,long now){
-  if(m==null||!hasMemory(s,m.memoryId))return;h.apply(support,weight,m.memoryId,now);
-  OpenQuestionState q=s.characterGod.openQuestions.get(h.questionId);if(q!=null){q.lastRevisitedAt=now;q.revisits++;if(h.evidenceCount>=3&&(h.confidence>=.76||h.confidence<=.24)){q.status="RESOLVED";q.resolvedAt=now;}else q.status="PARTIAL";}
+  if(m==null||!hasMemory(s,m.memoryId))return;double control=DopamineModulationEngine.logicalControl(s);String priorStatus=h.status;
+  double interpretedWeight=weight*(.62+.38*control);h.apply(support,interpretedWeight,m.memoryId,now);
+  boolean hold=control<.62&&!isSettled(priorStatus)&&("SUPPORTED".equals(h.status)||"DISFAVORED".equals(h.status));if(hold)h.status="ACTIVE";
+  OpenQuestionState q=s.characterGod.openQuestions.get(h.questionId);if(q!=null){q.lastRevisitedAt=now;q.revisits++;if(!hold&&control>=.62&&h.evidenceCount>=3&&(h.confidence>=.76||h.confidence<=.24)){q.status="RESOLVED";q.resolvedAt=now;}else q.status="PARTIAL";}
+  if(hold)addMetacognitiveHoldThought(s,h,m,now);
   if("REVISED".equals(h.status)){
    ThoughtState t=new ThoughtState("My earlier expectation about "+h.subjectId+" no longer fits the newer evidence.",
      "contradiction:"+h.id,"compare_concept",1.0-h.informationNeed(),.58,now);t.relatedMemories.add(m.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
@@ -224,6 +227,12 @@ public final class HaruReasoningEngine {
  private static String causeTypeFromText(String text){String x=text==null?"":text.toLowerCase(Locale.ROOT);if(x.contains("route")||x.contains("destination unreachable")||x.contains("no valid path"))return"ROUTE_CONSTRAINT";if(x.contains("target")&&x.contains("exist"))return"TARGET_UNAVAILABLE";if(x.contains("terrain"))return"TERRAIN_CONSTRAINT";if(x.contains("blocked")||x.contains("collision"))return"OBJECT_OBSTRUCTION";if(x.contains("action")||x.contains("interaction")||x.contains("unavailable"))return"ACTION_CONSTRAINT";return"";}
  private static String claimFor(String type,String detail){String d=detail==null?"":detail.trim();if("ROUTE_CONSTRAINT".equals(type))return"đường đi hoặc kết nối tới mục tiêu đã bị chặn/thay đổi"+suffix(d);if("OBJECT_OBSTRUCTION".equals(type))return"một vật cản vật lý đã chặn đường thực tế"+suffix(d);if("TERRAIN_CONSTRAINT".equals(type))return"địa hình thực tế vượt quá khả năng đi qua ở thời điểm đó"+suffix(d);if("TARGET_OR_ROUTE_CHANGED".equals(type))return"mục tiêu hoặc đường tới nó không còn như lúc lập kế hoạch"+suffix(d);if("TARGET_UNAVAILABLE".equals(type))return"mục tiêu cần thiết không còn khả dụng"+suffix(d);if("ACTION_CONSTRAINT".equals(type))return"hành động dự kiến không thể hoàn tất trong điều kiện thực tế"+suffix(d);return"có một nguyên nhân chưa xác định"+suffix(d);}
  private static String suffix(String d){return d==null||d.isEmpty()?".":" ("+d+").";}
+
+ private static boolean isSettled(String status){return "SUPPORTED".equals(status)||"DISFAVORED".equals(status);}
+ private static void addMetacognitiveHoldThought(WorldState s,HypothesisState h,MemoryEntry m,long now){
+  String trigger="metacognitive_hold:"+h.id;for(int i=Math.max(0,s.thoughts.size()-8);i<s.thoughts.size();i++){ThoughtState old=s.thoughts.get(i);if(old!=null&&trigger.equals(old.trigger))return;}
+  ThoughtState t=new ThoughtState("Mình đang bị cuốn mạnh bởi cảm giác/phần thưởng lúc này. Bằng chứng vẫn đáng nhớ, nhưng mình chưa nên chốt kết luận cho tới khi đầu óc ổn định hơn.",trigger,"reflect",.76,.50,now);t.relatedMemories.add(m.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
+ }
 
  private static GeneralRuleState rule(WorldState s,String id,String statement){
   GeneralRuleState r=s.characterGod.reasoning.rules.get(id);if(r==null){r=new GeneralRuleState();r.id=id;r.statement=statement;s.characterGod.reasoning.rules.put(id,r);}return r;
