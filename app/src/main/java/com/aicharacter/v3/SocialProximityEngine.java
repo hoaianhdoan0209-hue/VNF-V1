@@ -48,10 +48,10 @@ public final class SocialProximityEngine {
  }
 
  public static String complete(WorldState s,PlanState p,long now){
-  if(s==null||p==null)return"social spacing completed";double distance=Math.abs(s.haruX-s.catState.x);SocialProximityState st=s.socialProximity;st.lastCompletedAt=now;st.lastObservedDistance=distance;st.activePlanId="";
+  if(s==null||p==null)return"social spacing completed";boolean perceived=s.catState!=null&&s.catState.awake&&GirlCatSearchEngine.canPerceiveCat(s);double distance=perceived?Math.abs(s.haruX-s.catState.x):Double.NaN;SocialProximityState st=s.socialProximity;st.lastCompletedAt=now;if(Double.isFinite(distance))st.lastObservedDistance=distance;st.activePlanId="";
   String outcome="settled at a self-chosen "+st.mode.toLowerCase()+" social distance after a locally perceived encounter";
   s.haruActivity="GUARDED".equals(st.mode)?"staying nearby while keeping comfortable space":"APPROACH".equals(st.mode)?"settling a little nearer the cat":"sharing the area without forcing closeness";
-  WorldEventBus.publishId(s,now,"social_spacing_done_"+p.planId,"HARU_SOCIAL_SPACING_COMPLETED",p.planId,"mode="+st.mode+" resultingDistance="+fmt(distance));
+  WorldEventBus.publishId(s,now,"social_spacing_done_"+p.planId,"HARU_SOCIAL_SPACING_COMPLETED",p.planId,"mode="+st.mode+(perceived?" resultingPerceivedDistance="+fmt(distance):" catNoLongerLocallyPerceived=true"));
   return outcome;
  }
 
@@ -60,7 +60,7 @@ public final class SocialProximityEngine {
  }
 
  public static boolean shouldOrientToCat(WorldState s){
-  if(s==null||s.catState==null||s.world==null||"girl".equals(s.catState.attachedToEntity))return false;WorldArea ga=s.world.areaAt(s.haruX),ca=s.world.areaAt(s.catState.x);if(ga==null||ca==null||!ga.id.equals(ca.id))return false;double d=Math.abs(s.haruX-s.catState.x);return d<=320&&(GirlCatSearchEngine.canPerceiveCat(s)||(s.socialProximity!=null&&s.socialProximity.lastEvaluatedAt>0));
+  if(s==null||s.catState==null||s.world==null||"girl".equals(s.catState.attachedToEntity))return false;return s.catState.awake&&GirlCatSearchEngine.canPerceiveCat(s);
  }
  public static double gazeEngagement(WorldState s){
   if(s==null)return 0;double warm=warmth(s),guard=guardedness(s);double curiosity=s.emotion==null?0:cl01(s.emotion.curiosity),joy=s.emotion==null?0:cl01(s.emotion.joy);return cl01(.24+warm*.58+curiosity*.16+joy*.10-guard*.62);
