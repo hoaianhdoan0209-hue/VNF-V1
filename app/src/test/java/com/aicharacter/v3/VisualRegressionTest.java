@@ -39,7 +39,7 @@ public final class VisualRegressionTest{
     assertTrue("manifest lost "+id,manifest.contains("\"id\": \""+id+"\""));
    }
   }
-  assertTrue(renderer.contains("drawLayer(c,area+\"_foreground\",cam,1.06f)"));
+  assertTrue(renderer.contains("drawForegroundLayer(c,area+\"_foreground\",cam)"));
   assertTrue(renderer.contains("VisualRegressionContract.layerShift(cam,parallax,viewportWorldW)"));
  }
 
