@@ -71,6 +71,9 @@ public final class VisualRegressionTest{
   String haru=read(app.resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
   String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   assertTrue(divine.contains("drawAtmosphericField"));
+  assertTrue(divine.contains("drawDepthVeil"));
+  assertTrue(divine.contains("drawPresenceCore"));
+  assertTrue(divine.contains("drawConstellationThreads"));
   assertTrue(divine.contains("drawLightColumn"));
   assertTrue(divine.contains("drawFloorEcho"));
   assertTrue(divine.contains("drawHaloLattice"));
@@ -79,6 +82,8 @@ public final class VisualRegressionTest{
   assertTrue(scene.contains("THẦN // VNF"));
   assertTrue(scene.contains("KÊNH HIỆN DIỆN"));
   assertTrue(haru.contains("drawCloseSubjectLight"));
+  assertTrue(haru.contains("drawLayeredContactShadow"));
+  assertTrue(haru.contains("drawClosePortraitGrade"));
   assertTrue(haru.contains("PorterDuff.Mode.SRC_IN"));
   assertTrue(haru.contains("cameraZoom"));
   assertTrue(game.contains("anim,visualZoom"));
