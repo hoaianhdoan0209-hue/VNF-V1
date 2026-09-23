@@ -55,8 +55,8 @@ public final class HaruReasoningEngine {
   ensure(s);String id="hyp_revisit_"+clean(q.aboutObjectId);HypothesisState existing=s.characterGod.reasoning.hypotheses.get(id);if(existing!=null)return existing;
   WorldObject o=s.world.object(q.aboutObjectId);if(o==null||!isSeen(view,o.id))return null;
   HypothesisState h=new HypothesisState();h.id=id;h.questionId=q.questionId;h.subjectId=o.id;h.expectedAreaId=view.areaId;
-  h.proposition="Returning to "+view.areaId+" under good viewing conditions will probably let me encounter "+label(o)+" again and learn from another observation.";
-  h.alternative="The earlier sighting of "+label(o)+" may have been incidental, so returning may not provide the same evidence.";
+  h.proposition="Nếu mình quay lại "+view.areaId+" khi có thể quan sát rõ, mình có lẽ sẽ gặp lại "+label(o)+" và có thêm bằng chứng.";
+  h.alternative="Lần thấy "+label(o)+" trước đó có thể chỉ là tình cờ, nên quay lại chưa chắc cho mình cùng loại bằng chứng.";
   h.createdAt=now;h.updatedAt=now;h.confidence=.5;s.characterGod.reasoning.hypotheses.put(h.id,h);
   MemoryEntry seed=CognitionEngine.experience(s,now,"self_question",
     "She compared two possibilities about "+o.id+": a repeatable local pattern versus an incidental sighting.",.04,.44,
@@ -96,6 +96,9 @@ public final class HaruReasoningEngine {
   boolean success="COMPLETED".equals(p.status);
   if(pred!=null&&"PENDING".equals(pred.status)){
    pred.status=success?"CONFIRMED":"DISCONFIRMED";pred.outcomeMemoryId=outcome.memoryId;pred.resolvedAt=now;
+   if(!success&&!pred.subjectId.isEmpty()){
+    String qid="q_prediction_"+clean(pred.id);if(!s.characterGod.openQuestions.containsKey(qid)){OpenQuestionState q=new OpenQuestionState();q.questionId=qid;q.topic="prediction:"+pred.planId;q.aboutObjectId=s.world!=null&&s.world.object(pred.subjectId)!=null?pred.subjectId:"";q.question="Vì sao kết quả thực tế khác với điều mình vừa dự đoán?";q.reason="a prediction did not match the causal outcome";q.createdAt=now;q.lastRevisitedAt=now;s.characterGod.openQuestions.put(qid,q);}
+   }
   }
 
   if("WORLD_AFFORDANCE".equals(p.origin)){
