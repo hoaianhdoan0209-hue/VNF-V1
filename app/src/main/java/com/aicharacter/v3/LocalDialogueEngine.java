@@ -56,6 +56,8 @@ public final class LocalDialogueEngine {
             return pick(s,raw,"Mình có thể biết một chút, nhưng không muốn đoán bừa. Cậu đang hỏi phần nào?","Mình chưa chắc cậu muốn hỏi điều gì về nó. Nói cụ thể hơn được không?");
         }
         if(containsAny(q,"tại sao","vì sao","sao lại","why")){
+            String reasoning=HaruReasoningEngine.currentReasoningSummary(s);
+            if(!reasoning.isEmpty())return reasoning;
             if(s.currentIntention!=null && !s.currentIntention.isEmpty())
                 return pick(s,raw,"Mình có lý do của mình, nhưng chưa chắc mình hiểu hết nó. Lúc này mình đang muốn "+naturalizeActivity(s.currentIntention)+".","Chắc vì mấy chuyện vừa xảy ra cộng với cảm giác hiện tại. Mình chưa muốn biến nó thành một lý do quá chắc chắn.");
         }

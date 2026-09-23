@@ -5,6 +5,7 @@ on:
     branches:
       - mong/god-session-ui
       - integration/v1.0.1
+      - team/haru-intelligence-v1
   workflow_dispatch:
 
 jobs:
