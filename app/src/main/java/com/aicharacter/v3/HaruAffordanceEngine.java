@@ -46,13 +46,14 @@ public final class HaruAffordanceEngine {
   HaruReasoningEngine.attachReasoningToPlan(s,p,now);
   s.planState=p;s.currentIntention="affordance_inquiry";s.persistentIntentionTarget=o.id;s.intentionStartedAt=now;s.haruActivity="following up on something she noticed";
   boolean started=TravelEngine.start(s,s.girlTravel,"girl",o.areaId,p.planId,now);
-  if(!started){p.status="FAILED";p.lastOutcome="affordance route unavailable";p.lastProgressAt=now;s.currentIntention="";s.persistentIntentionTarget="";return false;}
+  if(!started){p.status="FAILED";p.lastOutcome="affordance route unavailable";p.lastProgressAt=now;s.currentIntention="";s.persistentIntentionTarget="";PlanExecutor.learnTerminalOutcome(s,p,now,"affordance_route_failed",p.lastOutcome,true);return false;}
   WorldEventBus.publishId(s,now,"aff_goal_"+p.planId,"HARU_GOAL_FORMED",o.id,"Haru formed a goal from a visible world affordance.");
   return true;
  }
 
  public static void reviewPlan(WorldState s,PlanState p,MemoryEntry outcome,long now){
   if(s==null||p==null||outcome==null||!"WORLD_AFFORDANCE".equals(p.origin))return;ensure(s);
+  if(!"COMPLETED".equals(p.status))return;
   String concept="world:"+p.destination;ConceptKnowledgeState k=s.characterGod.conceptKnowledge.computeIfAbsent(concept,x->{ConceptKnowledgeState z=new ConceptKnowledgeState();z.concept=x;return z;});
   WorldObject o=s.world==null?null:s.world.object(p.destination);String claim=o==null?p.destination:label(o);
   k.applyEvidence(claim,1,.55,"VNF_WORLD_TRUTH","memory:"+outcome.memoryId,outcome.memoryId,now);
