@@ -168,6 +168,24 @@ public final class HaruReasoningEngineTest {
   assertEquals("SUPPORTED",h.status);assertEquals("RESOLVED",q.status);
  }
 
+ @Test public void HaruLearnsThatOverdriveCanMakeHerOverconfident() throws Exception{
+  WorldState s=state();s.beliefStates.put("plan_outcome:affordance_inquiry",new BeliefState("plan_outcome:affordance_inquiry","usually_succeeds",.90));
+  for(int i=0;i<3;i++){
+   DopamineModulationEngine.pulse(s,1.0,"calibration_reward_"+i,2000L+i*200);DopamineModulationEngine.pulse(s,1.0,"calibration_reward_"+i,2001L+i*200);
+   PlanState p=reasoningPlan(s,"calibration_miss_"+i,"mystery_flora","",2100L+i*200);PredictionState pred=s.characterGod.reasoning.predictions.get(p.predictionId);assertTrue(pred.overdriveAtPrediction>.20);assertTrue(pred.confidence>=.68);
+   p.status="FAILED";MemoryEntry m=CognitionEngine.experience(s,2150L+i*200,"planned_action_outcome","overconfident prediction failed "+i,-.16,.55,"failure");HaruReasoningEngine.reviewPlanOutcome(s,p,m,2150L+i*200);
+  }
+  MetacognitiveCalibrationState cal=s.characterGod.reasoning.calibration;assertTrue(cal.learnedOverdriveRisk());assertTrue(cal.overdriveOverconfidentMisses>=3);assertTrue(cal.cautionAdjustment()>0);
+  assertTrue(s.thoughts.stream().anyMatch(t->"self_calibration:dopamine_overdrive".equals(t.trigger)));
+
+  WorldState naive=state();naive.beliefStates.put("plan_outcome:affordance_inquiry",new BeliefState("plan_outcome:affordance_inquiry","usually_succeeds",.90));DopamineModulationEngine.pulse(naive,1.0,"naive",5000L);DopamineModulationEngine.pulse(naive,1.0,"naive",5001L);
+  PlanState naivePlan=reasoningPlan(naive,"naive_prediction","mystery_flora","",5100L);double naiveConfidence=naive.characterGod.reasoning.predictions.get(naivePlan.predictionId).confidence;
+  DopamineModulationEngine.pulse(s,1.0,"learned_retry",5000L);DopamineModulationEngine.pulse(s,1.0,"learned_retry",5001L);PlanState calibrated=reasoningPlan(s,"calibrated_prediction","mystery_flora","",5100L);PredictionState cp=s.characterGod.reasoning.predictions.get(calibrated.predictionId);
+  assertTrue(cp.confidence<naiveConfidence);assertTrue(cp.confidence>=.18);assertTrue(cp.dopamineAtPrediction>0);assertTrue(cp.logicalControlAtPrediction<1);
+
+  WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.calibration.learnedOverdriveRisk());PredictionState xp=x.characterGod.reasoning.predictions.get(cp.id);assertEquals(cp.overdriveAtPrediction,xp.overdriveAtPrediction,.000001);assertEquals(cp.logicalControlAtPrediction,xp.logicalControlAtPrediction,.000001);
+ }
+
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
   WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
