@@ -40,17 +40,18 @@ final class HypothesisState {
  public final List<String> evidenceMemoryIds=new ArrayList<>();
 
  public void apply(boolean supports,double weight,String memoryId,long now){
+  if(memoryId!=null&&!memoryId.isEmpty()&&evidenceMemoryIds.contains(memoryId))return;
   double w=Double.isFinite(weight)?Math.max(.02,Math.min(1.5,weight)):.1;
-  double before=confidence;if(supports)supportWeight+=w;else contradictionWeight+=w;
+  double before=confidence;String prior=status;if(supports)supportWeight+=w;else contradictionWeight+=w;
   confidence=clamp((1.0+supportWeight)/(2.0+supportWeight+contradictionWeight));
   evidenceCount++;updatedAt=now;lastEvidenceAt=now;
-  if(memoryId!=null&&!memoryId.isEmpty()&&!evidenceMemoryIds.contains(memoryId)){evidenceMemoryIds.add(memoryId);while(evidenceMemoryIds.size()>24)evidenceMemoryIds.remove(0);}
-  String prior=status;
-  if(confidence>=.72&&supportWeight>=1.0)status="SUPPORTED";
+  if(memoryId!=null&&!memoryId.isEmpty()){evidenceMemoryIds.add(memoryId);while(evidenceMemoryIds.size()>24)evidenceMemoryIds.remove(0);}
+  boolean revised=("SUPPORTED".equals(prior)&&!supports&&confidence<.68)||("DISFAVORED".equals(prior)&&supports&&confidence>.32);
+  if(revised){status="REVISED";revisionCount++;}
+  else if("REVISED".equals(prior)&&confidence>.32&&confidence<.72)status="REVISED";
+  else if(confidence>=.72&&supportWeight>=1.0)status="SUPPORTED";
   else if(confidence<=.32&&contradictionWeight>=1.0)status="DISFAVORED";
   else status="ACTIVE";
-  if("SUPPORTED".equals(prior)&&confidence<.48){status="REVISED";revisionCount++;}
-  if("DISFAVORED".equals(prior)&&confidence>.52){status="REVISED";revisionCount++;}
   if(Math.abs(confidence-before)>.0001)updatedAt=now;
  }
  public double informationNeed(){return 1.0-Math.min(1.0,Math.abs(confidence-.5)*2.0);}
