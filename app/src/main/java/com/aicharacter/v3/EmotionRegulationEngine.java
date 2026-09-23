@@ -10,7 +10,7 @@ public final class EmotionRegulationEngine {
  public static void advance(WorldState s,double seconds,long now){
   if(s==null||seconds<=0)return;if(s.emotion==null)s.emotion=new EmotionState();if(s.mood==null)s.mood=new MoodState();
   EmotionAppraisalEngine.observeBody(s,now);
-  double minutes=Math.min(seconds/60.0,360),reg=regulationStrength(s),joy=0,fear=0,sad=0,anger=0,curiosity=0,lonely=0,relief=0,weight=0;
+  double minutes=Math.min(seconds/60.0,360),reg=regulationStrength(s,now),joy=0,fear=0,sad=0,anger=0,curiosity=0,lonely=0,relief=0,weight=0;
   for(EmotionEpisodeState x:s.emotionEpisodes){
    if(x==null||!"ACTIVE".equals(x.status))continue;double persistence=persistence(s,x,now),tau=halfLifeMinutes(x.primaryEmotion)*(1+.85*persistence),decay=Math.exp(-minutes/Math.max(2,tau));
    double regulationFactor=Math.max(.35,1-reg*.48);x.intensity=cl01(x.intensity*Math.pow(decay,regulationFactor));x.updatedAt=Math.max(x.updatedAt,now);
@@ -26,10 +26,10 @@ public final class EmotionRegulationEngine {
   if(s.mood!=null){double arousalTarget=clSigned(Math.max(targetFear,targetAnger)*.75+body*.45-targetCalm*.22);s.mood.arousal=mixSigned(s.mood.arousal,arousalTarget,follow*.55);s.mood.pleasantness=mixSigned(s.mood.pleasantness,clSigned(targetJoy*.55-targetSad*.42-targetFear*.25-targetAnger*.18),follow*.28);s.mood.loneliness=mixSigned(s.mood.loneliness,targetLonely,follow*.40);s.mood.normalize();}
  }
 
- public static double regulationStrength(WorldState s){
+ public static double regulationStrength(WorldState s,long now){
   if(s==null)return 0;double r=.08+(s.personality==null?0:s.personality.patience*.18)+(s.emotion==null?0:s.emotion.calm*.14);String id=s.currentIntention==null?"":s.currentIntention;
   if("quiet_pause".equals(id)||"reflect".equals(id))r+=.34;if("recover".equals(id)||"seek_shelter".equals(id))r+=.24;if("sleep".equals(id))r+=.38;
-  if(s.relationship!=null&&s.lastCatSeenAt>0&&System.currentTimeMillis()-s.lastCatSeenAt<10L*60L*1000L)r+=cl01(s.relationship.comfort/100.0)*.08;
+  if(s.relationship!=null&&s.lastCatSeenAt>0&&now>=s.lastCatSeenAt&&now-s.lastCatSeenAt<10L*60L*1000L)r+=cl01(s.relationship.comfort/100.0)*.08;
   return cl01(r);
  }
 
