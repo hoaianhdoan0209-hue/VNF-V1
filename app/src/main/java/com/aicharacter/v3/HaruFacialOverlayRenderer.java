@@ -7,10 +7,10 @@ import android.graphics.*;
  * It only decorates stable front-facing poses and never mutates world state.
  */
 public final class HaruFacialOverlayRenderer {
- private static final int SKIN=Color.rgb(239,190,147);
- private static final int EYE_WHITE=Color.rgb(245,225,200);
- private static final int INK=Color.rgb(67,45,43);
- private static final int CHEEK=Color.rgb(203,104,102);
+ private static final int SKIN=Color.rgb(244,207,166);
+ private static final int EYE_WHITE=Color.rgb(252,225,188);
+ private static final int INK=Color.rgb(75,46,43);
+ private static final int CHEEK=Color.rgb(194,137,101);
  private HaruFacialOverlayRenderer(){}
 
  public static void draw(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual pose,RectF dst){
@@ -20,7 +20,7 @@ public final class HaruFacialOverlayRenderer {
   float unit=dst.width()/Math.max(1f,HaruVisualRenderer.authoredFrameWidth());
   float cx=dst.left+dst.width()*.515f,cy=dst.top+dst.height()*.230f+(float)v.headDropPx*unit;
   float eyeY=cy-6.0f*unit,eyeDx=5.4f*unit,mouthY=cy+6.0f*unit;
-  int oldAlpha=p.getAlpha();Paint.Style oldStyle=p.getStyle();float oldStroke=p.getStrokeWidth();ColorFilter oldFilter=p.getColorFilter();boolean oldAA=p.isAntiAlias();
+  int oldAlpha=p.getAlpha();Paint.Style oldStyle=p.getStyle();Paint.Cap oldCap=p.getStrokeCap();float oldStroke=p.getStrokeWidth();ColorFilter oldFilter=p.getColorFilter();boolean oldAA=p.isAntiAlias();
   p.setShader(null);p.setColorFilter(null);p.setAntiAlias(false);p.setStyle(Paint.Style.FILL);p.setAlpha(255);
   c.save();c.rotate((float)v.headTiltDeg,cx,cy);
 
@@ -30,7 +30,7 @@ public final class HaruFacialOverlayRenderer {
   drawMouth(c,p,cx,mouthY,unit,v);
   drawCheeks(c,p,cx,cy,unit,v);
 
-  c.restore();p.setAlpha(oldAlpha);p.setStyle(oldStyle);p.setStrokeWidth(oldStroke);p.setColorFilter(oldFilter);p.setAntiAlias(oldAA);
+  c.restore();p.setAlpha(oldAlpha);p.setStyle(oldStyle);p.setStrokeWidth(oldStroke);p.setStrokeCap(oldCap);p.setColorFilter(oldFilter);p.setAntiAlias(oldAA);
  }
 
  private static void drawEye(Canvas c,Paint p,float x,float y,float u,HaruExpressionEngine.Visual v){
