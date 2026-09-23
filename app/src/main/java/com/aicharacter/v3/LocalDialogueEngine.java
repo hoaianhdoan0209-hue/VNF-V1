@@ -16,10 +16,9 @@ public final class LocalDialogueEngine {
         double closeness=relationshipWarmth(s);
         double tension=relationshipTension(s);
 
-        if(s.body!=null && s.body.pain>20)
-            return pick(s,raw,"Mình nghe cậu, nhưng chỗ đau đang làm mình khó tập trung.","Ừ… mình nghe. Cho mình ngồi yên một chút đã, đau quá.");
-        if(s.body!=null && s.body.energy<22)
-            return pick(s,raw,"Mình vẫn nghe đây. Chỉ là hôm nay đầu mình chậm hơn bình thường một chút.","Ừ. Mình hơi đuối, nên có thể trả lời chậm một chút nhé.");
+        // Do not let pain or fatigue hijack the meaning of a concrete question.
+        // Explicit health questions are handled by health(); for generic small talk
+        // body state is allowed to color the reply only after semantic intents below.
         if(tension>32)
             return pick(s,raw,"Mình nghe. Nhưng chuyện trước đó vẫn còn làm mình khó chịu.","Ừ, mình nghe thấy. Mình chưa muốn giả vờ như mọi thứ đã bình thường đâu.");
 
@@ -98,6 +97,14 @@ public final class LocalDialogueEngine {
             if(t!=null && t.uncertainty>.62)
                 return pick(s,raw,"Mình chưa chắc mình hiểu đúng ý cậu.","Khoan, ý cậu là thế nào? Mình không muốn tự đoán rồi hiểu sai.");
         }
+
+        // Only fall back to body-state remarks when the player's message did not
+        // match a concrete conversational intent above. This keeps pain causal
+        // without making every unrelated question receive the same pain sentence.
+        if(s.body!=null && s.body.pain>20)
+            return pick(s,raw,"Mình nghe cậu, nhưng chỗ đau vẫn đang làm mình khó tập trung.","Ừ… mình nghe. Cho mình ngồi yên một chút đã, mình vẫn còn đau.");
+        if(s.body!=null && s.body.energy<22)
+            return pick(s,raw,"Mình vẫn nghe đây. Chỉ là hôm nay đầu mình chậm hơn bình thường một chút.","Ừ. Mình hơi đuối, nên có thể trả lời chậm một chút nhé.");
 
         if(s.emotion!=null && s.emotion.curiosity>.52)
             return pick(s,raw,"Hửm? Cái đó làm mình để ý đấy.","Khoan, nghe thú vị đấy. Cậu nói rõ hơn một chút được không?");
