@@ -80,6 +80,7 @@ public final class HaruReasoningEngineTest {
 
  @Test public void predictionErrorBuildsGroundedCompetingCauseExplanations() throws Exception{
   WorldState s=state();PlanState p=reasoningPlan(s,"route_cause","mystery_flora","",1000L);p.origin="WORLD_AFFORDANCE";s.planState=p;
+  s.girlTravel.currentPlanId=p.planId;s.girlTravel.travelMode="ROUTE";s.girlTravel.routeIndex=0;s.girlTravel.route.add("test_area");s.girlTravel.route.add("other_area");
   WorldEventBus.publishId(s,1100L,"evt_route_block","ROUTE_BLOCKED",p.planId,"current connection invalid/topology changed");
   p.status="FAILED";p.lastOutcome="route invalid; no alternate path";
   MemoryEntry m=CognitionEngine.experience(s,1200L,"travel_failed","route invalid; no alternate path",-.12,.55,"failure","plan_terminal");
@@ -94,8 +95,11 @@ public final class HaruReasoningEngineTest {
   PlanState retry=reasoningPlan(s,"route_retry","mystery_flora","",1300L);retry.origin="WORLD_AFFORDANCE";retry.status="COMPLETED";retry.actionResolvedAt=1400L;
   MemoryEntry m2=CognitionEngine.experience(s,1400L,"planned_action_outcome","retry reached the target without a route block",.12,.50,"success");
   HaruReasoningEngine.reviewPlanOutcome(s,retry,m2,1400L);
-  assertEquals("SUPPORTED",route.status);assertTrue(route.counterfactualChecks>=1);assertTrue(route.evidenceMemoryIds.contains(m2.memoryId));
-  WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);assertEquals(route.testablePrediction,x.characterGod.reasoning.causalExplanations.get(route.id).testablePrediction);
+  assertEquals("SUPPORTED",route.status);assertTrue(route.counterfactualChecks>=1);assertTrue(route.evidenceMemoryIds.contains(m2.memoryId));assertEquals("test_area->other_area",route.contextKey);
+  WorldConnection learnedEdge=new WorldConnection("test_area","other_area",88,112,.05,.8,"walk");double neutralCost=WorldPathPlanner.cost(state(),learnedEdge,"girl"),learnedCost=WorldPathPlanner.cost(s,learnedEdge,"girl");assertTrue(learnedCost>neutralCost);assertTrue(HaruReasoningEngine.causalRoutePenalty(s,learnedEdge)>0);
+  PlanState future=new PlanState();future.planId="future_retry";future.intentionId="affordance_inquiry";future.goal="learn from observation";future.destination="mystery_flora";future.origin="WORLD_AFFORDANCE";future.status="ACTIVE";future.commitment=.6;future.createdAt=1500L;future.steps.add("TRAVEL:test_area");HaruReasoningEngine.attachReasoningToPlan(s,future,1500L);
+  assertEquals(route.id,future.causalAdaptationId);assertEquals("PREFER_ALTERNATE_ROUTE",future.adaptationPolicy);assertTrue(future.steps.stream().anyMatch(x->x.startsWith("ADAPT_CAUSE:")));
+  s.planState=future;WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);assertEquals(route.testablePrediction,x.characterGod.reasoning.causalExplanations.get(route.id).testablePrediction);assertEquals(route.id,x.planState.causalAdaptationId);assertEquals("PREFER_ALTERNATE_ROUTE",x.planState.adaptationPolicy);
  }
 
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
