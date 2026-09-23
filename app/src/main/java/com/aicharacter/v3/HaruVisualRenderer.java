@@ -101,6 +101,7 @@ public final class HaruVisualRenderer{
   if(s.environment!=null&&"RAIN".equals(s.environment.weather)){localColor=Color.rgb(137,176,197);localAlpha=Math.max(localAlpha,20);}
   if(localAlpha>0){p.setColorFilter(new PorterDuffColorFilter(localColor,PorterDuff.Mode.SRC_ATOP));p.setAlpha(Math.min(52,localAlpha));c.drawBitmap(sheet,src,dst,p);p.setColorFilter(null);}
   p.setAlpha(255);
+  HaruFacialOverlayRenderer.draw(c,p,s,v,dst);
   c.restore();
  }
 
