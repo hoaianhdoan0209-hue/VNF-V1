@@ -5,6 +5,7 @@ on:
     branches:
       - mong/god-session-ui
       - integration/v1.0.1
+      - phone-test/v1.0.1-rc2
   workflow_dispatch:
 
 jobs:
