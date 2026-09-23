@@ -116,6 +116,15 @@ public final class HaruReasoningEngine {
   return Math.max(0,Math.min(.16,(r.confidence-.65)*.34+.04));
  }
 
+ /** Expected information gain: uncertainty creates a reason to test; resolved hypotheses stop consuming attention. */
+ public static double informationGainBias(WorldState s,String subjectId){
+  if(s==null||subjectId==null||s.characterGod==null||s.characterGod.reasoning==null)return 0;
+  HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_"+clean(subjectId));
+  if(h==null)return 0;
+  if("SUPPORTED".equals(h.status)||"DISFAVORED".equals(h.status))return -.10;
+  return Math.max(0,Math.min(.22,h.informationNeed()*.22));
+ }
+
  public static String currentReasoningSummary(WorldState s){
   if(s==null||s.characterGod==null||s.characterGod.reasoning==null)return"";
   HypothesisState best=null;for(HypothesisState h:s.characterGod.reasoning.hypotheses.values())if(h!=null&&(best==null||h.updatedAt>best.updatedAt))best=h;
