@@ -30,5 +30,5 @@ public final class NeuroModulationState {
   return n;
  }
  private static double finite(double v,double fallback){return Double.isFinite(v)?v:fallback;}
- private static double cl(double v){return Math.max(0,Math.min(1,v));}
+ private static double cl(double v){return Double.isFinite(v)?Math.max(0,Math.min(1,v)):0;}
 }
