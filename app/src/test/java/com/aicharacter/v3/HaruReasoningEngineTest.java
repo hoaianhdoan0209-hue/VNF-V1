@@ -11,7 +11,7 @@ public final class HaruReasoningEngineTest {
   assertTrue(s.characterGod.openQuestions.containsKey("q_world_mystery_flora"));
   HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
-  assertNotNull(h);assertFalse(h.proposition.isEmpty());assertFalse(h.alternative.isEmpty());assertNotEquals(h.proposition,h.alternative);
+  assertNotNull(h);assertFalse(h.proposition.isEmpty());assertFalse(h.alternative.isEmpty());assertNotEquals(h.proposition,h.alternative);assertTrue(HaruReasoningEngine.informationGainBias(s,"mystery_flora")>0);
   assertFalse(h.evidenceMemoryIds.isEmpty());
   assertTrue(HaruAffordanceEngine.beginPlanIfCompelling(s,1100L));
   assertEquals(h.id,s.planState.reasoningHypothesisId);assertFalse(s.planState.predictionId.isEmpty());
@@ -48,7 +48,7 @@ public final class HaruReasoningEngineTest {
    p.status="COMPLETED";MemoryEntry m=CognitionEngine.experience(s,2100L+i*100,"planned_action_outcome","repeat observation "+i,.1,.5,"reasoning");
    HaruReasoningEngine.reviewPlanOutcome(s,p,m,2100L+i*100);
   }
-  assertEquals("SUPPORTED",h.status);double before=h.confidence;
+  assertEquals("SUPPORTED",h.status);assertTrue(HaruReasoningEngine.informationGainBias(s,"mystery_flora")<0);double before=h.confidence;
   s.world.object("mystery_flora").enabled=false;
   long later=h.lastEvidenceAt+6L*60L*1000L;HaruReasoningEngine.observe(s,later);
   assertTrue(h.confidence<before);assertEquals("REVISED",h.status);assertTrue(h.revisionCount>=1);
