@@ -87,11 +87,15 @@ public final class HaruReasoningEngineTest {
   PredictionState pred=s.characterGod.reasoning.predictions.get(p.predictionId);assertEquals("DISCONFIRMED",pred.status);
   CausalExplanationState route=s.characterGod.reasoning.causalExplanations.get("cause_"+pred.id+"_ROUTE_CONSTRAINT");
   CausalExplanationState unknown=s.characterGod.reasoning.causalExplanations.get("cause_"+pred.id+"_UNKNOWN_FACTOR");
-  assertNotNull(route);assertNotNull(unknown);assertEquals("SUPPORTED",route.status);assertTrue(route.confidence>unknown.confidence);
+  assertNotNull(route);assertNotNull(unknown);assertEquals("TENTATIVE",route.status);assertTrue(route.confidence>unknown.confidence);assertFalse(route.testablePrediction.isEmpty());
   assertTrue(route.evidenceEventIds.stream().anyMatch(x->x.startsWith("evt_route_block|")));
   assertTrue(HaruReasoningEngine.currentReasoningSummary(s).contains("đường đi"));
   assertFalse(s.characterGod.reasoning.rules.containsKey("rule:safe_revisit_reduces_uncertainty"));
-  WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);
+  PlanState retry=reasoningPlan(s,"route_retry","mystery_flora","",1300L);retry.origin="WORLD_AFFORDANCE";retry.status="COMPLETED";retry.actionResolvedAt=1400L;
+  MemoryEntry m2=CognitionEngine.experience(s,1400L,"planned_action_outcome","retry reached the target without a route block",.12,.50,"success");
+  HaruReasoningEngine.reviewPlanOutcome(s,retry,m2,1400L);
+  assertEquals("SUPPORTED",route.status);assertTrue(route.counterfactualChecks>=1);assertTrue(route.evidenceMemoryIds.contains(m2.memoryId));
+  WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);assertEquals(route.testablePrediction,x.characterGod.reasoning.causalExplanations.get(route.id).testablePrediction);
  }
 
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
