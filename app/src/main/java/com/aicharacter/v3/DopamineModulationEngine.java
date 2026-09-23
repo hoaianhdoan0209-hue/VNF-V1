@@ -52,7 +52,7 @@ public final class DopamineModulationEngine {
   if("seek_shelter".equals(id)||"recover".equals(id)||"sleep".equals(id))return cl(Math.max(n.safety,n.rest)/100.0);
   return 0;
  }
- private static double immediateReward(String id){if(id==null)return 0;if("eat".equals(id)||"drink".equals(id)||"toilet".equals(id)||"find_cat".equals(id))1.0;if("explore_garden".equals(id)||"observe_lake".equals(id)||"watch_reedling".equals(id))return.72;if("quiet_pause".equals(id)||"reflect".equals(id))return.22;return 0;}
+ private static double immediateReward(String id){if(id==null)return 0;if("eat".equals(id)||"drink".equals(id)||"toilet".equals(id)||"find_cat".equals(id))return 1.0;if("explore_garden".equals(id)||"observe_lake".equals(id)||"watch_reedling".equals(id))return.72;if("quiet_pause".equals(id)||"reflect".equals(id))return.22;return 0;}
  private static double decisionNoise(String id,long now){long bucket=now/12000L,z=bucket*2862933555777941757L+(id==null?0:id.hashCode()*7046029254386353131L);z^=z>>>29;return((Math.abs(z)%2001)/1000.0)-1.0;}
  private static double sum(Map<String,Double>m){double v=0;for(double x:m.values())if(Double.isFinite(x))v+=x;return v;}
  private static void recompute(WorldState s,NeuroModulationState n){double d=n.dopamine(),over=n.overdrive(),ar=s.mood==null?0:cl(Math.abs(s.mood.arousal));n.rewardSalience=cl(.22+d*.58+over*.18);n.executiveNoise=cl(over*(.46+.42*ar));n.instinctBias=cl(over*(.58+.32*ar));}
