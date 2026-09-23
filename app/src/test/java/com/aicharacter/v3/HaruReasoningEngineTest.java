@@ -78,6 +78,22 @@ public final class HaruReasoningEngineTest {
   assertTrue(PlanCausalAudit.valid(s,p));
  }
 
+ @Test public void predictionErrorBuildsGroundedCompetingCauseExplanations() throws Exception{
+  WorldState s=state();PlanState p=reasoningPlan(s,"route_cause","mystery_flora","",1000L);p.origin="WORLD_AFFORDANCE";s.planState=p;
+  WorldEventBus.publishId(s,1100L,"evt_route_block","ROUTE_BLOCKED",p.planId,"current connection invalid/topology changed");
+  p.status="FAILED";p.lastOutcome="route invalid; no alternate path";
+  MemoryEntry m=CognitionEngine.experience(s,1200L,"travel_failed","route invalid; no alternate path",-.12,.55,"failure","plan_terminal");
+  HaruReasoningEngine.reviewPlanOutcome(s,p,m,1200L);
+  PredictionState pred=s.characterGod.reasoning.predictions.get(p.predictionId);assertEquals("DISCONFIRMED",pred.status);
+  CausalExplanationState route=s.characterGod.reasoning.causalExplanations.get("cause_"+pred.id+"_ROUTE_CONSTRAINT");
+  CausalExplanationState unknown=s.characterGod.reasoning.causalExplanations.get("cause_"+pred.id+"_UNKNOWN_FACTOR");
+  assertNotNull(route);assertNotNull(unknown);assertEquals("SUPPORTED",route.status);assertTrue(route.confidence>unknown.confidence);
+  assertTrue(route.evidenceEventIds.stream().anyMatch(x->x.startsWith("evt_route_block|")));
+  assertTrue(HaruReasoningEngine.currentReasoningSummary(s).contains("đường đi"));
+  assertFalse(s.characterGod.reasoning.rules.containsKey("rule:safe_revisit_reduces_uncertainty"));
+  WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);
+ }
+
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
   WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
