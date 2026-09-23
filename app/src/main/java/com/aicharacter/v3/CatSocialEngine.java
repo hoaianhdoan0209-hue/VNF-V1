@@ -18,13 +18,12 @@ public final class CatSocialEngine {
    return true;
   }
   if(s.catTravel!=null&&s.catTravel.active)return false;
-  if(playerOverrideActive(s,now)){cs.mode="WATCH";cs.reason="recent player activity keeps autonomous cat response passive";cs.lastPlayerOverrideAt=Math.max(cs.lastPlayerOverrideAt,now);return false;}
+  if(playerOverrideActive(s,now)){cs.mode="WATCH";cs.reason="recent player activity keeps autonomous cat response passive";return false;}
 
   Observation o=observe(s,now);
   if(!o.seesGirl){cs.attention=follow(cs.attention,0,.22);cs.gazeTarget="";cs.lastApproachPressure=0;return false;}
   learn(s,o,now);
   cs.attention=follow(cs.attention,Math.max(.28,cs.curiosity*.62+cs.familiarity*.30),.35);cs.gazeTarget="girl";
-  if(cs.lastResponseAt>0&&now>=cs.lastResponseAt&&now-cs.lastResponseAt<RESPONSE_COOLDOWN_MS){cs.mode="WATCH";cs.reason="watching Haru during social response cooldown";return false;}
   if(cat.energy<15||cat.sleepiness>94||nervousLoad(s)>.78){cs.mode="STAY";cs.reason="body/balance state outweighs optional social movement";return false;}
 
   double affinity=cl(cs.familiarity*.43+cs.comfort*.40+cs.curiosity*.17),guard=cl(cs.wariness*.68+o.approachPressure*.58+nervousLoad(s)*.34);
@@ -32,6 +31,7 @@ public final class CatSocialEngine {
    float target=retreatTarget(s,o,guard);if(Float.isFinite(target)&&Math.abs(target-cat.x)>20)return startMove(s,now,"RETREAT",target,"Haru approached within the cat's current comfort boundary",o);
    cs.mode="STAY";cs.reason="wary but no safer bounded local retreat is available";return false;
   }
+  if(cs.lastResponseAt>0&&now>=cs.lastResponseAt&&now-cs.lastResponseAt<RESPONSE_COOLDOWN_MS){cs.mode="WATCH";cs.reason="watching Haru during social response cooldown";return false;}
   double tired=Math.max(cat.sleepiness/100.0,(100-cat.energy)/100.0);
   if(cs.comfort>.56&&cs.familiarity>.48&&guard<.42&&tired>.38&&o.distance>=55&&o.distance<=145){
    cs.mode="SETTLE_NEAR";cs.reason="familiar calm proximity and tiredness make staying nearby comfortable";cs.settles++;cs.lastResponseAt=now;WorldEventBus.publishId(s,now,"cat_social_settle_"+Long.toHexString(now),"CAT_SOCIAL_SETTLE_NEAR","cat","Cat chose to settle near Haru without attaching or being controlled.");return false;
