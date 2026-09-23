@@ -91,6 +91,26 @@ public final class VisualRegressionTest{
   assertTrue(read(app.resolve("src/main/java/com/aicharacter/v3/HudIconRenderer.java")).contains("GodSessionManager.State"));
  }
 
+ @Test public void divinePresenceLightingCouplesWorldAndHaruWithoutEnteringWorldState()throws Exception{
+  Path app=appRoot();
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String haru=read(app.resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
+  String activity=read(app.resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(game.contains("setDivineVisualPresence"));
+  assertTrue(game.contains("drawDivineWorldAmbient"));
+  assertTrue(game.contains("drawDivineNearField"));
+  assertTrue(game.contains("drawDivineScreenGrade"));
+  assertTrue(game.contains("visualDivinePresence"));
+  assertTrue(haru.contains("drawDivineSubjectLight"));
+  assertTrue(haru.contains("divinePresence"));
+  assertTrue(haru.contains("relativeHumidity"));
+  assertTrue(activity.contains("setDivineVisualPresence(true)"));
+  assertTrue(activity.contains("setDivineVisualPresence(false)"));
+  assertFalse(world.contains("divineVisualPresence"));
+  assertFalse(world.contains("visualDivinePresence"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
