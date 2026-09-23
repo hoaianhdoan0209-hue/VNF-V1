@@ -9,12 +9,13 @@ public final class CharacterGodState {
  public final Map<String,ConceptKnowledgeState> conceptKnowledge=new LinkedHashMap<>();
  public final Map<String,OpenQuestionState> openQuestions=new LinkedHashMap<>();
  public final Map<String,WorldConditionProposalState> worldConditions=new LinkedHashMap<>();
+ public HaruReasoningState reasoning=new HaruReasoningState();
 
  public JSONObject toJson(){JSONObject j=new JSONObject();try{
   JSONObject ls=new JSONObject();for(Map.Entry<String,LessonState>e:lessons.entrySet())ls.put(e.getKey(),e.getValue().toJson());j.put("lessons",ls);
   JSONObject ck=new JSONObject();for(Map.Entry<String,ConceptKnowledgeState>e:conceptKnowledge.entrySet())ck.put(e.getKey(),e.getValue().toJson());j.put("conceptKnowledge",ck);
   JSONObject oq=new JSONObject();for(Map.Entry<String,OpenQuestionState>e:openQuestions.entrySet())oq.put(e.getKey(),e.getValue().toJson());j.put("openQuestions",oq);
-  JSONObject wc=new JSONObject();for(Map.Entry<String,WorldConditionProposalState>e:worldConditions.entrySet())wc.put(e.getKey(),e.getValue().toJson());j.put("worldConditions",wc);
+  JSONObject wc=new JSONObject();for(Map.Entry<String,WorldConditionProposalState>e:worldConditions.entrySet())wc.put(e.getKey(),e.getValue().toJson());j.put("worldConditions",wc);j.put("reasoning",reasoning.toJson());
  }catch(Exception ignored){}return j;}
 
  public static CharacterGodState fromJson(JSONObject j){CharacterGodState s=new CharacterGodState();if(j==null)return s;
@@ -22,6 +23,7 @@ public final class CharacterGodState {
   read(j.optJSONObject("conceptKnowledge"),(k,v)->s.conceptKnowledge.put(k,ConceptKnowledgeState.fromJson(k,v)));
   read(j.optJSONObject("openQuestions"),(k,v)->s.openQuestions.put(k,OpenQuestionState.fromJson(k,v)));
   read(j.optJSONObject("worldConditions"),(k,v)->s.worldConditions.put(k,WorldConditionProposalState.fromJson(k,v)));
+  s.reasoning=HaruReasoningState.fromJson(j.optJSONObject("reasoning"));
   return s;
  }
  private interface Reader{void accept(String key,JSONObject value);}
