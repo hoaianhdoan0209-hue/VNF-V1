@@ -111,6 +111,27 @@ public final class VisualRegressionTest{
   assertFalse(world.contains("visualDivinePresence"));
  }
 
+ @Test public void catAndHaruAnimationStayInTheVisibleWorldPipeline()throws Exception{
+  Path app=appRoot();
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String cat=read(app.resolve("src/main/java/com/aicharacter/v3/CatVisualRenderer.java"));
+  String catController=read(app.resolve("src/main/java/com/aicharacter/v3/CatAnimationController.java"));
+  String haru=read(app.resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
+  assertTrue(game.contains("drawCat(c,cam)"));
+  assertTrue(game.contains("drawAttachedCat"));
+  assertTrue(game.contains("CatVisualRenderer.draw"));
+  assertTrue(game.contains("HARU_POSE_BLEND_MS"));
+  assertTrue(game.contains("saveLayerAlpha"));
+  assertTrue(cat.contains("drawTail"));
+  assertTrue(cat.contains("drawLegs"));
+  assertTrue(cat.contains("catRig"));
+  assertTrue(cat.contains("breathingDrive"));
+  assertTrue(catController.contains("State.APPROACH"));
+  assertTrue(catController.contains("State.RETREAT"));
+  assertTrue(catController.contains("State.SETTLE"));
+  assertTrue(haru.contains("HaruMotionStyleEngine.derive"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
