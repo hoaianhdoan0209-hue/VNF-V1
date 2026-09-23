@@ -88,7 +88,8 @@ public final class HaruReasoningEngine {
   PredictionState x=new PredictionState();x.id="pred_"+clean(p.planId);x.planId=p.planId;x.hypothesisId=p.reasoningHypothesisId==null?"":p.reasoningHypothesisId;x.subjectId=p.destination==null?"":p.destination;
   double learned=AdaptiveBeliefEngine.planExpectation(s,p.intentionId);double base=.55+Math.max(-.22,Math.min(.22,learned*.22));
   HypothesisState h=x.hypothesisId.isEmpty()?null:s.characterGod.reasoning.hypotheses.get(x.hypothesisId);if(h!=null)base=(base+h.confidence)/2.0;
-  base+=DopamineModulationEngine.predictionConfidenceBias(s);x.confidence=Math.max(.18,Math.min(.90,base));x.expectedOutcome=p.goal==null||p.goal.isEmpty()?"the planned action will produce useful evidence or satisfy its goal":p.goal;
+  x.dopamineAtPrediction=s.neuroModulation==null?0:s.neuroModulation.dopamine();x.logicalControlAtPrediction=DopamineModulationEngine.logicalControl(s);x.overdriveAtPrediction=DopamineModulationEngine.overdrive(s);
+  double learnedCaution=s.characterGod.reasoning.calibration==null?0:s.characterGod.reasoning.calibration.cautionAdjustment()*x.overdriveAtPrediction;base+=DopamineModulationEngine.predictionConfidenceBias(s)-learnedCaution;x.confidence=Math.max(.18,Math.min(.90,base));x.expectedOutcome=p.goal==null||p.goal.isEmpty()?"the planned action will produce useful evidence or satisfy its goal":p.goal;
   x.alternativeOutcome="the plan may be interrupted, fail, or produce evidence that changes the current expectation";x.createdAt=now;
   s.characterGod.reasoning.predictions.put(x.id,x);p.predictionId=x.id;return x;
  }
@@ -99,6 +100,7 @@ public final class HaruReasoningEngine {
   boolean success="COMPLETED".equals(p.status);
   if(pred!=null&&"PENDING".equals(pred.status)){
    pred.status=success?"CONFIRMED":"DISCONFIRMED";pred.outcomeMemoryId=outcome.memoryId;pred.resolvedAt=now;
+   MetacognitiveCalibrationState cal=s.characterGod.reasoning.calibration;if(cal==null){cal=new MetacognitiveCalibrationState();s.characterGod.reasoning.calibration=cal;}boolean knewRisk=cal.learnedOverdriveRisk();cal.record(pred,success,now);if(!knewRisk&&cal.learnedOverdriveRisk()){ThoughtState mt=new ThoughtState("Mình bắt đầu nhận ra rằng lúc bị kích thích mạnh, dự đoán của mình dễ tự tin quá mức. Khi ở trạng thái đó mình nên giữ thêm nghi ngờ và kiểm tra lại.","self_calibration:dopamine_overdrive","reflect",.62,.62,now);mt.relatedMemories.add(outcome.memoryId);s.thoughts.add(mt);while(s.thoughts.size()>16)s.thoughts.remove(0);}
    if(!success&&!pred.subjectId.isEmpty()){
     String qid="q_prediction_"+clean(pred.id);if(!s.characterGod.openQuestions.containsKey(qid)){OpenQuestionState q=new OpenQuestionState();q.questionId=qid;q.topic="prediction:"+pred.planId;q.aboutObjectId=s.world!=null&&s.world.object(pred.subjectId)!=null?pred.subjectId:"";q.question="Vì sao kết quả thực tế khác với điều mình vừa dự đoán?";q.reason="a prediction did not match the causal outcome";q.createdAt=now;q.lastRevisitedAt=now;s.characterGod.openQuestions.put(qid,q);}
     inferCausalExplanations(s,p,pred,outcome,now);
@@ -148,6 +150,7 @@ public final class HaruReasoningEngine {
   for(PredictionState p:r.predictions.values())b.append("pred ").append(p.id).append(" conf=").append(fmt(p.confidence)).append(" status=").append(p.status).append('\n');
   for(CausalExplanationState x:r.causalExplanations.values())b.append("cause ").append(x.id).append(" type=").append(x.causeType).append(" conf=").append(fmt(x.confidence)).append(" status=").append(x.status).append('\n');
   for(CausalExperimentState x:r.causalExperiments.values())b.append("experiment ").append(x.id).append(" status=").append(x.status).append(" strategy=").append(x.strategy).append(" attempts=").append(x.attempts).append('\n');
+  if(r.calibration!=null)b.append("self_calibration overdriveN=").append(r.calibration.overdrivePredictions).append(" stableN=").append(r.calibration.stablePredictions).append(" bias=").append(fmt(r.calibration.overdriveBias)).append(" caution=").append(fmt(r.calibration.cautionAdjustment())).append('\n');
   for(GeneralRuleState g:r.rules.values())b.append("rule ").append(g.id).append(" conf=").append(fmt(g.confidence)).append(" status=").append(g.status).append(" subjects=").append(g.subjects.size()).append('\n');
   return b.toString();
  }
