@@ -25,7 +25,7 @@ public final class DopamineModulationEngineTest {
  }
 
  @Test public void dopamineBiasesDeliberationButDoesNotRewriteBeliefsOrPersonality(){
-  WorldState low=WorldState.fresh(),high=WorldState.fresh();
+  WorldState low=decisionState(),high=decisionState();
   high.beliefStates.put("stable_test",new BeliefState("stable_test","unchanged",.73));
   double curiosity=high.personality.curiosity,caution=high.personality.caution;
   DopamineModulationEngine.pulse(high,1.0,"reward_spike",2000L);
@@ -45,6 +45,10 @@ public final class DopamineModulationEngineTest {
   WorldState x=WorldState.fromJson(s.toJson());
   assertTrue(Double.isFinite(x.neuroModulation.dopamineTonic));assertTrue(Double.isFinite(x.neuroModulation.executiveNoise));
   assertTrue(x.neuroModulation.dopaminePhasic>0);assertEquals("save_test",x.neuroModulation.lastPulseSource);
+ }
+
+ private static WorldState decisionState(){
+  WorldState s=WorldState.fresh();s.haruX=10;s.world=new WorldModel();s.world.areas.add(new WorldArea("test_area","Test","test",0,100,0,true,"test"));return s;
  }
 
  private static List<LifeDecision> choices(long now){
