@@ -22,7 +22,8 @@ public final class HaruExpressionEngine {
   String emotion=ep!=null&&ep.primaryEmotion!=null&&!ep.primaryEmotion.isEmpty()?ep.primaryEmotion:s.emotion.dominant();
   boolean social=socialFocus(s,ep);
   double gx=gazeX(s,ep,social),gy=0;
-  if((sad+lonely)>.62&&!social)gy=.46;else if(fear>.55)gy=-.12;else if(curious>.48)gy=-.05;
+  if(social){double engagement=SocialProximityEngine.gazeEngagement(s);gx*=engagement;gy+=SocialProximityEngine.gazeDownBias(s)*.34;}
+  if((sad+lonely)>.62&&!social)gy=.46;else if(fear>.55&&!social)gy=-.12;else if(curious>.48&&!social)gy=-.05;
 
   double eye=.62+fear*.30+curious*.18- sad*.18-lonely*.10-joy*.06-calm*.04;
   double lift=fear*.54+curious*.38+sad*.30+lonely*.18-anger*.25;
@@ -36,7 +37,7 @@ public final class HaruExpressionEngine {
 
   boolean blink=blink(s,now);
   if(blink)eye=.04;
-  String reason=(ep==null?"aggregate affect":"episode "+ep.primaryEmotion+" from "+ep.sourceKind)+(social?"; gaze tracks social target":"; gaze follows current attention");
+  String reason=(ep==null?"aggregate affect":"episode "+ep.primaryEmotion+" from "+ep.sourceKind)+(social?"; social gaze is modulated by trust/warmth versus hurt/fear":"; gaze follows current attention");
   return new Visual(intensity,gx,gy,eye,lift,pinch,mouth,open,cheeks,tilt,drop,social,blink,emotion,reason);
  }
 
@@ -50,8 +51,8 @@ public final class HaruExpressionEngine {
  private static boolean socialFocus(WorldState s,EmotionEpisodeState ep){
   boolean near=Math.abs(s.haruX-s.catX)<=460f||s.catState!=null&&"girl".equals(s.catState.attachedToEntity);
   boolean episode=ep!=null&&("cat".equals(ep.targetId)||ep.socialRelevance>=.42||(ep.cause!=null&&ep.cause.toLowerCase().contains("cat")));
-  boolean plan="find_cat".equals(s.currentIntention)||(s.reunionContext!=null&&!s.reunionContext.isEmpty());
-  return near&&(episode||plan);
+  boolean plan="find_cat".equals(s.currentIntention)||"social_adjust".equals(s.currentIntention)||(s.reunionContext!=null&&!s.reunionContext.isEmpty());
+  return near&&(episode||plan||SocialProximityEngine.shouldOrientToCat(s));
  }
  private static double gazeX(WorldState s,EmotionEpisodeState ep,boolean social){
   if(social){double d=s.catX-s.haruX;return clamp(d/190.0,-1,1);}
