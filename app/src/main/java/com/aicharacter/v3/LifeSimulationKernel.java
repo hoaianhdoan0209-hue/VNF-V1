@@ -26,7 +26,8 @@ public final class LifeSimulationKernel {
  public static void endSlice(WorldState s,double seconds,long now,boolean advanceGirlTravel,boolean advanceCatTravel,Mode mode){
   if(s==null||seconds<=0)return;
   double minutes=seconds/60.0;
-  PhysicalLifeStepEngine.advance(s,seconds,now,advanceGirlTravel,advanceCatTravel);
+  boolean socialCatTravel=CatSocialEngine.tick(s,now);
+  PhysicalLifeStepEngine.advance(s,seconds,now,advanceGirlTravel,advanceCatTravel||socialCatTravel);
   BodyPerceptionEngine.observe(s,now);
   EnvironmentConsequences.advance(s,minutes);
   CreatureLifeEngine.advance(s,minutes,now);
