@@ -156,6 +156,18 @@ public final class HaruReasoningEngineTest {
   assertEquals(experiment.id,deliberate.causalExperimentId);assertEquals("RUNNING",experiment.status);
  }
 
+ @Test public void dopamineOverdriveStoresEvidenceButDelaysEpistemicClosure(){
+  WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
+  HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");OpenQuestionState q=s.characterGod.openQuestions.get("q_world_mystery_flora");assertNotNull(h);assertNotNull(q);
+  DopamineModulationEngine.pulse(s,1.0,"high_reward",1100L);DopamineModulationEngine.pulse(s,1.0,"high_reward",1101L);assertTrue(DopamineModulationEngine.logicalControl(s)<.62);
+  for(int i=0;i<5;i++){PlanState p=reasoningPlan(s,"overdrive_support_"+i,"mystery_flora",h.id,1200L+i*100);p.status="COMPLETED";MemoryEntry m=CognitionEngine.experience(s,1250L+i*100,"planned_action_outcome","support while overstimulated "+i,.10,.50,"reasoning");HaruReasoningEngine.reviewPlanOutcome(s,p,m,1250L+i*100);}
+  assertTrue(h.confidence>.72);assertEquals("ACTIVE",h.status);assertEquals("PARTIAL",q.status);assertTrue(s.thoughts.stream().anyMatch(t->t.trigger.equals("metacognitive_hold:"+h.id)));
+
+  DopamineModulationEngine.advance(s,30*60.0,30L*60L*1000L+2000L);assertTrue(DopamineModulationEngine.logicalControl(s)>.62);
+  PlanState stable=reasoningPlan(s,"stable_support","mystery_flora",h.id,30L*60L*1000L+2100L);stable.status="COMPLETED";MemoryEntry m=CognitionEngine.experience(s,30L*60L*1000L+2200L,"planned_action_outcome","support after control recovered",.10,.50,"reasoning");HaruReasoningEngine.reviewPlanOutcome(s,stable,m,30L*60L*1000L+2200L);
+  assertEquals("SUPPORTED",h.status);assertEquals("RESOLVED",q.status);
+ }
+
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
   WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
