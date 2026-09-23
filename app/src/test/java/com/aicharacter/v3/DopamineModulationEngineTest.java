@@ -42,9 +42,33 @@ public final class DopamineModulationEngineTest {
 
  @Test public void livedRewardPulsesDopamineThroughCognitionPipeline(){
   WorldState s=decisionState();double before=s.neuroModulation.dopaminePhasic;
-  CognitionEngine.experience(s,5000L,"planned_action_outcome","a real action succeeded",.55,.72,"success","curiosity");
+  CognitionEngine.experience(s,5000L,"social_reward","a real rewarding interaction happened",.55,.72,"success","curiosity");
   assertTrue(s.neuroModulation.dopaminePhasic>before);
   assertTrue(s.neuroModulation.lastPulseSource.startsWith("experience:"));
+ }
+
+ @Test public void plannedOutcomeWaitsForPredictionErrorReviewInsteadOfDoublePulsing(){
+  WorldState s=decisionState();double before=s.neuroModulation.dopaminePhasic;
+  CognitionEngine.experience(s,5100L,"planned_action_outcome","planned success",.55,.72,"success");
+  assertEquals(before,s.neuroModulation.dopaminePhasic,.0000001);
+ }
+
+ @Test public void unexpectedSuccessCreatesLargerPositiveRewardPredictionError(){
+  WorldState unexpected=decisionState(),expected=decisionState();
+  PlanState pu=plan("u",true),pe=plan("e",true);PredictionState pru=prediction("pu",.20),pre=prediction("pe",.88);
+  MemoryEntry mu=new MemoryEntry(6000L,"planned_action_outcome","unexpected success",.6,.30,.9,"test_area",null,Arrays.asList("success"));
+  MemoryEntry me=new MemoryEntry(6000L,"planned_action_outcome","expected success",.6,.30,.9,"test_area",null,Arrays.asList("success"));
+  double ru=DopamineModulationEngine.onPlanOutcome(unexpected,pu,pru,mu,6000L),re=DopamineModulationEngine.onPlanOutcome(expected,pe,pre,me,6000L);
+  assertTrue(ru>re);assertTrue(ru>0);assertTrue(unexpected.neuroModulation.dopaminePhasic>expected.neuroModulation.dopaminePhasic);
+ }
+
+ @Test public void confidentFailureCreatesNegativeRewardPredictionErrorAndDopamineDip(){
+  WorldState s=decisionState();DopamineModulationEngine.pulse(s,.80,"preexisting_reward",6500L);double before=s.neuroModulation.dopaminePhasic;
+  PlanState p=plan("fail",false);PredictionState prediction=prediction("pfail",.92);
+  MemoryEntry m=new MemoryEntry(6600L,"planned_action_outcome","confident plan failed",.7,-.35,.9,"test_area",null,Arrays.asList("failure"));
+  double rpe=DopamineModulationEngine.onPlanOutcome(s,p,prediction,m,6600L);
+  assertTrue(rpe<0);assertTrue(s.neuroModulation.dopaminePhasic<before);assertEquals(rpe,s.neuroModulation.lastRewardPredictionError,.0000001);
+  assertTrue(s.neuroModulation.lastPulseSource.startsWith("negative_reward_prediction_error:"));
  }
 
  @Test public void activeAndOfflineSlicesShareTheSameDopamineClock(){
@@ -62,7 +86,14 @@ public final class DopamineModulationEngineTest {
   WorldState s=WorldState.fresh();DopamineModulationEngine.pulse(s,.86,"save_test",3000L);s.neuroModulation.dopamineTonic=Double.NaN;s.neuroModulation.executiveNoise=Double.POSITIVE_INFINITY;
   WorldState x=WorldState.fromJson(s.toJson());
   assertTrue(Double.isFinite(x.neuroModulation.dopamineTonic));assertTrue(Double.isFinite(x.neuroModulation.executiveNoise));
-  assertTrue(x.neuroModulation.dopaminePhasic>0);assertEquals("save_test",x.neuroModulation.lastPulseSource);
+  assertTrue(x.neuroModulation.dopaminePhasic>0);assertEquals("save_test",x.neuroModulation.lastPulseSource);assertTrue(Double.isFinite(x.neuroModulation.lastRewardPredictionError));
+ }
+
+ private static PlanState plan(String id,boolean success){
+  PlanState p=new PlanState();p.planId=id;p.intentionId="observe_lake";p.status=success?"COMPLETED":"FAILED";return p;
+ }
+ private static PredictionState prediction(String id,double confidence){
+  PredictionState p=new PredictionState();p.id=id;p.planId=id;p.confidence=confidence;return p;
  }
 
  private static WorldState decisionState(){
