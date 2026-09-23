@@ -17,8 +17,18 @@ public final class DopamineModulationEngine {
  }
 
  public static void onExperience(WorldState s,MemoryEntry m,Experience e){
-  if(s==null||m==null)return;double positive=Math.max(0,m.valence),sig=Math.max(0,Math.min(1,m.importance));double novelty=(m.hasTag("novelty")||m.hasTag("curiosity")||m.hasTag("success"))?.16:0;
+  if(s==null||m==null||deferToPlanOutcomeReview(m))return;double positive=Math.max(0,m.valence),sig=Math.max(0,Math.min(1,m.importance));double novelty=(m.hasTag("novelty")||m.hasTag("curiosity")||m.hasTag("success"))?.16:0;
   double x=positive*.62+sig*.18+novelty;if(x>=.10)pulse(s,Math.min(1,x),"experience:"+m.kind,m.time);
+ }
+
+ public static double onPlanOutcome(WorldState s,PlanState plan,PredictionState prediction,MemoryEntry outcome,long now){
+  if(s==null||plan==null||outcome==null)return 0;ensure(s);NeuroModulationState n=s.neuroModulation;boolean success="COMPLETED".equals(plan.status);
+  double predictionConfidence=prediction==null?.5:cl(prediction.confidence),learned=clSigned(AdaptiveBeliefEngine.planExpectation(s,plan.intentionId));
+  double expected=clSigned((predictionConfidence*2-1)*.72+learned*.28);
+  double valence=clSigned(outcome.valence),actual=success?clSigned(.48+Math.max(0,valence)*.52):clSigned(-.48+Math.min(0,valence)*.52);
+  double rpe=clSigned(actual-expected);n.lastRewardPredictionError=rpe;n.lastExpectedReward=expected;n.lastActualReward=actual;n.lastPredictionErrorAt=Math.max(n.lastPredictionErrorAt,now);n.lastPredictionErrorSource=plan.planId==null?"":plan.planId;
+  if(rpe>.03)pulse(s,Math.min(1,rpe),"reward_prediction_error:"+plan.planId,now);else if(rpe<-.03){double mag=Math.min(1,-rpe);n.dopaminePhasic=cl(n.dopaminePhasic-mag*(.36+.22*n.dopaminePhasic));n.lastPulseAt=Math.max(n.lastPulseAt,now);n.lastPulseSource="negative_reward_prediction_error:"+plan.planId;recompute(s,n);}
+  return rpe;
  }
 
  public static void advance(WorldState s,double seconds,long now){
@@ -44,6 +54,12 @@ public final class DopamineModulationEngine {
 
  public static double reflectiveWeight(WorldState s){return logicalControl(s);}
  public static double predictionConfidenceBias(WorldState s){return Math.min(.09,overdrive(s)*.09);}
+
+ private static boolean deferToPlanOutcomeReview(MemoryEntry m){
+  if(m==null)return false;String k=m.kind==null?"":m.kind;
+  return "planned_action_outcome".equals(k)||"planned_action_blocked".equals(k)||m.hasTag("plan_terminal")||k.startsWith("plan_")||k.startsWith("travel_failed")||k.startsWith("affordance_route_failed");
+ }
+ private static double clSigned(double v){return Double.isFinite(v)?Math.max(-1,Math.min(1,v)):0;}
 
  private static double instinctDrive(WorldState s,NeedState n,String id){
   if("eat".equals(id))return cl(n.hunger/100.0);if("drink".equals(id))return cl(n.thirst/100.0);if("toilet".equals(id))return cl(n.elimination/100.0);
