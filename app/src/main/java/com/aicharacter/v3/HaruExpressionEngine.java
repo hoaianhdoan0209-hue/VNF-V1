@@ -49,13 +49,13 @@ public final class HaruExpressionEngine {
   if(s.emotionEpisodes==null)return null;for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState e=s.emotionEpisodes.get(i);if(e==null||!"ACTIVE".equals(e.status)||e.intensity<.08)continue;if(e.updatedAt>0&&now>=e.updatedAt&&now-e.updatedAt>12L*60L*1000L)continue;return e;}return null;
  }
  private static boolean socialFocus(WorldState s,EmotionEpisodeState ep){
-  boolean near=Math.abs(s.haruX-s.catX)<=460f||s.catState!=null&&"girl".equals(s.catState.attachedToEntity);
+  boolean attached=s.catState!=null&&"girl".equals(s.catState.attachedToEntity),locallyPerceived=SocialProximityEngine.shouldOrientToCat(s);
   boolean episode=ep!=null&&("cat".equals(ep.targetId)||ep.socialRelevance>=.42||(ep.cause!=null&&ep.cause.toLowerCase().contains("cat")));
   boolean plan="find_cat".equals(s.currentIntention)||"social_adjust".equals(s.currentIntention)||(s.reunionContext!=null&&!s.reunionContext.isEmpty());
-  return near&&(episode||plan||SocialProximityEngine.shouldOrientToCat(s));
+  return (attached||locallyPerceived)&&(episode||plan||locallyPerceived);
  }
  private static double gazeX(WorldState s,EmotionEpisodeState ep,boolean social){
-  if(social){double d=s.catX-s.haruX;return clamp(d/190.0,-1,1);}
+  if(social){double cat=s.catState==null?s.haruX:s.catState.x,d=cat-s.haruX;return clamp(d/190.0,-1,1);}
   if(s.planState!=null&&s.world!=null&&s.planState.destination!=null&&!s.planState.destination.isEmpty()){WorldObject o=s.world.object(s.planState.destination);if(o!=null)return clamp((o.x-s.haruX)/260.0,-1,1);}
   if(s.girlTravel!=null&&s.girlTravel.active&&Float.isFinite(s.girlTravel.segmentEndX))return clamp((s.girlTravel.segmentEndX-s.haruX)/180.0,-1,1);
   return 0;
