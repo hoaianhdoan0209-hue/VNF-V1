@@ -11,7 +11,7 @@ public final class GirlAnimationController{
  public static Visual select(WorldState s){
   String a=s.haruActivity==null?"":s.haruActivity.toLowerCase();WorldArea here=s.world==null?null:s.world.areaAt(s.haruX);double exposure=WorldSemantics.exposure(here),rain="RAIN".equals(s.environment.weather)?s.environment.weatherIntensity*exposure:0,wind=s.environment.wind*exposure;boolean socialLeft=SocialProximityEngine.shouldOrientToCat(s)&&s.catState!=null&&s.catState.x<s.haruX;
   if(s.girlPhysics!=null&&s.girlPhysics.falling)return v(State.REACT,"girl_react_right",12,2.4f,.50f,.94f,"whole body lost physical support");
-  boolean facingRight=!s.girlTravel.active||Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX;
+  boolean facingRight=s.girlTravel.active?(Float.isNaN(s.girlTravel.segmentEndX)||s.girlTravel.segmentEndX>=s.haruX):SocialProximityEngine.preferFacingRight(s,true);
   if(a.contains("sleep"))return v(State.SLEEP,"girl_sleep_right",12,1.8f,.50f,.82f,"body/activity sleeping");
   if(a.contains("crouch")||a.contains("lean"))return social(v(State.CROUCH,"girl_crouch_right",12,2.5f,.50f,.94f,"real close interaction"),socialLeft);
   if("find_cat".equals(s.currentIntention)||s.catSearch.active)return facingRight?v(State.SEARCH_RIGHT,"girl_search_right",12,3.2f,.50f,.94f,"active search plan"):v(State.SEARCH_LEFT,"girl_search_left",12,3.2f,.50f,.94f,"active search plan");
@@ -31,7 +31,7 @@ public final class GirlAnimationController{
   ThoughtState thought=lastThought(s);long now=System.currentTimeMillis();boolean currentThought=thought!=null&&thought.isCurrent(now,s.currentIntention);if(currentThought&&thought.uncertainty>.58&&!s.girlTravel.active)return social(v(State.THINK,"girl_think_right",12,1.75f,.50f,.94f,"current thought remains uncertain"),socialLeft);
   if(a.contains("think")||a.contains("looking")||a.contains("observe")||a.contains("finishing a quiet thought"))return social(v(State.THINK,"girl_think_right",12,2.0f,.50f,.94f,"attention/thought transition"),socialLeft);
   if(a.contains("sitting")||a.equals("resting")||a.contains("taking a quiet rest"))return social(v(State.SIT,"girl_sit_right",12,1.8f,.50f,.94f,"body still needs rest"),socialLeft);
-  if(s.relationship!=null&&s.relationship.hurt+s.relationship.irritation>32)return v(State.IDLE,"girl_idle_right",12,1.55f,.50f,.94f,"relationship tension keeps her visually reserved");
+  if(s.relationship!=null&&s.relationship.hurt+s.relationship.irritation>32)return social(v(State.IDLE,"girl_idle_right",12,1.55f,.50f,.94f,"relationship tension keeps her visually reserved"),socialLeft);
   return facingRight?v(State.IDLE,"girl_idle_right",12,2.0f,.50f,.94f,"between committed actions"):v(State.IDLE,"girl_idle_left",12,2.0f,.50f,.94f,"between committed actions");
  }
  private static EmotionEpisodeState latestEmotion(WorldState s){if(s==null||s.emotionEpisodes==null)return null;long now=Math.max(s.lastSimulatedAt,s.lastOpenedAt);for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState e=s.emotionEpisodes.get(i);if(e==null||!"ACTIVE".equals(e.status)||e.intensity<.18)continue;if(e.updatedAt>0&&now>=e.updatedAt&&now-e.updatedAt>12L*60L*1000L)continue;return e;}return null;}
