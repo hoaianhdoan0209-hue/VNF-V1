@@ -22,10 +22,11 @@ public final class HaruFacialOverlayRenderer {
   float eyeY=cy-6.0f*unit,eyeDx=5.4f*unit,mouthY=cy+6.0f*unit;
   int oldAlpha=p.getAlpha();Paint.Style oldStyle=p.getStyle();Paint.Cap oldCap=p.getStrokeCap();float oldStroke=p.getStrokeWidth();ColorFilter oldFilter=p.getColorFilter();boolean oldAA=p.isAntiAlias();
   p.setShader(null);p.setColorFilter(null);p.setAntiAlias(false);p.setStyle(Paint.Style.FILL);p.setAlpha(255);
-  c.save();c.rotate((float)v.headTiltDeg,cx,cy);
+  double localGazeX=pose.flipX?-v.gazeX:v.gazeX,localTilt=pose.flipX?-v.headTiltDeg:v.headTiltDeg;
+  c.save();c.rotate((float)localTilt,cx,cy);
 
-  drawEye(c,p,cx-eyeDx,eyeY,unit,v);
-  drawEye(c,p,cx+eyeDx,eyeY,unit,v);
+  drawEye(c,p,cx-eyeDx,eyeY,unit,v,localGazeX);
+  drawEye(c,p,cx+eyeDx,eyeY,unit,v,localGazeX);
   drawBrows(c,p,cx,eyeY,eyeDx,unit,v);
   drawMouth(c,p,cx,mouthY,unit,v);
   drawCheeks(c,p,cx,cy,unit,v);
@@ -33,11 +34,11 @@ public final class HaruFacialOverlayRenderer {
   c.restore();p.setAlpha(oldAlpha);p.setStyle(oldStyle);p.setStrokeWidth(oldStroke);p.setStrokeCap(oldCap);p.setColorFilter(oldFilter);p.setAntiAlias(oldAA);
  }
 
- private static void drawEye(Canvas c,Paint p,float x,float y,float u,HaruExpressionEngine.Visual v){
+ private static void drawEye(Canvas c,Paint p,float x,float y,float u,HaruExpressionEngine.Visual v,double localGazeX){
   float patchW=4.6f*u,patchH=3.8f*u;p.setColor(SKIN);c.drawRect(x-patchW*.5f,y-patchH*.5f,x+patchW*.5f,y+patchH*.5f,p);
   float open=(float)Math.max(.18,Math.min(1,v.eyeOpen)),whiteH=Math.max(.9f*u,(1.0f+open*1.45f)*u),whiteW=3.2f*u;
   p.setColor(EYE_WHITE);c.drawRect(x-whiteW*.5f,y-whiteH*.5f,x+whiteW*.5f,y+whiteH*.5f,p);
-  float px=x+(float)v.gazeX*1.05f*u,py=y+(float)v.gazeY*.72f*u,pupilW=1.35f*u,pupilH=Math.max(.85f*u,whiteH*.76f);
+  float px=x+(float)localGazeX*1.05f*u,py=y+(float)v.gazeY*.72f*u,pupilW=1.35f*u,pupilH=Math.max(.85f*u,whiteH*.76f);
   p.setColor(INK);c.drawRect(px-pupilW*.5f,py-pupilH*.5f,px+pupilW*.5f,py+pupilH*.5f,p);
   if(v.socialFocus&&!v.blink&&open>.45){p.setColor(Color.rgb(255,244,221));float gl=.46f*u;c.drawRect(px-.40f*u,py-.48f*u,px-.40f*u+gl,py-.48f*u+gl,p);}
  }
