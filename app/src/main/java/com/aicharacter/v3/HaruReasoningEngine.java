@@ -76,6 +76,7 @@ public final class HaruReasoningEngine {
    if(h!=null)p.reasoningHypothesisId=h.id;
   }
   predictPlanOutcome(s,p,now);
+  attachPlanningAdaptation(s,p,now);
  }
 
  public static PredictionState predictPlanOutcome(WorldState s,PlanState p,long now){
@@ -172,7 +173,7 @@ public final class HaruReasoningEngine {
  }
 
  private static CausalExplanationState ensureCause(WorldState s,PlanState plan,PredictionState pred,String type,String claim,long now){
-  String id="cause_"+clean(pred.id)+"_"+clean(type);CausalExplanationState x=s.characterGod.reasoning.causalExplanations.get(id);if(x==null){x=new CausalExplanationState();x.id=id;x.predictionId=pred.id;x.planId=pred.planId;x.intentionId=plan==null?"":plan.intentionId;x.subjectId=pred.subjectId;x.causeType=type;x.claim=claim;x.testablePrediction=testablePrediction(type);x.createdAt=now;x.updatedAt=now;s.characterGod.reasoning.causalExplanations.put(id,x);}else if((x.claim==null||x.claim.isEmpty())&&claim!=null)x.claim=claim;return x;
+  String id="cause_"+clean(pred.id)+"_"+clean(type);CausalExplanationState x=s.characterGod.reasoning.causalExplanations.get(id);if(x==null){x=new CausalExplanationState();x.id=id;x.predictionId=pred.id;x.planId=pred.planId;x.intentionId=plan==null?"":plan.intentionId;x.subjectId=pred.subjectId;x.contextKey=routeContext(s,plan);x.causeType=type;x.claim=claim;x.testablePrediction=testablePrediction(type);x.createdAt=now;x.updatedAt=now;s.characterGod.reasoning.causalExplanations.put(id,x);}else if((x.claim==null||x.claim.isEmpty())&&claim!=null)x.claim=claim;return x;
  }
  private static void reviewPriorCausalExplanations(WorldState s,PlanState plan,PredictionState current,MemoryEntry outcome,boolean success,long now){
   if(s==null||plan==null||outcome==null||!success)return;HaruReasoningState r=s.characterGod.reasoning;
@@ -186,6 +187,32 @@ public final class HaruReasoningEngine {
  private static boolean hasCauseEvent(WorldState s,String planId,long start,long end,String causeType){if(s==null||s.worldHistory==null)return false;for(int i=Math.max(0,s.worldHistory.size()-64);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e!=null&&e.time>=start&&e.time<=end&&planId.equals(e.entity)&&eventSupports(causeType,e))return true;}return false;}
  private static double causeEvidenceWeight(WorldHistoryEntry e){if(e==null||e.type==null)return.25;if("TRAVEL_OBJECT_BLOCKED".equals(e.type)||"TRAVEL_TERRAIN_BLOCKED".equals(e.type))return 1.25;if("ROUTE_BLOCKED".equals(e.type))return.65;if("PLAN_INTEGRITY_FAILED".equals(e.type))return.55;if("PLAN_ACTION_RESOLVED".equals(e.type))return.35;return.25;}
  private static String testablePrediction(String type){if("ROUTE_CONSTRAINT".equals(type))return"Nếu trở ngại đường đi là nguyên nhân chính, một lần thử tương tự khi không còn dấu hiệu route bị chặn nên có cơ hội hoàn tất tốt hơn.";if("OBJECT_OBSTRUCTION".equals(type))return"Nếu vật cản là nguyên nhân chính, cùng mục tiêu sẽ dễ hoàn tất hơn khi đường vật lý thông thoáng.";if("TERRAIN_CONSTRAINT".equals(type))return"Nếu địa hình là nguyên nhân chính, kết quả sẽ khác khi chọn lối có độ cao vượt qua được.";if("TARGET_OR_ROUTE_CHANGED".equals(type)||"TARGET_UNAVAILABLE".equals(type))return"Nếu mục tiêu/đường đi thay đổi là nguyên nhân, kế hoạch tương tự chỉ nên thành công khi mục tiêu và đường đi thực sự khả dụng.";if("ACTION_CONSTRAINT".equals(type))return"Nếu chính điều kiện thực hiện hành động gây thất bại, cùng hành động trong điều kiện khả dụng hơn nên cho kết quả khác.";return"Mình chưa có dự đoán kiểm chứng cụ thể cho nguyên nhân này.";}
+
+ public static double causalRoutePenalty(WorldState s,WorldConnection c){
+  if(s==null||c==null||s.characterGod==null||s.characterGod.reasoning==null)return 0;double best=0;
+  for(CausalExplanationState x:s.characterGod.reasoning.causalExplanations.values()){
+   if(x==null||x.contextKey==null||!c.id.equals(x.contextKey)||"DISFAVORED".equals(x.status)||"UNKNOWN_FACTOR".equals(x.causeType))continue;
+   if(!("ROUTE_CONSTRAINT".equals(x.causeType)||"OBJECT_OBSTRUCTION".equals(x.causeType)||"TERRAIN_CONSTRAINT".equals(x.causeType)||"TARGET_OR_ROUTE_CHANGED".equals(x.causeType)))continue;
+   double p="SUPPORTED".equals(x.status)?.20+.55*Math.max(0,x.confidence-.55):.10+.30*Math.max(0,x.confidence-.50);best=Math.max(best,Math.min(.75,p));
+  }
+  return best;
+ }
+
+ private static void attachPlanningAdaptation(WorldState s,PlanState p,long now){
+  if(s==null||p==null||s.characterGod==null||s.characterGod.reasoning==null)return;CausalExplanationState best=null;
+  for(CausalExplanationState x:s.characterGod.reasoning.causalExplanations.values()){
+   if(x==null||"DISFAVORED".equals(x.status)||"UNKNOWN_FACTOR".equals(x.causeType)||x.confidence<.54)continue;
+   boolean sameSubject=!x.subjectId.isEmpty()&&x.subjectId.equals(p.destination),sameIntention=!x.intentionId.isEmpty()&&x.intentionId.equals(p.intentionId);if(!sameSubject&&!sameIntention)continue;
+   if(best==null||x.confidence>best.confidence)best=x;
+  }
+  if(best==null)return;p.causalAdaptationId=best.id;p.adaptationPolicy=adaptationPolicy(best.causeType);
+  String step="ADAPT_CAUSE:"+best.id+":"+p.adaptationPolicy;if(!p.steps.contains(step))p.steps.add(0,step);
+  if("CAUTIOUS_RETRY".equals(p.adaptationPolicy))p.commitment=Math.max(.20,p.commitment-.08);
+  ThoughtState t=new ThoughtState("Lần thử trước có một nguyên nhân khả dĩ. Mình sẽ thay đổi cách thử thay vì lặp lại y hệt.","planning_adaptation:"+best.id,p.intentionId,.56,.46,now);if(!best.evidenceMemoryIds.isEmpty())t.relatedMemories.add(best.evidenceMemoryIds.get(best.evidenceMemoryIds.size()-1));s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
+ }
+
+ private static String adaptationPolicy(String type){if("ROUTE_CONSTRAINT".equals(type)||"OBJECT_OBSTRUCTION".equals(type)||"TERRAIN_CONSTRAINT".equals(type)||"TARGET_OR_ROUTE_CHANGED".equals(type))return"PREFER_ALTERNATE_ROUTE";if("TARGET_UNAVAILABLE".equals(type))return"VERIFY_TARGET_AVAILABLE";if("ACTION_CONSTRAINT".equals(type))return"CAUTIOUS_RETRY";return"RECHECK_CONDITIONS";}
+ private static String routeContext(WorldState s,PlanState p){if(s==null||p==null||s.girlTravel==null)return"";TravelState t=s.girlTravel;if(!p.planId.equals(t.currentPlanId)||!"ROUTE".equals(t.travelMode)||t.routeIndex<0||t.routeIndex>=t.route.size()-1)return"";return t.route.get(t.routeIndex)+"->"+t.route.get(t.routeIndex+1);}
 
  private static CausalExplanationState bestCause(HaruReasoningState r,String predictionId){CausalExplanationState best=null;for(CausalExplanationState x:r.causalExplanations.values())if(x!=null&&predictionId.equals(x.predictionId)&&!"UNKNOWN_FACTOR".equals(x.causeType)&&(best==null||x.confidence>best.confidence))best=x;return best;}
  private static String causeTypeForEvent(WorldHistoryEntry e){if(e==null||e.type==null)return"";if("ROUTE_BLOCKED".equals(e.type))return"ROUTE_CONSTRAINT";if("TRAVEL_OBJECT_BLOCKED".equals(e.type))return"OBJECT_OBSTRUCTION";if("TRAVEL_TERRAIN_BLOCKED".equals(e.type))return"TERRAIN_CONSTRAINT";if("PLAN_INTEGRITY_FAILED".equals(e.type))return"TARGET_OR_ROUTE_CHANGED";if("PLAN_ACTION_RESOLVED".equals(e.type)&&e.summary!=null&&e.summary.startsWith("failure:"))return"ACTION_CONSTRAINT";return"";}
