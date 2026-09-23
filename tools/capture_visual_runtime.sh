@@ -113,22 +113,33 @@ adb shell settings put secure immersive_mode_confirmations confirmed || true
 adb shell settings put global hide_error_dialogs 1 || true
 adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
 
+APP_STARTED=0
 capture() {
   local name="$1" biome="$2" pose="$3" target="$4"
   local file="$target/$name.png"
 
-  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
   adb logcat -c || true
   adb shell settings put secure immersive_mode_confirmations confirmed || true
   adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
 
-  timeout 45s adb shell am start -W -S -n "$ACTIVITY" \
-    --es vnf_debug_biome "$biome" \
-    --es vnf_debug_pose "$pose" >/dev/null
+  # Keep one Activity/Surface alive for the entire visual pass. Repeated force-stop
+  # was destroying/recreating emulator ColorBuffers and produced stale identical
+  # screenshots under gfxstream. singleTop routes new debug parameters through
+  # MainActivity.onNewIntent(), so only the scene changes while the Surface stays.
+  if [[ "$APP_STARTED" -eq 0 ]]; then
+    timeout 45s adb shell am start -W -S -n "$ACTIVITY" \
+      --es vnf_debug_biome "$biome" \
+      --es vnf_debug_pose "$pose" >/dev/null
+    APP_STARTED=1
+  else
+    timeout 30s adb shell am start -W --activity-single-top -n "$ACTIVITY" \
+      --es vnf_debug_biome "$biome" \
+      --es vnf_debug_pose "$pose" >/dev/null
+  fi
 
   wait_for_focus
   wait_for_render_ready "$biome"
-  # One extra frame interval after the renderer's successful-frame marker.
+  # Let two vsyncs pass after the renderer confirms the new scene.
   sleep 1
   wait_for_focus
   capture_png "$file"
