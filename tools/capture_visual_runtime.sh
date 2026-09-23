@@ -5,10 +5,11 @@ APK="app/build/outputs/apk/debug/app-debug.apk"
 OUT="app/build/visual-runtime"
 PKG="com.aicharacter.v3"
 ACTIVITY="$PKG/.MainActivity"
+APP_CAPTURE_DIR="files/visual-capture"
 
 wait_for_pm() {
   adb wait-for-device
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 90); do
     if timeout 8s adb shell cmd package list packages >/dev/null 2>&1; then
       return 0
     fi
@@ -18,40 +19,12 @@ wait_for_pm() {
   return 1
 }
 
-wait_for_focus() {
-  local state=""
-  for _ in $(seq 1 45); do
-    state="$(adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 10 || true)"
-    if [[ "$state" == *"$PKG"* ]] && [[ "$state" != *"com.android.systemui"* ]] && [[ "$state" != *"com.android.permissioncontroller"* ]]; then
-      return 0
-    fi
-    sleep 1
-  done
-  echo "VNF never became the focused app:" >&2
-  printf '%s\n' "$state" >&2
-  return 1
-}
-
-wait_for_render_ready() {
-  local biome="$1"
-  for _ in $(seq 1 60); do
-    if adb logcat -d -s VNF:I '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_READY biome=$biome"; then
-      return 0
-    fi
-    sleep 1
-  done
-  echo "VNF never reported a successful rendered frame for biome=$biome" >&2
-  dump_runtime_debug
-  return 1
-}
-
 dump_runtime_debug() {
-  echo "Window state:" >&2
+  echo "Window/activity state:" >&2
+  adb shell dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity|com.aicharacter.v3' | tail -n 30 >&2 || true
   adb shell dumpsys window 2>/dev/null | grep -E 'mCurrentFocus|mFocusedApp' | head -n 12 >&2 || true
-  echo "Surface state:" >&2
-  adb shell dumpsys SurfaceFlinger --list 2>/dev/null | grep -E "$PKG|SurfaceView|BLAST" | tail -n 30 >&2 || true
   echo "Recent VNF logcat:" >&2
-  adb logcat -d -t 320 2>/dev/null | grep -E "$PKG|VISUAL_CAPTURE_READY|AndroidRuntime|FATAL EXCEPTION|OutOfMemoryError" | tail -n 160 >&2 || true
+  adb logcat -d -t 400 2>/dev/null | grep -E 'VNF|VISUAL_CAPTURE|AndroidRuntime|FATAL EXCEPTION|OutOfMemoryError' | tail -n 220 >&2 || true
 }
 
 install_apk() {
@@ -84,27 +57,30 @@ raise SystemExit(0 if ok else 1)
 PY
 }
 
-capture_png() {
-  local path="$1"
-  rm -f "$path"
-  for attempt in 1 2 3 4; do
-    if timeout 20s adb exec-out screencap -p > "$path" 2>/dev/null && [[ -s "$path" ]] && valid_png "$path"; then
-      return 0
+pull_runtime_capture() {
+  local name="$1" dest="$2"
+  rm -f "$dest"
+  for _ in $(seq 1 90); do
+    if timeout 8s adb exec-out run-as "$PKG" cat "$APP_CAPTURE_DIR/$name.png" > "$dest" 2>/dev/null; then
+      if [[ -s "$dest" ]] && valid_png "$dest"; then
+        return 0
+      fi
     fi
-    echo "screencap attempt $attempt failed; retrying after renderer settle" >&2
-    rm -f "$path"
-    sleep 2
+    rm -f "$dest"
+    if adb logcat -d -s VNF:I VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE name=$name ok=true"; then
+      sleep 1
+    fi
+    if adb logcat -d -s VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE failed name=$name"; then
+      break
+    fi
+    sleep 1
   done
-  echo "Unable to capture a valid runtime PNG: $path" >&2
+  echo "Runtime renderer did not export a valid PNG for $name" >&2
   dump_runtime_debug
   return 1
 }
 
 install_apk
-
-# This emulator is new for every CI job. Clear app data once instead of before
-# every screenshot; repeated pm clear was recycling surfaces and stressing
-# gfxstream/ColorBuffer while also making every capture race the startup screen.
 adb shell pm clear "$PKG" >/dev/null 2>&1 || true
 rm -rf "$OUT"
 mkdir -p "$OUT/biomes" "$OUT/haru-poses"
@@ -112,6 +88,7 @@ mkdir -p "$OUT/biomes" "$OUT/haru-poses"
 adb shell settings put secure immersive_mode_confirmations confirmed || true
 adb shell settings put global hide_error_dialogs 1 || true
 adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
+adb shell run-as "$PKG" rm -rf "$APP_CAPTURE_DIR" >/dev/null 2>&1 || true
 
 APP_STARTED=0
 capture() {
@@ -121,28 +98,22 @@ capture() {
   adb logcat -c || true
   adb shell settings put secure immersive_mode_confirmations confirmed || true
   adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
+  adb shell run-as "$PKG" rm -f "$APP_CAPTURE_DIR/$name.png" >/dev/null 2>&1 || true
 
-  # Keep one Activity/Surface alive for the entire visual pass. Repeated force-stop
-  # was destroying/recreating emulator ColorBuffers and produced stale identical
-  # screenshots under gfxstream. singleTop routes new debug parameters through
-  # MainActivity.onNewIntent(), so only the scene changes while the Surface stays.
   if [[ "$APP_STARTED" -eq 0 ]]; then
     timeout 45s adb shell am start -W -S -n "$ACTIVITY" \
       --es vnf_debug_biome "$biome" \
-      --es vnf_debug_pose "$pose" >/dev/null
+      --es vnf_debug_pose "$pose" \
+      --es vnf_debug_capture_name "$name" >/dev/null
     APP_STARTED=1
   else
     timeout 30s adb shell am start -W --activity-single-top -n "$ACTIVITY" \
       --es vnf_debug_biome "$biome" \
-      --es vnf_debug_pose "$pose" >/dev/null
+      --es vnf_debug_pose "$pose" \
+      --es vnf_debug_capture_name "$name" >/dev/null
   fi
 
-  wait_for_focus
-  wait_for_render_ready "$biome"
-  # Let two vsyncs pass after the renderer confirms the new scene.
-  sleep 1
-  wait_for_focus
-  capture_png "$file"
+  pull_runtime_capture "$name" "$file"
   echo "captured $name biome=$biome pose=$pose bytes=$(stat -c%s "$file")"
 }
 
