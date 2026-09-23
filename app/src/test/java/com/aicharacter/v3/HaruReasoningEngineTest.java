@@ -102,6 +102,60 @@ public final class HaruReasoningEngineTest {
   s.planState=future;WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExplanations.containsKey(route.id));assertEquals(route.confidence,x.characterGod.reasoning.causalExplanations.get(route.id).confidence,.000001);assertEquals(route.testablePrediction,x.characterGod.reasoning.causalExplanations.get(route.id).testablePrediction);assertEquals(route.id,x.planState.causalAdaptationId);assertEquals("PREFER_ALTERNATE_ROUTE",x.planState.adaptationPolicy);
  }
 
+ @Test public void causalExperimentChangesOneRealRouteVariableAndResolvesFromOutcome() throws Exception{
+  WorldState s=experimentState();PlanState failed=reasoningPlan(s,"experiment_fail","test_target","",1000L);failed.origin="WORLD_AFFORDANCE";s.planState=failed;
+  s.girlTravel.currentPlanId=failed.planId;s.girlTravel.travelMode="ROUTE";s.girlTravel.routeIndex=0;s.girlTravel.route.add("area_a");s.girlTravel.route.add("area_b");s.girlTravel.route.add("area_d");
+  WorldEventBus.publishId(s,1100L,"evt_experiment_route_block","ROUTE_BLOCKED",failed.planId,"the original route became blocked");
+  failed.status="FAILED";failed.lastOutcome="route invalid; no alternate path";
+  MemoryEntry failure=CognitionEngine.experience(s,1200L,"travel_failed","route invalid; no alternate path",-.12,.55,"failure","plan_terminal");
+  HaruReasoningEngine.reviewPlanOutcome(s,failed,failure,1200L);
+
+  PredictionState pred=s.characterGod.reasoning.predictions.get(failed.predictionId);CausalExplanationState route=s.characterGod.reasoning.causalExplanations.get("cause_"+pred.id+"_ROUTE_CONSTRAINT");
+  assertNotNull(route);assertEquals("area_a->area_b",route.contextKey);
+  CausalExperimentState experiment=s.characterGod.reasoning.causalExperiments.values().stream().findFirst().orElse(null);
+  assertNotNull(experiment);assertEquals("DESIGNED",experiment.status);assertEquals("ALTERNATE_ROUTE_RETRY",experiment.strategy);
+
+  PlanState retry=experimentPlan("experiment_retry",1500L);HaruReasoningEngine.attachReasoningToPlan(s,retry,1500L);
+  assertEquals(experiment.id,retry.causalExperimentId);assertEquals("ALTERNATE_ROUTE_RETRY",retry.experimentStrategy);assertEquals("RUNNING",experiment.status);assertTrue(experiment.manipulationVerified);
+  assertFalse(experiment.testContextKey.contains("area_a->area_b"));
+  assertEquals(Arrays.asList("area_a","area_c","area_d"),WorldPathPlanner.route(s,"girl","area_a","area_d"));
+
+  retry.status="COMPLETED";retry.actionResolvedAt=1600L;MemoryEntry outcome=CognitionEngine.experience(s,1600L,"planned_action_outcome","the alternate-route retry reached the target",.12,.52,"success");
+  HaruReasoningEngine.reviewPlanOutcome(s,retry,outcome,1600L);
+  assertEquals("RESOLVED",experiment.status);assertEquals(route.id,experiment.favoredCauseId);assertEquals(outcome.memoryId,experiment.outcomeMemoryId);assertEquals("SUPPORTED",route.status);
+
+  s.planState=retry;WorldState x=WorldState.fromJson(s.toJson());assertTrue(x.characterGod.reasoning.causalExperiments.containsKey(experiment.id));assertEquals(experiment.id,x.planState.causalExperimentId);assertEquals("RESOLVED",x.characterGod.reasoning.causalExperiments.get(experiment.id).status);
+ }
+
+ @Test public void causalExperimentDoesNotPretendToRunWithoutManipulation(){
+  WorldState s=experimentState();PlanState failed=reasoningPlan(s,"no_manip_fail","test_target","",1000L);failed.origin="WORLD_AFFORDANCE";s.planState=failed;
+  s.girlTravel.currentPlanId=failed.planId;s.girlTravel.travelMode="ROUTE";s.girlTravel.routeIndex=0;s.girlTravel.route.add("area_a");s.girlTravel.route.add("area_b");s.girlTravel.route.add("area_d");
+  WorldEventBus.publishId(s,1100L,"evt_no_manip_block","ROUTE_BLOCKED",failed.planId,"the route was blocked");
+  failed.status="FAILED";failed.lastOutcome="route invalid; no alternate path";MemoryEntry failure=CognitionEngine.experience(s,1200L,"travel_failed","route invalid; no alternate path",-.12,.55,"failure");
+  HaruReasoningEngine.reviewPlanOutcome(s,failed,failure,1200L);
+  CausalExperimentState experiment=s.characterGod.reasoning.causalExperiments.values().stream().findFirst().orElse(null);assertNotNull(experiment);
+
+  s.world.area("area_a").connections.remove("area_c");
+  PlanState retry=experimentPlan("same_route_retry",1500L);HaruReasoningEngine.attachReasoningToPlan(s,retry,1500L);
+  assertTrue(retry.causalExperimentId.isEmpty());assertEquals("DESIGNED",experiment.status);assertFalse(experiment.manipulationVerified);
+ }
+
+ @Test public void dopamineOverdriveDelaysExecutiveCausalExperimentUntilControlRecovers(){
+  WorldState s=experimentState();PlanState failed=reasoningPlan(s,"dopamine_exp_fail","test_target","",1000L);failed.origin="WORLD_AFFORDANCE";s.planState=failed;
+  s.girlTravel.currentPlanId=failed.planId;s.girlTravel.travelMode="ROUTE";s.girlTravel.routeIndex=0;s.girlTravel.route.add("area_a");s.girlTravel.route.add("area_b");s.girlTravel.route.add("area_d");
+  WorldEventBus.publishId(s,1100L,"evt_dopamine_route_block","ROUTE_BLOCKED",failed.planId,"the original route became blocked");
+  failed.status="FAILED";failed.lastOutcome="route invalid; no alternate path";MemoryEntry failure=CognitionEngine.experience(s,1200L,"travel_failed","route invalid; no alternate path",-.12,.55,"failure");
+  HaruReasoningEngine.reviewPlanOutcome(s,failed,failure,1200L);CausalExperimentState experiment=s.characterGod.reasoning.causalExperiments.values().stream().findFirst().orElse(null);assertNotNull(experiment);
+
+  DopamineModulationEngine.pulse(s,1.0,"strong_reward",1300L);DopamineModulationEngine.pulse(s,1.0,"strong_reward",1301L);assertTrue(DopamineModulationEngine.logicalControl(s)<.58);
+  PlanState impulsive=experimentPlan("impulsive_retry",1400L);HaruReasoningEngine.attachReasoningToPlan(s,impulsive,1400L);
+  assertTrue(impulsive.causalExperimentId.isEmpty());assertEquals("DESIGNED",experiment.status);
+
+  DopamineModulationEngine.advance(s,30*60.0,1400L+30*60*1000L);assertTrue(DopamineModulationEngine.logicalControl(s)>.58);
+  PlanState deliberate=experimentPlan("deliberate_retry",1400L+30*60*1000L);HaruReasoningEngine.attachReasoningToPlan(s,deliberate,1400L+30*60*1000L);
+  assertEquals(experiment.id,deliberate.causalExperimentId);assertEquals("RUNNING",experiment.status);
+ }
+
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
   WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
@@ -120,6 +174,17 @@ public final class HaruReasoningEngineTest {
   assertEquals(active.characterGod.openQuestions.keySet(),offline.characterGod.openQuestions.keySet());
   HypothesisState a=active.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora"),b=offline.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
   assertNotNull(a);assertNotNull(b);assertEquals(a.confidence,b.confidence,.000001);assertEquals(a.evidenceCount,b.evidenceCount);
+ }
+
+ private static PlanState experimentPlan(String id,long now){
+  PlanState p=new PlanState();p.planId=id;p.intentionId="affordance_inquiry";p.goal="learn from observation";p.destination="test_target";p.plannedAction="OBSERVE";p.origin="WORLD_AFFORDANCE";p.status="ACTIVE";p.commitment=.60;p.createdAt=now;p.lastProgressAt=now;p.steps.add("TRAVEL:area_d");p.steps.add("OBSERVE:test_target");return p;
+ }
+
+ private static WorldState experimentState(){
+  WorldState s=state();s.haruX=10;s.world=new WorldModel();
+  WorldArea a=new WorldArea("area_a","A","A",0,100,0,true,"test"),b=new WorldArea("area_b","B","B",120,220,0,true,"test"),cc=new WorldArea("area_c","C","C",120,220,0,true,"test"),d=new WorldArea("area_d","D","D",240,340,0,true,"test");
+  a.connections.add("area_b");a.connections.add("area_c");b.connections.add("area_d");cc.connections.add("area_d");s.world.areas.add(a);s.world.areas.add(b);s.world.areas.add(cc);s.world.areas.add(d);
+  WorldObject o=new WorldObject("test_target","flora","area_d","","mục tiêu thử nghiệm",270,0,10,10,"flora living resource");o.enabled=true;o.interactable=true;s.world.objects.add(o);return s;
  }
 
  private static PlanState reasoningPlan(WorldState s,String id,String subject,String hypothesis,long now){
