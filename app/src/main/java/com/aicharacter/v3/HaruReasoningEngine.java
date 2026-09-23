@@ -77,6 +77,7 @@ public final class HaruReasoningEngine {
   }
   predictPlanOutcome(s,p,now);
   attachPlanningAdaptation(s,p,now);
+  CausalExperimentEngine.attachIfTestable(s,p,now);
  }
 
  public static PredictionState predictPlanOutcome(WorldState s,PlanState p,long now){
@@ -104,7 +105,8 @@ public final class HaruReasoningEngine {
     ThoughtState t=new ThoughtState("Mình đã dự đoán một kết quả nhưng trải nghiệm thật lại khác. Mình cần tìm nguyên nhân thay vì giữ nguyên giả định cũ.","prediction_error:"+pred.id,"reflect",.78,.58,now);t.relatedMemories.add(outcome.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
    }
   }
-  reviewPriorCausalExplanations(s,p,pred,outcome,success,now);
+  if(p.causalExperimentId==null||p.causalExperimentId.isEmpty())reviewPriorCausalExplanations(s,p,pred,outcome,success,now);
+  CausalExperimentEngine.review(s,p,outcome,now);
 
   if("WORLD_AFFORDANCE".equals(p.origin)){
    HypothesisState h=p.reasoningHypothesisId==null?null:s.characterGod.reasoning.hypotheses.get(p.reasoningHypothesisId);
@@ -145,6 +147,7 @@ public final class HaruReasoningEngine {
   for(HypothesisState h:r.hypotheses.values())b.append("hyp ").append(h.id).append(" conf=").append(fmt(h.confidence)).append(" status=").append(h.status).append(" evidence=").append(h.evidenceCount).append(" revisions=").append(h.revisionCount).append('\n');
   for(PredictionState p:r.predictions.values())b.append("pred ").append(p.id).append(" conf=").append(fmt(p.confidence)).append(" status=").append(p.status).append('\n');
   for(CausalExplanationState x:r.causalExplanations.values())b.append("cause ").append(x.id).append(" type=").append(x.causeType).append(" conf=").append(fmt(x.confidence)).append(" status=").append(x.status).append('\n');
+  for(CausalExperimentState x:r.causalExperiments.values())b.append("experiment ").append(x.id).append(" status=").append(x.status).append(" strategy=").append(x.strategy).append(" attempts=").append(x.attempts).append('\n');
   for(GeneralRuleState g:r.rules.values())b.append("rule ").append(g.id).append(" conf=").append(fmt(g.confidence)).append(" status=").append(g.status).append(" subjects=").append(g.subjects.size()).append('\n');
   return b.toString();
  }
@@ -163,6 +166,7 @@ public final class HaruReasoningEngine {
   if(s.worldHistory!=null)for(int i=Math.max(0,s.worldHistory.size()-48);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.time<start||e.time>end||!p.planId.equals(e.entity))continue;String type=causeTypeForEvent(e);if(type.isEmpty())continue;CausalExplanationState x=ensureCause(s,p,pred,type,claimFor(type,e.summary),now);x.apply(true,causeEvidenceWeight(e),e.eventId,outcome.memoryId,now);grounded=true;}
   if(!grounded){String type=causeTypeFromText((p.lastOutcome==null?"":p.lastOutcome)+" "+outcome.summary);if(!type.isEmpty()){CausalExplanationState x=ensureCause(s,p,pred,type,claimFor(type,outcome.summary),now);x.apply(true,.35,"",outcome.memoryId,now);}}
   ensureCause(s,p,pred,"UNKNOWN_FACTOR","Một yếu tố khác mà mình chưa quan sát được có thể đã làm kế hoạch lệch khỏi dự đoán.",now);
+  CausalExperimentEngine.designForPrediction(s,p,pred,now);
  }
 
  private static void refreshCausalExplanations(WorldState s,long now){
