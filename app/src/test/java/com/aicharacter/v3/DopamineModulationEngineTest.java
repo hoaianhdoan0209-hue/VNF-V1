@@ -40,6 +40,24 @@ public final class DopamineModulationEngineTest {
   assertEquals(curiosity,high.personality.curiosity,.000001);assertEquals(caution,high.personality.caution,.000001);
  }
 
+ @Test public void livedRewardPulsesDopamineThroughCognitionPipeline(){
+  WorldState s=decisionState();double before=s.neuroModulation.dopaminePhasic;
+  CognitionEngine.experience(s,5000L,"planned_action_outcome","a real action succeeded",.55,.72,"success","curiosity");
+  assertTrue(s.neuroModulation.dopaminePhasic>before);
+  assertTrue(s.neuroModulation.lastPulseSource.startsWith("experience:"));
+ }
+
+ @Test public void activeAndOfflineSlicesShareTheSameDopamineClock(){
+  WorldState active=decisionState(),offline=decisionState();long now=System.currentTimeMillis()+60_000L;
+  DopamineModulationEngine.pulse(active,.92,"parity",now-60_000L);DopamineModulationEngine.pulse(offline,.92,"parity",now-60_000L);
+  LifeSimulationKernel.beginSlice(active,60,now,LifeSimulationKernel.Mode.ACTIVE);
+  LifeSimulationKernel.beginSlice(offline,60,now,LifeSimulationKernel.Mode.OFFLINE);
+  assertEquals(active.neuroModulation.dopaminePhasic,offline.neuroModulation.dopaminePhasic,.0000001);
+  assertEquals(active.neuroModulation.rewardSalience,offline.neuroModulation.rewardSalience,.0000001);
+  assertEquals(DopamineModulationEngine.logicalControl(active),DopamineModulationEngine.logicalControl(offline),.0000001);
+  assertEquals(DopamineModulationEngine.instinctBias(active),DopamineModulationEngine.instinctBias(offline),.0000001);
+ }
+
  @Test public void neuromodulationSurvivesSaveAndRejectsNonFiniteValues() throws Exception{
   WorldState s=WorldState.fresh();DopamineModulationEngine.pulse(s,.86,"save_test",3000L);s.neuroModulation.dopamineTonic=Double.NaN;s.neuroModulation.executiveNoise=Double.POSITIVE_INFINITY;
   WorldState x=WorldState.fromJson(s.toJson());
