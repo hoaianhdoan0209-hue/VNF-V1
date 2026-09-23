@@ -78,7 +78,8 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-linux-hw-accel: true
+          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -no-snapshot -no-snapshot-save -noaudio -no-boot-anim -camera-back none -camera-front none
           script: bash tools/capture_visual_runtime.sh
 
       - name: Upload runtime visual QA screenshots
