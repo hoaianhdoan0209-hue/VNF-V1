@@ -19,7 +19,8 @@ public final class GirlAnimationController{
   if(rain>.60&&(wind>.42||(s.thermal!=null&&s.thermal.coldLoad>.48)))return v(State.REACT,"girl_react_right",12,1.7f,.50f,.94f,"heavy exposed weather visibly changes posture");
   if(s.body.pain>20)return v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"pain is visibly affecting movement");
   if(s.body.energy<22||s.body.sleepiness>78)return v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant");
-  HaruVisibleBehaviorBridge.Cue cue=HaruVisibleBehaviorBridge.observe(s,System.currentTimeMillis());
+  EmotionEpisodeState emotion=latestEmotion(s);if(emotion!=null&&emotion.intensity>=.30){String e=emotion.primaryEmotion==null?"":emotion.primaryEmotion;if("afraid".equals(e)||"angry".equals(e))return v(State.REACT,"girl_react_right",12,2.15f,.50f,.94f,"current "+e+" episode remains visibly active");if("sad".equals(e)||"lonely".equals(e))return v(State.SIT,"girl_sit_right",12,1.35f,.50f,.94f,"current "+e+" episode softens posture");if("curious".equals(e))return v(State.THINK,"girl_think_right",12,1.85f,.50f,.94f,"current curiosity episode keeps attention visibly engaged");if("joyful".equals(e)||"relieved".equals(e))return v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"current "+e+" episode becomes a brief open reaction");}
+  HaruVisibleBehaviorBridge.Cue cue=HaruVisibleBehaviorBridge.observe(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));
   if(cue.mode==HaruVisibleBehaviorBridge.Mode.THINK)return v(State.THINK,"girl_think_right",12,1.9f,.50f,.94f,cue.reason);
   if(cue.mode==HaruVisibleBehaviorBridge.Mode.SETTLE)return v(State.SIT,"girl_sit_right",12,1.6f,.50f,.94f,cue.reason);
   if(cue.mode==HaruVisibleBehaviorBridge.Mode.REACT)return v(State.REACT,"girl_react_right",12,2.25f,.50f,.94f,cue.reason);
@@ -33,6 +34,7 @@ public final class GirlAnimationController{
   if(s.relationship!=null&&s.relationship.hurt+s.relationship.irritation>32)return v(State.IDLE,"girl_idle_right",12,1.55f,.50f,.94f,"relationship tension keeps her visually reserved");
   return facingRight?v(State.IDLE,"girl_idle_right",12,2.0f,.50f,.94f,"between committed actions"):v(State.IDLE,"girl_idle_left",12,2.0f,.50f,.94f,"between committed actions");
  }
+ private static EmotionEpisodeState latestEmotion(WorldState s){if(s==null||s.emotionEpisodes==null)return null;long now=Math.max(s.lastSimulatedAt,s.lastOpenedAt);for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState e=s.emotionEpisodes.get(i);if(e==null||!"ACTIVE".equals(e.status)||e.intensity<.18)continue;if(e.updatedAt>0&&now>=e.updatedAt&&now-e.updatedAt>12L*60L*1000L)continue;return e;}return null;}
  private static ThoughtState lastThought(WorldState s){return s.thoughts==null||s.thoughts.isEmpty()?null:s.thoughts.get(s.thoughts.size()-1);}
  public static float renderTop(float ground,float frameHeight,float scale,float anchorY){return ground-anchorY*frameHeight*scale;}
  private static Visual v(State s,String a,int f,float fps,float ax,float ay,String r){return new Visual(s,a,f,fps,ax,ay,r);}
