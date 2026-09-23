@@ -107,7 +107,7 @@ public final class HaruReasoningEngine {
   if("WORLD_AFFORDANCE".equals(p.origin)){
    HypothesisState h=p.reasoningHypothesisId==null?null:s.characterGod.reasoning.hypotheses.get(p.reasoningHypothesisId);
    if(success&&h!=null)applyHypothesisEvidence(s,h,true,.58,outcome,now);
-   if(p.actionResolvedAt>0){GeneralRuleState rule=rule(s,RULE_REVISIT,"When a cautious revisit repeatedly produces useful observations, using a revisit as a low-risk inquiry strategy can transfer to a new unfamiliar subject.");
+   if(success||p.actionResolvedAt>0){GeneralRuleState rule=rule(s,RULE_REVISIT,"When a cautious revisit repeatedly produces useful observations, using a revisit as a low-risk inquiry strategy can transfer to a new unfamiliar subject.");
    rule.record(p.destination,success,now);}
   }
  }
