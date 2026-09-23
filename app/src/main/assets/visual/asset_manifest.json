@@ -200,9 +200,9 @@
         800,
         360
       ],
-      "bytes": 8379,
+      "bytes": 36566,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "garden_foreground",
@@ -211,9 +211,9 @@
         800,
         360
       ],
-      "bytes": 6144,
+      "bytes": 38947,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "garden_ground",
@@ -222,9 +222,9 @@
         800,
         360
       ],
-      "bytes": 5249,
+      "bytes": 35216,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "garden_mid",
@@ -233,9 +233,9 @@
         800,
         360
       ],
-      "bytes": 5745,
+      "bytes": 64938,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "garden_sky",
@@ -244,9 +244,9 @@
         800,
         360
       ],
-      "bytes": 2448,
+      "bytes": 35736,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "girl_crouch_right",
@@ -376,9 +376,9 @@
         800,
         360
       ],
-      "bytes": 4975,
+      "bytes": 25885,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "grove_foreground",
@@ -387,9 +387,9 @@
         800,
         360
       ],
-      "bytes": 6801,
+      "bytes": 53566,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "grove_ground",
@@ -398,9 +398,9 @@
         800,
         360
       ],
-      "bytes": 5658,
+      "bytes": 31626,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "grove_mid",
@@ -409,9 +409,9 @@
         800,
         360
       ],
-      "bytes": 6506,
+      "bytes": 69832,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "grove_sky",
@@ -420,9 +420,9 @@
         800,
         360
       ],
-      "bytes": 2734,
+      "bytes": 37471,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_distant",
@@ -431,9 +431,9 @@
         800,
         360
       ],
-      "bytes": 7759,
+      "bytes": 36016,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_foreground",
@@ -442,9 +442,9 @@
         800,
         360
       ],
-      "bytes": 5712,
+      "bytes": 37353,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_ground",
@@ -453,9 +453,9 @@
         800,
         360
       ],
-      "bytes": 4763,
+      "bytes": 26785,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_mid",
@@ -464,9 +464,9 @@
         800,
         360
       ],
-      "bytes": 4125,
+      "bytes": 61398,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_sky",
@@ -475,9 +475,9 @@
         800,
         360
       ],
-      "bytes": 2492,
+      "bytes": 34225,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "home_warm_light",
@@ -541,9 +541,9 @@
         800,
         360
       ],
-      "bytes": 7844,
+      "bytes": 34197,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "lakeside_foreground",
@@ -552,9 +552,9 @@
         800,
         360
       ],
-      "bytes": 5268,
+      "bytes": 28596,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "lakeside_ground",
@@ -563,9 +563,9 @@
         800,
         360
       ],
-      "bytes": 5243,
+      "bytes": 36935,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "lakeside_mid",
@@ -574,9 +574,9 @@
         800,
         360
       ],
-      "bytes": 3490,
+      "bytes": 28772,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "lakeside_sky",
@@ -585,9 +585,9 @@
         800,
         360
       ],
-      "bytes": 2385,
+      "bytes": 31759,
       "decodedBytes": 4608000,
-      "visualRevision": "authored-organic-biome-v2-2026-09"
+      "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
     },
     {
       "id": "lakeside_water_0",
@@ -876,5 +876,5 @@
       "sha256": "f830ce30ef5aa74626736e4953c0d76c2d98fba82f809fc8fed7191e77363b22"
     }
   ],
-  "visualRevision": "authored-organic-biome-v2-2026-09"
+  "visualRevision": "authored-organic-biome-v9-aligned-bloom-2026-09"
 }
