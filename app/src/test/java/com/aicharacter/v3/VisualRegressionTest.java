@@ -64,6 +64,26 @@ public final class VisualRegressionTest{
   assertTrue(gameView.contains("emotionShot="));
  }
 
+ @Test public void divineAndHaruPolishStayWiredToCurrentVisualPipeline()throws Exception{
+  Path app=appRoot();
+  String divine=read(app.resolve("src/main/java/com/aicharacter/v3/DivineManifestationView.java"));
+  String scene=read(app.resolve("src/main/java/com/aicharacter/v3/GodContactScene.java"));
+  String haru=read(app.resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  assertTrue(divine.contains("drawAtmosphericField"));
+  assertTrue(divine.contains("drawLightColumn"));
+  assertTrue(divine.contains("drawFloorEcho"));
+  assertTrue(divine.contains("drawHaloLattice"));
+  assertTrue(divine.contains("drawOrbitBands"));
+  assertTrue(divine.contains("drawPhaseAccent"));
+  assertTrue(scene.contains("THẦN // VNF"));
+  assertTrue(scene.contains("KÊNH HIỆN DIỆN"));
+  assertTrue(haru.contains("drawCloseSubjectLight"));
+  assertTrue(haru.contains("PorterDuff.Mode.SRC_IN"));
+  assertTrue(haru.contains("cameraZoom"));
+  assertTrue(game.contains("anim,visualZoom"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
