@@ -49,8 +49,7 @@ public final class HaruVisualRenderer{
   float cloud=s.environment==null?0f:(float)Math.max(0,Math.min(1,s.environment.cloudCover));
   float rainFactor=s.environment!=null&&"RAIN".equals(s.environment.weather)?.62f:1f;
   int shadowAlpha=(int)Math.max(10,(("NIGHT".equals(phase)?38:56)-lift*.16f)*(1f-cloud*.38f)*rainFactor);
-  p.setColor(Color.argb(shadowAlpha,0,0,0));
-  c.drawOval(x-shadowW+shadowDx,contactGround-7,x+shadowW+shadowDx,contactGround+10,p);
+  drawLayeredContactShadow(c,p,x,contactGround,shadowW,shadowDx,shadowAlpha,closeT);
   p.setColor(Color.argb(Math.max(8,shadowAlpha/3),18,26,24));
   c.drawOval(x-shadowW*.72f+shadowDx*.75f,contactGround-4,x+shadowW*.72f+shadowDx*.75f,contactGround+7,p);
 
@@ -96,6 +95,7 @@ public final class HaruVisualRenderer{
   p.setColorFilter(null);
   p.setAlpha(bodyAlpha);
   c.drawBitmap(sheet,src,dst,p);
+  if(closeT>.04f)drawClosePortraitGrade(c,p,s,sheet,src,dst,closeT,phase,area);
   int localColor=Color.TRANSPARENT,localAlpha=0;
   if("home_shelter".equals(area)){
    WorldObject shelter=s.world==null?null:s.world.object("shelter_01");
@@ -109,6 +109,21 @@ public final class HaruVisualRenderer{
   p.setAlpha(255);
   HaruFacialOverlayRenderer.draw(c,p,s,v,dst);
   c.restore();
+ }
+
+ private static void drawLayeredContactShadow(Canvas c,Paint p,float x,float ground,float shadowW,float shadowDx,int alpha,float closeT){
+  p.setStyle(Paint.Style.FILL);
+  p.setColor(Color.argb(Math.max(7,alpha/4),0,0,0));c.drawOval(x-shadowW*1.14f+shadowDx,ground-10,x+shadowW*1.14f+shadowDx,ground+13,p);
+  p.setColor(Color.argb(Math.max(10,(int)(alpha*(.62f+.18f*closeT))),0,0,0));c.drawOval(x-shadowW*.78f+shadowDx*.78f,ground-6,x+shadowW*.78f+shadowDx*.78f,ground+9,p);
+  p.setColor(Color.argb(Math.max(12,(int)(alpha*(.82f+.12f*closeT))),4,7,7));c.drawOval(x-shadowW*.43f+shadowDx*.42f,ground-3.6f,x+shadowW*.43f+shadowDx*.42f,ground+5.5f,p);
+ }
+
+ private static void drawClosePortraitGrade(Canvas c,Paint p,WorldState s,Bitmap sheet,Rect src,RectF dst,float closeT,String phase,String area){
+  int key;if("NIGHT".equals(phase))key=Color.rgb(156,188,228);else if("EVENING".equals(phase))key=Color.rgb(255,183,126);else if("MORNING".equals(phase))key=Color.rgb(255,220,171);else if("quiet_grove".equals(area))key=Color.rgb(188,217,176);else key=Color.rgb(222,226,201);
+  int lower="NIGHT".equals(phase)?Color.rgb(36,53,78):Color.rgb(84,78,66);
+  c.save();c.clipRect(dst.left,dst.top,dst.right,dst.top+dst.height()*.58f);p.setColorFilter(new PorterDuffColorFilter(key,PorterDuff.Mode.SRC_ATOP));p.setAlpha((int)(8+18*closeT));c.drawBitmap(sheet,src,dst,p);c.restore();
+  c.save();c.clipRect(dst.left,dst.top+dst.height()*.54f,dst.right,dst.bottom);p.setColorFilter(new PorterDuffColorFilter(lower,PorterDuff.Mode.SRC_ATOP));p.setAlpha((int)(5+10*closeT));c.drawBitmap(sheet,src,dst,p);c.restore();
+  p.setColorFilter(null);p.setAlpha(255);
  }
 
  private static void drawCloseSubjectLight(Canvas c,Paint p,WorldState s,RectF dst,float closeT,String phase){
