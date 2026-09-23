@@ -11,6 +11,7 @@ import java.util.*;
 public final class HaruReasoningState {
  public final Map<String,HypothesisState> hypotheses=new LinkedHashMap<>();
  public final Map<String,PredictionState> predictions=new LinkedHashMap<>();
+ public final Map<String,CausalExplanationState> causalExplanations=new LinkedHashMap<>();
  public final Map<String,GeneralRuleState> rules=new LinkedHashMap<>();
  public long lastCycleAt;
  public int cycleCount;
@@ -18,6 +19,7 @@ public final class HaruReasoningState {
  public JSONObject toJson(){JSONObject j=new JSONObject();try{
   JSONObject h=new JSONObject();for(Map.Entry<String,HypothesisState>e:hypotheses.entrySet())h.put(e.getKey(),e.getValue().toJson());j.put("hypotheses",h);
   JSONObject p=new JSONObject();for(Map.Entry<String,PredictionState>e:predictions.entrySet())p.put(e.getKey(),e.getValue().toJson());j.put("predictions",p);
+  JSONObject x=new JSONObject();for(Map.Entry<String,CausalExplanationState>e:causalExplanations.entrySet())x.put(e.getKey(),e.getValue().toJson());j.put("causalExplanations",x);
   JSONObject r=new JSONObject();for(Map.Entry<String,GeneralRuleState>e:rules.entrySet())r.put(e.getKey(),e.getValue().toJson());j.put("rules",r);
   j.put("lastCycleAt",lastCycleAt);j.put("cycleCount",cycleCount);
  }catch(Exception ignored){}return j;}
@@ -25,6 +27,7 @@ public final class HaruReasoningState {
  public static HaruReasoningState fromJson(JSONObject j){HaruReasoningState s=new HaruReasoningState();if(j==null)return s;
   read(j.optJSONObject("hypotheses"),(k,v)->s.hypotheses.put(k,HypothesisState.fromJson(k,v)));
   read(j.optJSONObject("predictions"),(k,v)->s.predictions.put(k,PredictionState.fromJson(k,v)));
+  read(j.optJSONObject("causalExplanations"),(k,v)->s.causalExplanations.put(k,CausalExplanationState.fromJson(k,v)));
   read(j.optJSONObject("rules"),(k,v)->s.rules.put(k,GeneralRuleState.fromJson(k,v)));
   s.lastCycleAt=Math.max(0,j.optLong("lastCycleAt"));s.cycleCount=Math.max(0,j.optInt("cycleCount"));return s;
  }
@@ -71,6 +74,28 @@ final class PredictionState {
 
  public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("id",id);j.put("planId",planId);j.put("hypothesisId",hypothesisId);j.put("subjectId",subjectId);j.put("expectedOutcome",expectedOutcome);j.put("alternativeOutcome",alternativeOutcome);j.put("status",status);j.put("outcomeMemoryId",outcomeMemoryId);j.put("confidence",confidence);j.put("createdAt",createdAt);j.put("resolvedAt",resolvedAt);}catch(Exception ignored){}return j;}
  public static PredictionState fromJson(String key,JSONObject j){PredictionState p=new PredictionState();if(j==null){p.id=key;return p;}p.id=j.optString("id",key);p.planId=j.optString("planId","");p.hypothesisId=j.optString("hypothesisId","");p.subjectId=j.optString("subjectId","");p.expectedOutcome=j.optString("expectedOutcome","");p.alternativeOutcome=j.optString("alternativeOutcome","");p.status=j.optString("status","PENDING");p.outcomeMemoryId=j.optString("outcomeMemoryId","");double c=j.optDouble("confidence",.5);p.confidence=Double.isFinite(c)?Math.max(0,Math.min(1,c)):.5;p.createdAt=Math.max(0,j.optLong("createdAt"));p.resolvedAt=Math.max(0,j.optLong("resolvedAt"));return p;}
+}
+
+final class CausalExplanationState {
+ public String id="",predictionId="",planId="",causeType="",claim="",status="TENTATIVE";
+ public double supportWeight,contradictionWeight,confidence=.5;
+ public long createdAt,updatedAt;
+ public final List<String> evidenceEventIds=new ArrayList<>(),evidenceMemoryIds=new ArrayList<>();
+
+ public void apply(boolean supports,double weight,String eventId,String memoryId,long now){
+  String key=(eventId==null?"":eventId)+"|"+(memoryId==null?"":memoryId);for(String x:evidenceEventIds)if(x.equals(key))return;
+  double w=Double.isFinite(weight)?Math.max(.02,Math.min(1.5,weight)):.1;if(supports)supportWeight+=w;else contradictionWeight+=w;
+  confidence=Math.max(.02,Math.min(.98,(1.0+supportWeight)/(2.0+supportWeight+contradictionWeight)));
+  if(!key.equals("|")){evidenceEventIds.add(key);while(evidenceEventIds.size()>24)evidenceEventIds.remove(0);}
+  if(memoryId!=null&&!memoryId.isEmpty()&&!evidenceMemoryIds.contains(memoryId)){evidenceMemoryIds.add(memoryId);while(evidenceMemoryIds.size()>24)evidenceMemoryIds.remove(0);}
+  if(confidence>=.68&&supportWeight>=.5)status="SUPPORTED";else if(confidence<=.32&&contradictionWeight>=.5)status="DISFAVORED";else status="TENTATIVE";updatedAt=now;
+ }
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{
+  j.put("id",id);j.put("predictionId",predictionId);j.put("planId",planId);j.put("causeType",causeType);j.put("claim",claim);j.put("status",status);j.put("supportWeight",supportWeight);j.put("contradictionWeight",contradictionWeight);j.put("confidence",confidence);j.put("createdAt",createdAt);j.put("updatedAt",updatedAt);j.put("evidenceEventIds",new JSONArray(evidenceEventIds));j.put("evidenceMemoryIds",new JSONArray(evidenceMemoryIds));
+ }catch(Exception ignored){}return j;}
+ public static CausalExplanationState fromJson(String key,JSONObject j){CausalExplanationState x=new CausalExplanationState();if(j==null){x.id=key;return x;}x.id=j.optString("id",key);x.predictionId=j.optString("predictionId","");x.planId=j.optString("planId","");x.causeType=j.optString("causeType","");x.claim=j.optString("claim","");x.status=j.optString("status","TENTATIVE");x.supportWeight=finite(j.optDouble("supportWeight"),0);x.contradictionWeight=finite(j.optDouble("contradictionWeight"),0);x.confidence=Math.max(.02,Math.min(.98,finite(j.optDouble("confidence",.5),.5)));x.createdAt=Math.max(0,j.optLong("createdAt"));x.updatedAt=Math.max(0,j.optLong("updatedAt"));strings(j.optJSONArray("evidenceEventIds"),x.evidenceEventIds);strings(j.optJSONArray("evidenceMemoryIds"),x.evidenceMemoryIds);return x;}
+ private static void strings(JSONArray a,List<String>out){if(a!=null)for(int i=0;i<a.length();i++){String v=a.optString(i,"");if(!v.isEmpty())out.add(v);}}
+ private static double finite(double v,double f){return Double.isFinite(v)?v:f;}
 }
 
 final class GeneralRuleState {
