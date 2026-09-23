@@ -14,6 +14,7 @@ public final class HaruReasoningState {
  public final Map<String,CausalExplanationState> causalExplanations=new LinkedHashMap<>();
  public final Map<String,CausalExperimentState> causalExperiments=new LinkedHashMap<>();
  public final Map<String,GeneralRuleState> rules=new LinkedHashMap<>();
+ public MetacognitiveCalibrationState calibration=new MetacognitiveCalibrationState();
  public long lastCycleAt;
  public int cycleCount;
 
@@ -23,6 +24,7 @@ public final class HaruReasoningState {
   JSONObject x=new JSONObject();for(Map.Entry<String,CausalExplanationState>e:causalExplanations.entrySet())x.put(e.getKey(),e.getValue().toJson());j.put("causalExplanations",x);
   JSONObject ce=new JSONObject();for(Map.Entry<String,CausalExperimentState>e:causalExperiments.entrySet())ce.put(e.getKey(),e.getValue().toJson());j.put("causalExperiments",ce);
   JSONObject r=new JSONObject();for(Map.Entry<String,GeneralRuleState>e:rules.entrySet())r.put(e.getKey(),e.getValue().toJson());j.put("rules",r);
+  j.put("calibration",calibration==null?new MetacognitiveCalibrationState().toJson():calibration.toJson());
   j.put("lastCycleAt",lastCycleAt);j.put("cycleCount",cycleCount);
  }catch(Exception ignored){}return j;}
 
@@ -32,6 +34,7 @@ public final class HaruReasoningState {
   read(j.optJSONObject("causalExplanations"),(k,v)->s.causalExplanations.put(k,CausalExplanationState.fromJson(k,v)));
   read(j.optJSONObject("causalExperiments"),(k,v)->s.causalExperiments.put(k,CausalExperimentState.fromJson(k,v)));
   read(j.optJSONObject("rules"),(k,v)->s.rules.put(k,GeneralRuleState.fromJson(k,v)));
+  s.calibration=MetacognitiveCalibrationState.fromJson(j.optJSONObject("calibration"));
   s.lastCycleAt=Math.max(0,j.optLong("lastCycleAt"));s.cycleCount=Math.max(0,j.optInt("cycleCount"));return s;
  }
  private interface Reader{void accept(String key,JSONObject value);}
@@ -72,11 +75,11 @@ final class HypothesisState {
 
 final class PredictionState {
  public String id="",planId="",hypothesisId="",subjectId="",expectedOutcome="",alternativeOutcome="",status="PENDING",outcomeMemoryId="";
- public double confidence=.5;
+ public double confidence=.5,dopamineAtPrediction,logicalControlAtPrediction=1,overdriveAtPrediction,calibrationError;
  public long createdAt,resolvedAt;
 
- public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("id",id);j.put("planId",planId);j.put("hypothesisId",hypothesisId);j.put("subjectId",subjectId);j.put("expectedOutcome",expectedOutcome);j.put("alternativeOutcome",alternativeOutcome);j.put("status",status);j.put("outcomeMemoryId",outcomeMemoryId);j.put("confidence",confidence);j.put("createdAt",createdAt);j.put("resolvedAt",resolvedAt);}catch(Exception ignored){}return j;}
- public static PredictionState fromJson(String key,JSONObject j){PredictionState p=new PredictionState();if(j==null){p.id=key;return p;}p.id=j.optString("id",key);p.planId=j.optString("planId","");p.hypothesisId=j.optString("hypothesisId","");p.subjectId=j.optString("subjectId","");p.expectedOutcome=j.optString("expectedOutcome","");p.alternativeOutcome=j.optString("alternativeOutcome","");p.status=j.optString("status","PENDING");p.outcomeMemoryId=j.optString("outcomeMemoryId","");double c=j.optDouble("confidence",.5);p.confidence=Double.isFinite(c)?Math.max(0,Math.min(1,c)):.5;p.createdAt=Math.max(0,j.optLong("createdAt"));p.resolvedAt=Math.max(0,j.optLong("resolvedAt"));return p;}
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("id",id);j.put("planId",planId);j.put("hypothesisId",hypothesisId);j.put("subjectId",subjectId);j.put("expectedOutcome",expectedOutcome);j.put("alternativeOutcome",alternativeOutcome);j.put("status",status);j.put("outcomeMemoryId",outcomeMemoryId);j.put("confidence",confidence);j.put("dopamineAtPrediction",dopamineAtPrediction);j.put("logicalControlAtPrediction",logicalControlAtPrediction);j.put("overdriveAtPrediction",overdriveAtPrediction);j.put("calibrationError",calibrationError);j.put("createdAt",createdAt);j.put("resolvedAt",resolvedAt);}catch(Exception ignored){}return j;}
+ public static PredictionState fromJson(String key,JSONObject j){PredictionState p=new PredictionState();if(j==null){p.id=key;return p;}p.id=j.optString("id",key);p.planId=j.optString("planId","");p.hypothesisId=j.optString("hypothesisId","");p.subjectId=j.optString("subjectId","");p.expectedOutcome=j.optString("expectedOutcome","");p.alternativeOutcome=j.optString("alternativeOutcome","");p.status=j.optString("status","PENDING");p.outcomeMemoryId=j.optString("outcomeMemoryId","");double c=j.optDouble("confidence",.5);p.confidence=finite01(c,.5);p.dopamineAtPrediction=finite01(j.optDouble("dopamineAtPrediction",0),0);p.logicalControlAtPrediction=finite01(j.optDouble("logicalControlAtPrediction",1),1);p.overdriveAtPrediction=finite01(j.optDouble("overdriveAtPrediction",0),0);double err=j.optDouble("calibrationError",0);p.calibrationError=Double.isFinite(err)?Math.max(-1,Math.min(1,err)):0;p.createdAt=Math.max(0,j.optLong("createdAt"));p.resolvedAt=Math.max(0,j.optLong("resolvedAt"));return p;}private static double finite01(double v,double f){return Double.isFinite(v)?Math.max(0,Math.min(1,v)):f;}
 }
 
 final class CausalExplanationState {
@@ -115,6 +118,29 @@ final class CausalExperimentState {
  public static CausalExperimentState fromJson(String key,JSONObject j){CausalExperimentState x=new CausalExperimentState();if(j==null){x.id=key;return x;}
   x.id=j.optString("id",key);x.sourcePredictionId=j.optString("sourcePredictionId","");x.causeAId=j.optString("causeAId","");x.causeBId=j.optString("causeBId","");x.intentionId=j.optString("intentionId","");x.subjectId=j.optString("subjectId","");x.strategy=j.optString("strategy","");x.manipulatedVariable=j.optString("manipulatedVariable","");x.expectedIfA=j.optString("expectedIfA","");x.expectedIfB=j.optString("expectedIfB","");x.status=j.optString("status","DESIGNED");x.activePlanId=j.optString("activePlanId","");x.favoredCauseId=j.optString("favoredCauseId","");x.outcomeMemoryId=j.optString("outcomeMemoryId","");x.resultSummary=j.optString("resultSummary","");x.baselineContextKey=j.optString("baselineContextKey","");x.testContextKey=j.optString("testContextKey","");x.createdAt=Math.max(0,j.optLong("createdAt"));x.startedAt=Math.max(0,j.optLong("startedAt"));x.resolvedAt=Math.max(0,j.optLong("resolvedAt"));x.attempts=Math.max(0,j.optInt("attempts"));x.manipulationVerified=j.optBoolean("manipulationVerified",false);return x;
  }
+}
+
+final class MetacognitiveCalibrationState {
+ public int stablePredictions,overdrivePredictions,overdriveOverconfidentMisses;
+ public double stableAbsErrorSum,overdriveAbsErrorSum,overdriveBias;
+ public long updatedAt;
+
+ public void record(PredictionState p,boolean success,long now){
+  if(p==null)return;double actual=success?1:0,error=actual-p.confidence,abs=Math.abs(error);
+  p.calibrationError=Double.isFinite(error)?Math.max(-1,Math.min(1,error)):0;
+  boolean over=p.overdriveAtPrediction>=.22||p.logicalControlAtPrediction<.70;
+  if(over){overdrivePredictions++;overdriveAbsErrorSum+=abs;if(!success&&p.confidence>=.68)overdriveOverconfidentMisses++;}
+  else{stablePredictions++;stableAbsErrorSum+=abs;}
+  double overErr=overdrivePredictions==0?0:overdriveAbsErrorSum/overdrivePredictions,stableErr=stablePredictions==0?overErr:stableAbsErrorSum/stablePredictions;
+  double missRate=overdrivePredictions==0?0:(double)overdriveOverconfidentMisses/overdrivePredictions;
+  overdriveBias=clamp((overErr-stableErr)*1.35+missRate*.55);updatedAt=Math.max(updatedAt,now);
+ }
+ public double cautionAdjustment(){return overdrivePredictions<3?0:Math.min(.22,overdriveBias*.22);}
+ public boolean learnedOverdriveRisk(){return overdrivePredictions>=3&&overdriveBias>=.18;}
+
+ public JSONObject toJson(){JSONObject j=new JSONObject();try{j.put("stablePredictions",stablePredictions);j.put("overdrivePredictions",overdrivePredictions);j.put("overdriveOverconfidentMisses",overdriveOverconfidentMisses);j.put("stableAbsErrorSum",finite(stableAbsErrorSum));j.put("overdriveAbsErrorSum",finite(overdriveAbsErrorSum));j.put("overdriveBias",finite(overdriveBias));j.put("updatedAt",Math.max(0,updatedAt));}catch(Exception ignored){}return j;}
+ public static MetacognitiveCalibrationState fromJson(JSONObject j){MetacognitiveCalibrationState x=new MetacognitiveCalibrationState();if(j==null)return x;x.stablePredictions=Math.max(0,j.optInt("stablePredictions"));x.overdrivePredictions=Math.max(0,j.optInt("overdrivePredictions"));x.overdriveOverconfidentMisses=Math.max(0,j.optInt("overdriveOverconfidentMisses"));x.stableAbsErrorSum=nonneg(j.optDouble("stableAbsErrorSum"));x.overdriveAbsErrorSum=nonneg(j.optDouble("overdriveAbsErrorSum"));x.overdriveBias=clamp(j.optDouble("overdriveBias"));x.updatedAt=Math.max(0,j.optLong("updatedAt"));return x;}
+ private static double finite(double v){return Double.isFinite(v)?v:0;}private static double nonneg(double v){return Double.isFinite(v)?Math.max(0,v):0;}private static double clamp(double v){return Double.isFinite(v)?Math.max(0,Math.min(1,v)):0;}
 }
 
 final class GeneralRuleState {
