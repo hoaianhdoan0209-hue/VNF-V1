@@ -36,8 +36,9 @@ public final class HaruVisualRenderer{
   int bands=water?7:4;
   for(int i=0;i<bands;i++){float y=contactGround+10+i*(water?17f:13f),phaseWave=(float)Math.sin(anim*(.65f+i*.03f)+i*.9f),ww=(water?52:38)+(i%3)*18f;p.setColor(Color.argb((int)Math.max(3,(water?15:8)*strength),water?184:145,water?211:162,water?211:153));c.drawRoundRect(x-ww+phaseWave*9,y,x+ww+phaseWave*9,y+(water?2.2f:1.5f),1,1,p);}
  }
- public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){
-  float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift);
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim){draw(c,p,assets,s,v,x,bodyGround,contactGround,anim,1f);}
+ public static void draw(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float cameraZoom){
+  float lift=Math.max(0,contactGround-bodyGround),shadowScale=shadowScale(lift),closeT=Math.max(0f,Math.min(1f,(cameraZoom-1f)/.56f));
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
   String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes);
   float dayT=(float)Math.max(0,Math.min(1,(s.worldMinutes-360.0)/(14.0*60.0)));
@@ -76,12 +77,15 @@ public final class HaruVisualRenderer{
 
   Rect src=new Rect(frame*fw,0,Math.min(sheet.getWidth(),(frame+1)*fw),fh);
   RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
+  if(closeT>.02f)drawCloseSubjectLight(c,p,s,dst,closeT,phase);
   c.save();
   c.translate(postureX,postureY);
   c.rotate(rotation,x,bodyGround);
   if(v.flipX)c.scale(-1f,1f,x,bodyGround);
   int bodyAlpha=(int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness));
   String area="";if(s.world!=null){WorldArea wa=s.world.areaAt(s.haruX);if(wa!=null)area=wa.id==null?"":wa.id;}
+  if(closeT>.02f){int separator="NIGHT".equals(phase)?Color.rgb(21,29,42):Color.rgb(38,42,38);float oo=.75f+1.25f*closeT;p.setColorFilter(new PorterDuffColorFilter(separator,PorterDuff.Mode.SRC_IN));p.setAlpha((int)(18+34*closeT));c.drawBitmap(sheet,src,new RectF(dst.left-oo,dst.top,dst.right-oo,dst.bottom),p);c.drawBitmap(sheet,src,new RectF(dst.left+oo,dst.top,dst.right+oo,dst.bottom),p);c.drawBitmap(sheet,src,new RectF(dst.left,dst.top-oo,dst.right,dst.bottom-oo),p);c.drawBitmap(sheet,src,new RectF(dst.left,dst.top+oo,dst.right,dst.bottom+oo),p);p.setColorFilter(null);p.setAlpha(255);}
+
   int rimColor;if("NIGHT".equals(phase))rimColor=Color.rgb(152,188,232);else if("EVENING".equals(phase))rimColor=Color.rgb(255,166,105);else if("MORNING".equals(phase))rimColor=Color.rgb(255,214,158);else if("home_shelter".equals(area))rimColor=Color.rgb(235,216,172);else if("garden_path".equals(area))rimColor=Color.rgb(226,232,184);else if("quiet_grove".equals(area))rimColor=Color.rgb(184,211,168);else rimColor=Color.rgb(188,218,225);
   float rimDx="MORNING".equals(phase)?-3.5f:"EVENING".equals(phase)?3.5f:"NIGHT".equals(phase)?1.5f:-1.5f;
   float rimDy="NIGHT".equals(phase)?-2.5f:-1f;
@@ -105,6 +109,13 @@ public final class HaruVisualRenderer{
   p.setAlpha(255);
   HaruFacialOverlayRenderer.draw(c,p,s,v,dst);
   c.restore();
+ }
+
+ private static void drawCloseSubjectLight(Canvas c,Paint p,WorldState s,RectF dst,float closeT,String phase){
+  String area="";if(s.world!=null){WorldArea a=s.world.areaAt(s.haruX);if(a!=null)area=a.id==null?"":a.id;}
+  int color;if("NIGHT".equals(phase))color=Color.rgb(128,166,213);else if("EVENING".equals(phase))color=Color.rgb(246,164,108);else if("MORNING".equals(phase))color=Color.rgb(247,211,158);else if("quiet_grove".equals(area))color=Color.rgb(171,205,168);else if("garden_path".equals(area))color=Color.rgb(220,226,178);else color=Color.rgb(169,208,218);
+  float cx=dst.centerX(),cy=dst.top+dst.height()*.40f,r=dst.height()*(.43f+.05f*closeT);int alpha=(int)(7+15*closeT);
+  p.setStyle(Paint.Style.FILL);p.setShader(new RadialGradient(cx,cy,r,Color.argb(alpha,Color.red(color),Color.green(color),Color.blue(color)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.save();c.scale(.72f,1f,cx,cy);c.drawCircle(cx,cy,r,p);c.restore();p.setShader(null);
  }
 
  static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
