@@ -18,8 +18,10 @@ public final class PlanOutcomeReviewEngine {
   double preference=0;
   PreferenceState pref=s.preferences.get("activity:"+activityKey(p.intentionId));
   if(pref!=null)preference=pref.value;
+  PredictionState prediction=p.predictionId==null||p.predictionId.isEmpty()?null:(s.characterGod==null||s.characterGod.reasoning==null?null:s.characterGod.reasoning.predictions.get(p.predictionId));
+  double rpe=DopamineModulationEngine.onPlanOutcome(s,p,prediction,m,now);
   p.lastOutcomeReview="POST_OUTCOME_REVIEW: memory="+m.memoryId+
-   " valence="+fmt(m.valence)+" expectation="+fmt(expectation)+" preference="+fmt(preference);
+   " valence="+fmt(m.valence)+" expectation="+fmt(expectation)+" preference="+fmt(preference)+" rewardPredictionError="+fmt(rpe);
   HaruReasoningEngine.reviewPlanOutcome(s,p,m,now);
   HaruAffordanceEngine.reviewPlan(s,p,m,now);
   PlanCausalAudit.reviewed(s,p,now,p.lastOutcomeReview);
