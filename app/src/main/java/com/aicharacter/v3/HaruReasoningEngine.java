@@ -87,7 +87,7 @@ public final class HaruReasoningEngine {
   PredictionState x=new PredictionState();x.id="pred_"+clean(p.planId);x.planId=p.planId;x.hypothesisId=p.reasoningHypothesisId==null?"":p.reasoningHypothesisId;x.subjectId=p.destination==null?"":p.destination;
   double learned=AdaptiveBeliefEngine.planExpectation(s,p.intentionId);double base=.55+Math.max(-.22,Math.min(.22,learned*.22));
   HypothesisState h=x.hypothesisId.isEmpty()?null:s.characterGod.reasoning.hypotheses.get(x.hypothesisId);if(h!=null)base=(base+h.confidence)/2.0;
-  x.confidence=Math.max(.18,Math.min(.86,base));x.expectedOutcome=p.goal==null||p.goal.isEmpty()?"the planned action will produce useful evidence or satisfy its goal":p.goal;
+  base+=DopamineModulationEngine.predictionConfidenceBias(s);x.confidence=Math.max(.18,Math.min(.90,base));x.expectedOutcome=p.goal==null||p.goal.isEmpty()?"the planned action will produce useful evidence or satisfy its goal":p.goal;
   x.alternativeOutcome="the plan may be interrupted, fail, or produce evidence that changes the current expectation";x.createdAt=now;
   s.characterGod.reasoning.predictions.put(x.id,x);p.predictionId=x.id;return x;
  }
@@ -127,7 +127,7 @@ public final class HaruReasoningEngine {
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_"+clean(subjectId));
   if(h==null)return 0;
   if("SUPPORTED".equals(h.status)||"DISFAVORED".equals(h.status))return -.10;
-  return Math.max(0,Math.min(.22,h.informationNeed()*.22));
+  return Math.max(0,Math.min(.22,h.informationNeed()*.22*DopamineModulationEngine.logicalControl(s)));
  }
 
  public static String currentReasoningSummary(WorldState s){
