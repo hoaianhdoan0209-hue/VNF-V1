@@ -18,6 +18,7 @@ public final class HaruAutonomyEngine {private static final long DECISION_INTERV
   // creates the external offer; Haru owns whether it becomes lived learning.
   HaruTeachingOpportunityEngine.observe(s,now);
   HaruAffordanceEngine.observeQuestions(s,now);
+  HaruReasoningEngine.observe(s,now);
  }
 
  /**
