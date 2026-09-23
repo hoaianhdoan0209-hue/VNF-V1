@@ -31,7 +31,7 @@ public final class HaruAffordanceEngine {
    OpenQuestionState q=findQuestion(s,o.id);double question=q!=null&&!"RESOLVED".equals(q.status)?.24:0;
    double novelty=(1-known)*.38+(seen.familiar?.02:.18),living=("creature".equals(o.type)||o.tags.contains("flora")||o.tags.contains("living"))?.12:0,resource=(o.tags.contains("water")||o.tags.contains("food")||o.tags.contains("herb")||o.tags.contains("resource"))?.09:0;
    double curiosity=s.personality==null?.5:s.personality.curiosity,energy=s.body==null?.5:Math.max(0,Math.min(1,s.body.energy/100.0));PreferenceState pref=s.preferences.get("activity:observe");double learned=pref==null?0:Math.max(-.12,Math.min(.12,pref.value*.12));
-   double reasoning=HaruReasoningEngine.inquiryStrategyBias(s);double score=novelty+question+living+resource+curiosity*.16+energy*.08+learned+reasoning;
+   double reasoning=HaruReasoningEngine.inquiryStrategyBias(s),informationGain=HaruReasoningEngine.informationGainBias(s,o.id);double score=novelty+question+living+resource+curiosity*.16+energy*.08+learned+reasoning+informationGain;
    Candidate c=new Candidate("affordance:"+o.id,o.id,"understand "+label(o),"visible_object:"+o.id,score);if(best==null||c.score>best.score)best=c;
   }
   return best!=null&&best.score>=.56?best:null;

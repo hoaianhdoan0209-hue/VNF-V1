@@ -98,6 +98,7 @@ public final class HaruReasoningEngine {
    pred.status=success?"CONFIRMED":"DISCONFIRMED";pred.outcomeMemoryId=outcome.memoryId;pred.resolvedAt=now;
    if(!success&&!pred.subjectId.isEmpty()){
     String qid="q_prediction_"+clean(pred.id);if(!s.characterGod.openQuestions.containsKey(qid)){OpenQuestionState q=new OpenQuestionState();q.questionId=qid;q.topic="prediction:"+pred.planId;q.aboutObjectId=s.world!=null&&s.world.object(pred.subjectId)!=null?pred.subjectId:"";q.question="Vì sao kết quả thực tế khác với điều mình vừa dự đoán?";q.reason="a prediction did not match the causal outcome";q.createdAt=now;q.lastRevisitedAt=now;s.characterGod.openQuestions.put(qid,q);}
+    ThoughtState t=new ThoughtState("Mình đã dự đoán một kết quả nhưng trải nghiệm thật lại khác. Mình cần tìm nguyên nhân thay vì giữ nguyên giả định cũ.","prediction_error:"+pred.id,"reflect",.78,.58,now);t.relatedMemories.add(outcome.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
    }
   }
 
@@ -116,9 +117,20 @@ public final class HaruReasoningEngine {
   return Math.max(0,Math.min(.16,(r.confidence-.65)*.34+.04));
  }
 
+ /** Expected information gain: uncertainty creates a reason to test; resolved hypotheses stop consuming attention. */
+ public static double informationGainBias(WorldState s,String subjectId){
+  if(s==null||subjectId==null||s.characterGod==null||s.characterGod.reasoning==null)return 0;
+  HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_"+clean(subjectId));
+  if(h==null)return 0;
+  if("SUPPORTED".equals(h.status)||"DISFAVORED".equals(h.status))return -.10;
+  return Math.max(0,Math.min(.22,h.informationNeed()*.22));
+ }
+
  public static String currentReasoningSummary(WorldState s){
   if(s==null||s.characterGod==null||s.characterGod.reasoning==null)return"";
-  HypothesisState best=null;for(HypothesisState h:s.characterGod.reasoning.hypotheses.values())if(h!=null&&(best==null||h.updatedAt>best.updatedAt))best=h;
+  HaruReasoningState r=s.characterGod.reasoning;HypothesisState best=null;for(HypothesisState h:r.hypotheses.values())if(h!=null&&(best==null||h.updatedAt>best.updatedAt))best=h;
+  PredictionState miss=null;for(PredictionState p:r.predictions.values())if(p!=null&&"DISCONFIRMED".equals(p.status)&&(miss==null||p.resolvedAt>miss.resolvedAt))miss=p;
+  if(miss!=null&&(best==null||miss.resolvedAt>=best.updatedAt))return "Mình vừa dự đoán rằng "+miss.expectedOutcome+", nhưng kết quả thực tế không khớp. Mình chưa muốn bịa lý do; mình đang giữ câu hỏi đó mở để tìm thêm bằng chứng.";
   if(best==null)return"";String certainty=best.confidence>=.72?"nghiêng về khả năng đầu":best.confidence<=.32?"nghiêng về khả năng thứ hai":"chưa đủ bằng chứng để chọn";
   return "Mình đang so hai khả năng: "+best.proposition+" Hoặc "+best.alternative+" Hiện mình "+certainty+", nên mình muốn kiểm tra bằng trải nghiệm thật.";
  }
