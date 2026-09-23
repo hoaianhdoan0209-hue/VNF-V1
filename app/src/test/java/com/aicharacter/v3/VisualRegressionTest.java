@@ -82,6 +82,8 @@ public final class VisualRegressionTest{
   assertTrue(haru.contains("PorterDuff.Mode.SRC_IN"));
   assertTrue(haru.contains("cameraZoom"));
   assertTrue(game.contains("anim,visualZoom"));
+  assertTrue(game.contains("HudIconRenderer.drawGodButton"));
+  assertTrue(read(app.resolve("src/main/java/com/aicharacter/v3/HudIconRenderer.java")).contains("GodSessionManager.State"));
  }
 
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
