@@ -1,0 +1,56 @@
+package com.aicharacter.v3;
+
+import org.junit.Test;
+import java.util.*;
+import static org.junit.Assert.*;
+
+public final class DopamineModulationEngineTest {
+
+ @Test public void strongPhasicDopamineRaisesRewardAndInstinctWhileReducingExecutiveControl(){
+  WorldState s=WorldState.fresh();double before=DopamineModulationEngine.logicalControl(s);
+  DopamineModulationEngine.pulse(s,.98,"test_reward",1000L);
+  assertTrue(s.neuroModulation.dopamine()>.62);
+  assertTrue(DopamineModulationEngine.overdrive(s)>0);
+  assertTrue(s.neuroModulation.rewardSalience>.45);
+  assertTrue(DopamineModulationEngine.instinctBias(s)>0);
+  assertTrue(DopamineModulationEngine.logicalControl(s)<before);
+ }
+
+ @Test public void phasicDopamineDecaysAndJudgmentRecovers(){
+  WorldState s=WorldState.fresh();DopamineModulationEngine.pulse(s,1.0,"test_reward",1000L);
+  double spike=s.neuroModulation.dopaminePhasic,control=DopamineModulationEngine.logicalControl(s);
+  DopamineModulationEngine.advance(s,20*60.0,1000L+20*60*1000L);
+  assertTrue(s.neuroModulation.dopaminePhasic<spike);
+  assertTrue(DopamineModulationEngine.logicalControl(s)>control);
+ }
+
+ @Test public void dopamineBiasesDeliberationButDoesNotRewriteBeliefsOrPersonality(){
+  WorldState low=WorldState.fresh(),high=WorldState.fresh();
+  high.beliefStates.put("stable_test",new BeliefState("stable_test","unchanged",.73));
+  double curiosity=high.personality.curiosity,caution=high.personality.caution;
+  DopamineModulationEngine.pulse(high,1.0,"reward_spike",2000L);
+
+  List<LifeDecision> lowChoices=choices(2000L),highChoices=choices(2000L);
+  DeliberationEngine.apply(low,lowChoices,2000L);DeliberationEngine.apply(high,highChoices,2000L);
+
+  assertFalse(lowChoices.get(0).reasons.containsKey("dopamine_reward_salience"));
+  assertTrue(highChoices.get(0).reasons.containsKey("dopamine_reward_salience"));
+  assertTrue(highChoices.get(0).reasons.containsKey("dopamine_executive_noise"));
+  assertEquals(.73,high.beliefStates.get("stable_test").confidence,.000001);
+  assertEquals(curiosity,high.personality.curiosity,.000001);assertEquals(caution,high.personality.caution,.000001);
+ }
+
+ @Test public void neuromodulationSurvivesSaveAndRejectsNonFiniteValues() throws Exception{
+  WorldState s=WorldState.fresh();DopamineModulationEngine.pulse(s,.86,"save_test",3000L);s.neuroModulation.dopamineTonic=Double.NaN;s.neuroModulation.executiveNoise=Double.POSITIVE_INFINITY;
+  WorldState x=WorldState.fromJson(s.toJson());
+  assertTrue(Double.isFinite(x.neuroModulation.dopamineTonic));assertTrue(Double.isFinite(x.neuroModulation.executiveNoise));
+  assertTrue(x.neuroModulation.dopaminePhasic>0);assertEquals("save_test",x.neuroModulation.lastPulseSource);
+ }
+
+ private static List<LifeDecision> choices(long now){
+  List<LifeDecision> x=new ArrayList<>();
+  x.add(new LifeDecision(new Intention("explore_garden",0,"curiosity","garden_path","notice something different",.32,now+7200000)).reason("base",10));
+  x.add(new LifeDecision(new Intention("reflect",0,"curiosity","bench_lake_01","reflect",.30,now+7200000)).reason("base",10));
+  return x;
+ }
+}
