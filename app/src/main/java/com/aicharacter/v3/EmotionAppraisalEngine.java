@@ -33,6 +33,13 @@ public final class EmotionAppraisalEngine {
   return x;
  }
 
+ public static EmotionEpisodeState observeBody(WorldState s,long now){
+  if(s==null)return null;ensure(s);double load=bodyLoad(s);if(load<.30)return null;
+  EmotionEpisodeState recent=null;for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState e=s.emotionEpisodes.get(i);if(e!=null&&"interoception".equals(e.sourceKind)&&"ACTIVE".equals(e.status)){recent=e;break;}}
+  if(recent!=null&&now>=recent.updatedAt&&now-recent.updatedAt<2L*60L*1000L){recent.bodilyLoad=load;recent.threat=cl01(Math.max(recent.threat,load*.76));recent.fear=cl01(Math.max(recent.fear,load*.68));recent.arousal=cl01(Math.max(recent.arousal,load*.74));recent.intensity=cl01(Math.max(recent.intensity,load*.62));recent.updatedAt=now;apply(s,recent,recent.joy,recent.fear,recent.sadness,recent.anger,recent.curiosity,recent.loneliness,recent.relief);return recent;}
+  EmotionEpisodeState x=new EmotionEpisodeState();x.id="emotion_body_"+now;x.sourceKind="interoception";x.targetId="body";x.cause=bodyCause(s);x.createdAt=now;x.updatedAt=now;x.bodilyLoad=load;x.threat=cl01(load*.76);x.uncertainty=.28;x.perceivedControl=cl01(.68-load*.34);x.fear=cl01(load*.68);x.anger=cl01((s.body==null?0:s.body.pain/100.0)*.18);x.sadness=cl01(Math.max(0,(s.body==null?0:(35-s.body.energy)/35.0))*.16);x.arousal=cl01(load*.78);x.intensity=cl01(load*.62);x.primaryEmotion=primary(x.joy,x.fear,x.sadness,x.anger,x.curiosity,x.loneliness,x.relief);apply(s,x,x.joy,x.fear,x.sadness,x.anger,x.curiosity,x.loneliness,x.relief);s.emotionEpisodes.add(x);while(s.emotionEpisodes.size()>36)s.emotionEpisodes.remove(0);return x;
+ }
+
  public static String currentCause(WorldState s,String emotion){
   if(s==null||emotion==null)return"";for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState x=s.emotionEpisodes.get(i);if(x!=null&&"ACTIVE".equals(x.status)&&emotion.equals(x.primaryEmotion))return x.cause;}return"";
  }
@@ -44,6 +51,7 @@ public final class EmotionAppraisalEngine {
   s.haruMood=s.emotion.dominant();
  }
 
+ private static String bodyCause(WorldState s){StringBuilder b=new StringBuilder();if(s.body!=null&&s.body.pain>18)b.append("pain ");if(s.respiration!=null&&s.respiration.breathingLoad>.28)b.append("breathing strain ");if(s.nervous!=null&&Math.max(s.nervous.balanceAlarm,s.nervous.protectiveReflex)>.30)b.append("balance/protective alarm ");if(s.thermal!=null&&Math.max(s.thermal.coldLoad,s.thermal.heatLoad)>.32)b.append("thermal strain ");if(s.endocrine!=null&&s.endocrine.stressResponse>.35)b.append("stress activation ");String x=b.toString().trim();return x.isEmpty()?"body signals feel unusually strained":x;}
  private static double catReturnBelief(WorldState s,MemoryEntry m){
   if(m==null||!(m.participants.contains("cat")||tag(m,"cat")>0||tag(m,"absence")>0))return 0;BeliefState b=s.beliefStates==null?null:s.beliefStates.get("cat_returns");if(b==null)return 0;return "usually_returns".equals(b.value)||"returns".equals(b.value)||"likely_returns".equals(b.value)?cl01(b.confidence):.5*cl01(b.confidence);
  }
