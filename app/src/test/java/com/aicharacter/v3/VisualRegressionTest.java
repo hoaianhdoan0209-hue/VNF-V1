@@ -52,6 +52,18 @@ public final class VisualRegressionTest{
   assertFalse(renderer.contains("scaleY"));
  }
 
+ @Test public void closeCameraKeepsEmotionFaceAndMicroPostureInRenderer()throws Exception{
+  String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
+  String gameView=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  assertTrue(renderer.contains("HaruFacialOverlayRenderer.draw"));
+  assertTrue(renderer.contains("HaruExpressionEngine.derive"));
+  assertTrue(renderer.contains("expression.headDropPx"));
+  assertTrue(renderer.contains("expression.headTiltDeg"));
+  assertTrue(gameView.contains("EmotionCameraDirector.Frame"));
+  assertTrue(gameView.contains("EmotionalCameraProjection.worldScale"));
+  assertTrue(gameView.contains("emotionShot="));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
