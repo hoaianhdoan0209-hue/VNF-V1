@@ -67,10 +67,10 @@ public final class CatSocialEngine {
  }
 
  private static void learn(WorldState s,Observation o,long now){
-  CatSocialState cs=s.catSocial;if(cs.lastLearningAt>0&&now>=cs.lastLearningAt&&now-cs.lastLearningAt<LEARNING_INTERVAL_MS)return;cs.lastLearningAt=now;
-  double intrusion=o.distance<52?cl((52-o.distance)/35.0):0,pressure=o.approachPressure;
+  CatSocialState cs=s.catSocial;double intrusion=o.distance<52?cl((52-o.distance)/35.0):0,pressure=o.approachPressure;
+  if(intrusion>0||pressure>.52){double shock=Math.max(intrusion,pressure);cs.wariness=cl(cs.wariness+.045+.055*shock);cs.comfort=cl(cs.comfort-.025-.025*shock);cs.lastCalmExposure=0;cs.lastLearningAt=now;return;}
+  if(cs.lastLearningAt>0&&now>=cs.lastLearningAt&&now-cs.lastLearningAt<LEARNING_INTERVAL_MS)return;cs.lastLearningAt=now;
   boolean calm=o.distance>=65&&o.distance<=230&&pressure<.24&&nervousLoad(s)<.42;
-  if(intrusion>0||pressure>.52){double shock=Math.max(intrusion,pressure);cs.wariness=cl(cs.wariness+.045+.055*shock);cs.comfort=cl(cs.comfort-.025-.025*shock);cs.lastCalmExposure=0;return;}
   if(calm){cs.calmEncounters++;cs.lastCalmExposure=cl(.45+(1-cs.wariness)*.40);cs.familiarity=cl(cs.familiarity+.014*(1-cs.wariness));cs.comfort=cl(cs.comfort+.018*(.65+cs.familiarity*.35));cs.wariness=cl(cs.wariness-.012*(.5+cs.comfort*.5));}
  }
 
