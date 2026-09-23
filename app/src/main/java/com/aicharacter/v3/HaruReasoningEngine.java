@@ -103,6 +103,7 @@ public final class HaruReasoningEngine {
     ThoughtState t=new ThoughtState("Mình đã dự đoán một kết quả nhưng trải nghiệm thật lại khác. Mình cần tìm nguyên nhân thay vì giữ nguyên giả định cũ.","prediction_error:"+pred.id,"reflect",.78,.58,now);t.relatedMemories.add(outcome.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);
    }
   }
+  reviewPriorCausalExplanations(s,p,pred,outcome,success,now);
 
   if("WORLD_AFFORDANCE".equals(p.origin)){
    HypothesisState h=p.reasoningHypothesisId==null?null:s.characterGod.reasoning.hypotheses.get(p.reasoningHypothesisId);
@@ -158,21 +159,34 @@ public final class HaruReasoningEngine {
 
  private static void inferCausalExplanations(WorldState s,PlanState p,PredictionState pred,MemoryEntry outcome,long now){
   if(s==null||p==null||pred==null||outcome==null)return;boolean grounded=false;long start=Math.max(0,pred.createdAt-1000L),end=Math.max(now,outcome.time)+1000L;
-  if(s.worldHistory!=null)for(int i=Math.max(0,s.worldHistory.size()-48);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.time<start||e.time>end||!p.planId.equals(e.entity))continue;String type=causeTypeForEvent(e);if(type.isEmpty())continue;CausalExplanationState x=ensureCause(s,pred,type,claimFor(type,e.summary),now);x.apply(true,1.25,e.eventId,outcome.memoryId,now);grounded=true;}
-  if(!grounded){String type=causeTypeFromText((p.lastOutcome==null?"":p.lastOutcome)+" "+outcome.summary);if(!type.isEmpty()){CausalExplanationState x=ensureCause(s,pred,type,claimFor(type,outcome.summary),now);x.apply(true,.45,"",outcome.memoryId,now);}}
-  ensureCause(s,pred,"UNKNOWN_FACTOR","Một yếu tố khác mà mình chưa quan sát được có thể đã làm kế hoạch lệch khỏi dự đoán.",now);
+  if(s.worldHistory!=null)for(int i=Math.max(0,s.worldHistory.size()-48);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.time<start||e.time>end||!p.planId.equals(e.entity))continue;String type=causeTypeForEvent(e);if(type.isEmpty())continue;CausalExplanationState x=ensureCause(s,p,pred,type,claimFor(type,e.summary),now);x.apply(true,causeEvidenceWeight(e),e.eventId,outcome.memoryId,now);grounded=true;}
+  if(!grounded){String type=causeTypeFromText((p.lastOutcome==null?"":p.lastOutcome)+" "+outcome.summary);if(!type.isEmpty()){CausalExplanationState x=ensureCause(s,p,pred,type,claimFor(type,outcome.summary),now);x.apply(true,.35,"",outcome.memoryId,now);}}
+  ensureCause(s,p,pred,"UNKNOWN_FACTOR","Một yếu tố khác mà mình chưa quan sát được có thể đã làm kế hoạch lệch khỏi dự đoán.",now);
  }
 
  private static void refreshCausalExplanations(WorldState s,long now){
   if(s==null||s.characterGod==null||s.characterGod.reasoning==null||s.worldHistory==null)return;HaruReasoningState r=s.characterGod.reasoning;
   for(CausalExplanationState x:r.causalExplanations.values()){if(x==null||"UNKNOWN_FACTOR".equals(x.causeType)||"DISFAVORED".equals(x.status))continue;PredictionState p=r.predictions.get(x.predictionId);if(p==null||!"DISCONFIRMED".equals(p.status))continue;long start=Math.max(0,p.createdAt-1000L),end=Math.max(now,p.resolvedAt)+1000L;
-   for(int i=Math.max(0,s.worldHistory.size()-64);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.time<start||e.time>end||!x.planId.equals(e.entity)||!eventSupports(x.causeType,e))continue;x.apply(true,1.25,e.eventId,p.outcomeMemoryId,now);}
+   for(int i=Math.max(0,s.worldHistory.size()-64);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.time<start||e.time>end||!x.planId.equals(e.entity)||!eventSupports(x.causeType,e))continue;x.apply(true,causeEvidenceWeight(e),e.eventId,p.outcomeMemoryId,now);}
   }
  }
 
- private static CausalExplanationState ensureCause(WorldState s,PredictionState pred,String type,String claim,long now){
-  String id="cause_"+clean(pred.id)+"_"+clean(type);CausalExplanationState x=s.characterGod.reasoning.causalExplanations.get(id);if(x==null){x=new CausalExplanationState();x.id=id;x.predictionId=pred.id;x.planId=pred.planId;x.causeType=type;x.claim=claim;x.createdAt=now;x.updatedAt=now;s.characterGod.reasoning.causalExplanations.put(id,x);}else if((x.claim==null||x.claim.isEmpty())&&claim!=null)x.claim=claim;return x;
+ private static CausalExplanationState ensureCause(WorldState s,PlanState plan,PredictionState pred,String type,String claim,long now){
+  String id="cause_"+clean(pred.id)+"_"+clean(type);CausalExplanationState x=s.characterGod.reasoning.causalExplanations.get(id);if(x==null){x=new CausalExplanationState();x.id=id;x.predictionId=pred.id;x.planId=pred.planId;x.intentionId=plan==null?"":plan.intentionId;x.subjectId=pred.subjectId;x.causeType=type;x.claim=claim;x.testablePrediction=testablePrediction(type);x.createdAt=now;x.updatedAt=now;s.characterGod.reasoning.causalExplanations.put(id,x);}else if((x.claim==null||x.claim.isEmpty())&&claim!=null)x.claim=claim;return x;
  }
+ private static void reviewPriorCausalExplanations(WorldState s,PlanState plan,PredictionState current,MemoryEntry outcome,boolean success,long now){
+  if(s==null||plan==null||outcome==null||!success)return;HaruReasoningState r=s.characterGod.reasoning;
+  for(CausalExplanationState x:r.causalExplanations.values()){if(x==null||"UNKNOWN_FACTOR".equals(x.causeType)||"DISFAVORED".equals(x.status))continue;if(current!=null&&current.id.equals(x.predictionId))continue;
+   boolean sameIntention=!x.intentionId.isEmpty()&&x.intentionId.equals(plan.intentionId),sameSubject=!x.subjectId.isEmpty()&&x.subjectId.equals(plan.destination);if(!sameIntention&&!sameSubject)continue;
+   long start=current==null?Math.max(0,plan.createdAt):Math.max(0,current.createdAt);if(hasCauseEvent(s,plan.planId,start,now,x.causeType))continue;
+   double before=x.confidence;x.apply(true,.55,"counterfactual:"+plan.planId,outcome.memoryId,now);x.counterfactualChecks++;
+   if(before<.68&&x.confidence>=.68){ThoughtState t=new ThoughtState("Một lần thử khác đã thành công khi dấu hiệu cản trở trước đó không xuất hiện. Điều này làm lời giải thích cũ đáng tin hơn, nhưng vẫn có thể sửa.","causal_counterfactual:"+x.id,"reflect",.68,.52,now);t.relatedMemories.add(outcome.memoryId);s.thoughts.add(t);while(s.thoughts.size()>16)s.thoughts.remove(0);}
+  }
+ }
+ private static boolean hasCauseEvent(WorldState s,String planId,long start,long end,String causeType){if(s==null||s.worldHistory==null)return false;for(int i=Math.max(0,s.worldHistory.size()-64);i<s.worldHistory.size();i++){WorldHistoryEntry e=s.worldHistory.get(i);if(e!=null&&e.time>=start&&e.time<=end&&planId.equals(e.entity)&&eventSupports(causeType,e))return true;}return false;}
+ private static double causeEvidenceWeight(WorldHistoryEntry e){if(e==null||e.type==null)return.25;if("TRAVEL_OBJECT_BLOCKED".equals(e.type)||"TRAVEL_TERRAIN_BLOCKED".equals(e.type))return 1.25;if("ROUTE_BLOCKED".equals(e.type))return.65;if("PLAN_INTEGRITY_FAILED".equals(e.type))return.55;if("PLAN_ACTION_RESOLVED".equals(e.type))return.35;return.25;}
+ private static String testablePrediction(String type){if("ROUTE_CONSTRAINT".equals(type))return"Nếu trở ngại đường đi là nguyên nhân chính, một lần thử tương tự khi không còn dấu hiệu route bị chặn nên có cơ hội hoàn tất tốt hơn.";if("OBJECT_OBSTRUCTION".equals(type))return"Nếu vật cản là nguyên nhân chính, cùng mục tiêu sẽ dễ hoàn tất hơn khi đường vật lý thông thoáng.";if("TERRAIN_CONSTRAINT".equals(type))return"Nếu địa hình là nguyên nhân chính, kết quả sẽ khác khi chọn lối có độ cao vượt qua được.";if("TARGET_OR_ROUTE_CHANGED".equals(type)||"TARGET_UNAVAILABLE".equals(type))return"Nếu mục tiêu/đường đi thay đổi là nguyên nhân, kế hoạch tương tự chỉ nên thành công khi mục tiêu và đường đi thực sự khả dụng.";if("ACTION_CONSTRAINT".equals(type))return"Nếu chính điều kiện thực hiện hành động gây thất bại, cùng hành động trong điều kiện khả dụng hơn nên cho kết quả khác.";return"Mình chưa có dự đoán kiểm chứng cụ thể cho nguyên nhân này.";}
+
  private static CausalExplanationState bestCause(HaruReasoningState r,String predictionId){CausalExplanationState best=null;for(CausalExplanationState x:r.causalExplanations.values())if(x!=null&&predictionId.equals(x.predictionId)&&!"UNKNOWN_FACTOR".equals(x.causeType)&&(best==null||x.confidence>best.confidence))best=x;return best;}
  private static String causeTypeForEvent(WorldHistoryEntry e){if(e==null||e.type==null)return"";if("ROUTE_BLOCKED".equals(e.type))return"ROUTE_CONSTRAINT";if("TRAVEL_OBJECT_BLOCKED".equals(e.type))return"OBJECT_OBSTRUCTION";if("TRAVEL_TERRAIN_BLOCKED".equals(e.type))return"TERRAIN_CONSTRAINT";if("PLAN_INTEGRITY_FAILED".equals(e.type))return"TARGET_OR_ROUTE_CHANGED";if("PLAN_ACTION_RESOLVED".equals(e.type)&&e.summary!=null&&e.summary.startsWith("failure:"))return"ACTION_CONSTRAINT";return"";}
  private static boolean eventSupports(String causeType,WorldHistoryEntry e){return causeType!=null&&causeType.equals(causeTypeForEvent(e));}
