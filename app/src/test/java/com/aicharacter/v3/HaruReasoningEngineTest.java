@@ -66,6 +66,18 @@ public final class HaruReasoningEngineTest {
   assertTrue(HaruReasoningEngine.currentReasoningSummary(s).contains("kết quả thực tế không khớp"));
  }
 
+ @Test public void preActionFailureStillClosesPredictionLoopWithoutInventingKnowledge(){
+  WorldState s=state();PlanState p=new PlanState();p.planId="blocked_before_action";p.intentionId="affordance_inquiry";p.goal="observe an unfamiliar target";p.destination="missing_target";p.plannedAction="OBSERVE";p.origin="WORLD_AFFORDANCE";p.status="PAUSED";p.createdAt=900L;p.pausedAt=1000L;
+  HaruReasoningEngine.predictPlanOutcome(s,p,950L);s.planState=p;
+  assertFalse(PlanExecutor.resume(s,2000L));
+  assertEquals("FAILED",p.status);assertFalse(p.outcomeMemoryId.isEmpty());assertTrue(p.outcomeNeedsReview());assertTrue(PlanCausalAudit.valid(s,p));
+  assertTrue(PlanOutcomeReviewEngine.reviewIfReady(s,2001L));
+  PredictionState pred=s.characterGod.reasoning.predictions.get(p.predictionId);assertNotNull(pred);assertEquals("DISCONFIRMED",pred.status);
+  assertTrue(s.characterGod.openQuestions.keySet().stream().anyMatch(x->x.startsWith("q_prediction_")));
+  assertFalse(s.characterGod.conceptKnowledge.containsKey("world:missing_target"));
+  assertTrue(PlanCausalAudit.valid(s,p));
+ }
+
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
   WorldState s=state();HaruAffordanceEngine.observeQuestions(s,1000L);HaruReasoningEngine.observe(s,1000L);
   HypothesisState h=s.characterGod.reasoning.hypotheses.get("hyp_revisit_mystery_flora");
