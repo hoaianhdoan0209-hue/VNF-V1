@@ -62,6 +62,8 @@ public final class HaruReasoningEngineTest {
   HaruReasoningEngine.reviewPlanOutcome(s,p,m,1200L);
   assertEquals("DISCONFIRMED",s.characterGod.reasoning.predictions.get(p.predictionId).status);
   assertTrue(s.characterGod.openQuestions.keySet().stream().anyMatch(x->x.startsWith("q_prediction_")));
+  assertTrue(s.thoughts.stream().anyMatch(t->t.trigger.startsWith("prediction_error:")));
+  assertTrue(HaruReasoningEngine.currentReasoningSummary(s).contains("kết quả thực tế không khớp"));
  }
 
  @Test public void reasoningSurvivesSaveRoundTrip() throws Exception{
