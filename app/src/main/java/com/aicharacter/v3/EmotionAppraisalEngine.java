@@ -12,8 +12,9 @@ public final class EmotionAppraisalEngine {
  public static EmotionEpisodeState onExperience(WorldState s,MemoryEntry m,Experience e){
   if(s==null||m==null)return null;ensure(s);EmotionEpisodeState x=new EmotionEpisodeState();x.id="emotion_"+clean(m.memoryId);x.sourceMemoryId=m.memoryId;x.sourceKind=m.kind==null?"":m.kind;x.targetId=targetOf(m,e);x.cause=m.summary==null?"":m.summary;x.createdAt=m.time;x.updatedAt=m.time;
   NeedState n=NeedState.evaluate(s);double sig=cl01(Math.max(.08,m.importance)),val=clSigned(m.valence),body=bodyLoad(s),rel=relationshipRelevance(s,m),unc=uncertainty(s,m),goal=goalCongruence(m,e,val),control=perceivedControl(s,m,e);
-  double threat=cl01(body*.38+Math.max(0,n.safety/100.0)*.34+tag(m,"danger")*.48+tag(m,"control")*.28+Math.max(0,-val)*unc*.26);
-  double loss=cl01(tag(m,"absence")*.62+tag(m,"loss")*.72+rel*Math.max(0,-val)*.38+(m.kind!=null&&m.kind.contains("failure")?.14:0));
+  double returnBelief=catReturnBelief(s,m);double threat=cl01(body*.38+Math.max(0,n.safety/100.0)*.34+tag(m,"danger")*.48+tag(m,"control")*.28+Math.max(0,-val)*unc*.26);
+  if(tag(m,"absence")>0&&returnBelief>0)threat=cl01(threat*(1-.38*returnBelief));
+  double loss=cl01(tag(m,"absence")*.62+tag(m,"loss")*.72+rel*Math.max(0,-val)*.38+(m.kind!=null&&m.kind.contains("failure")?.14:0));if(tag(m,"absence")>0&&returnBelief>0)loss=cl01(loss*(1-.18*returnBelief));
   double frustration=cl01(tag(m,"control")*.70+tag(m,"blocked")*.56+tag(m,"failure")*.30+Math.max(0,-goal)*control*.32);
   x.goalCongruence=goal;x.threat=threat;x.loss=loss;x.frustration=frustration;x.uncertainty=unc;x.socialRelevance=rel;x.bodilyLoad=body;x.perceivedControl=control;x.valence=val;
   double joy=cl01(Math.max(0,goal)*(.52+.28*rel)+tag(m,"kind")*.26+tag(m,"respect")*.22);
@@ -23,6 +24,7 @@ public final class EmotionAppraisalEngine {
   double curiosity=cl01(unc*(.46+.42*Math.max(0,s.personality.curiosity))*(1-threat*.55)+tag(m,"curiosity")*.34+tag(m,"novelty")*.32);
   double loneliness=cl01(tag(m,"absence")*rel*.72+Math.max(0,s.mood==null?0:s.mood.loneliness)*.24);
   double relief=cl01(tag(m,"relief")*.7+(Math.max(0,goal)*tag(m,"safety"))*.45);
+  x.joy=joy;x.fear=fear;x.sadness=sadness;x.anger=anger;x.curiosity=curiosity;x.loneliness=loneliness;x.relief=relief;
   x.arousal=cl01(Math.max(Math.max(fear,anger),Math.max(curiosity,body))*.74+Math.abs(val)*.18);
   x.intensity=cl01(sig*(.45+.55*Math.max(Math.max(joy,fear),Math.max(Math.max(sadness,anger),Math.max(curiosity,loneliness)))));
   x.primaryEmotion=primary(joy,fear,sadness,anger,curiosity,loneliness,relief);
@@ -42,6 +44,9 @@ public final class EmotionAppraisalEngine {
   s.haruMood=s.emotion.dominant();
  }
 
+ private static double catReturnBelief(WorldState s,MemoryEntry m){
+  if(m==null||!(m.participants.contains("cat")||tag(m,"cat")>0||tag(m,"absence")>0))return 0;BeliefState b=s.beliefStates==null?null:s.beliefStates.get("cat_returns");if(b==null)return 0;return "usually_returns".equals(b.value)||"returns".equals(b.value)||"likely_returns".equals(b.value)?cl01(b.confidence):.5*cl01(b.confidence);
+ }
  private static double relationshipRelevance(WorldState s,MemoryEntry m){if(s.relationship==null)return 0;boolean social=m.participants.contains("cat")||tag(m,"social")>0||tag(m,"kind")>0||tag(m,"respect")>0||tag(m,"control")>0||tag(m,"absence")>0;if(!social)return 0;double attachment=cl01(s.relationship.attachment/100.0),affection=cl01(s.relationship.affection/100.0),trust=cl01(s.relationship.trust/100.0);return cl01(.30+.32*attachment+.20*affection+.18*trust);}
  private static double bodyLoad(WorldState s){double pain=s.body==null?0:cl01(s.body.pain/100.0),stress=s.endocrine==null?0:cl01(s.endocrine.stressResponse),breath=s.respiration==null?0:cl01(s.respiration.breathingLoad),alarm=s.nervous==null?0:cl01(Math.max(s.nervous.balanceAlarm,s.nervous.protectiveReflex)),thermal=s.thermal==null?0:cl01(Math.max(s.thermal.coldLoad,s.thermal.heatLoad));return cl01(pain*.30+stress*.24+breath*.18+alarm*.18+thermal*.10);}
  private static double uncertainty(WorldState s,MemoryEntry m){double u=.28;if(tag(m,"novelty")>0||tag(m,"curiosity")>0)u+=.24;if(tag(m,"failure")>0||tag(m,"absence")>0)u+=.18;if(m.confidence<.8)u+=( .8-m.confidence)*.45;if(s.characterGod!=null&&s.characterGod.reasoning!=null){for(OpenQuestionState q:s.characterGod.openQuestions.values())if(q!=null&&!"RESOLVED".equals(q.status)){u+=.04;break;}}return cl01(u);}
