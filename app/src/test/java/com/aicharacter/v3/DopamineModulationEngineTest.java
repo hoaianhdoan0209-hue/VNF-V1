@@ -71,6 +71,16 @@ public final class DopamineModulationEngineTest {
   assertTrue(s.neuroModulation.lastPulseSource.startsWith("negative_reward_prediction_error:"));
  }
 
+ @Test public void postOutcomeReviewComputesRpeBeforeReasoningClosesPrediction(){
+  WorldState s=decisionState();PlanState p=new PlanState();p.planId="review_rpe";p.intentionId="observe_lake";p.status="COMPLETED";p.origin="LEGACY";p.predictionId="pred_review_rpe";p.outcomeLearnedAt=7000L;p.lastProgressAt=7000L;
+  PredictionState pred=prediction(p.predictionId,.22);pred.planId=p.planId;pred.expectedOutcome="observe the target";s.characterGod.reasoning.predictions.put(pred.id,pred);
+  MemoryEntry m=CognitionEngine.experience(s,7000L,"planned_action_outcome","an unexpectedly successful observation",.30,.60,"success");assertEquals(0,s.neuroModulation.dopaminePhasic,.0000001);
+  p.outcomeMemoryId=m.memoryId;s.planState=p;
+  assertTrue(PlanOutcomeReviewEngine.reviewIfReady(s,7100L));
+  assertTrue(s.neuroModulation.lastRewardPredictionError>0);assertTrue(s.neuroModulation.dopaminePhasic>0);assertEquals("CONFIRMED",pred.status);assertTrue(p.postOutcomeReviewedAt>=7100L);
+  assertTrue(p.lastOutcomeReview.contains("rewardPredictionError="));
+ }
+
  @Test public void activeAndOfflineSlicesShareTheSameDopamineClock(){
   WorldState active=decisionState(),offline=decisionState();long now=System.currentTimeMillis()+60_000L;
   DopamineModulationEngine.pulse(active,.92,"parity",now-60_000L);DopamineModulationEngine.pulse(offline,.92,"parity",now-60_000L);
