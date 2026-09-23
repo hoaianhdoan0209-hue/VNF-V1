@@ -33,7 +33,7 @@ public final class CausalExperimentEngine {
   if(best==null)return false;CausalExplanationState a=r.causalExplanations.get(best.causeAId);if(a==null)return false;
   String context="";boolean verified=false;
   if("ALTERNATE_ROUTE_RETRY".equals(best.strategy)){
-   List<String> route=prospectiveRoute(s,p);if(route.size()<1)return false;context=routeContext(route);verified=!best.baselineContextKey.isEmpty()&&!containsEdge(route,best.baselineContextKey);
+   List<String> route=prospectiveRoute(s,p);if(route.size()<2)return false;context=routeContext(route);verified=!context.isEmpty()&&!best.baselineContextKey.isEmpty()&&!containsEdge(route,best.baselineContextKey);
   }else if("VERIFY_TARGET_RETRY".equals(best.strategy)){
    WorldObject o=s.world.object(p.destination);verified=o!=null&&o.enabled;context=verified?"target_available:"+o.id:"";
   }
