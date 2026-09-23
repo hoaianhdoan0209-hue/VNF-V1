@@ -24,7 +24,7 @@ public final class CausalExperimentEngine {
  }
 
  public static boolean attachIfTestable(WorldState s,PlanState p,long now){
-  if(s==null||p==null||s.world==null||s.characterGod==null||s.characterGod.reasoning==null)return false;if(DopamineModulationEngine.logicalControl(s)<.58)return false;HaruReasoningState r=s.characterGod.reasoning;CausalExperimentState best=null;
+  if(s==null||p==null||s.world==null||s.characterGod==null||s.characterGod.reasoning==null)return false;if(DopamineModulationEngine.logicalControl(s)*EmotionalDecisionEngine.reflectiveSupport(s)<.58)return false;HaruReasoningState r=s.characterGod.reasoning;CausalExperimentState best=null;
   for(CausalExperimentState x:r.causalExperiments.values()){
    if(x==null||!("DESIGNED".equals(x.status)||"INCONCLUSIVE".equals(x.status))||x.attempts>=3)continue;
    boolean sameSubject=!x.subjectId.isEmpty()&&x.subjectId.equals(p.destination),sameIntention=!x.intentionId.isEmpty()&&x.intentionId.equals(p.intentionId);if(!sameSubject&&!sameIntention)continue;
