@@ -24,10 +24,10 @@ public final class HaruExpressionEngineTest {
  }
 
  @Test public void socialGazeTracksCatOnEitherSide(){
-  WorldState right=state();right.haruX=500;right.catX=620;right.currentIntention="find_cat";EmotionEpisodeState er=episode("relieved",.70);er.targetId="cat";er.socialRelevance=.9;er.relief=.8;right.emotionEpisodes.add(er);
+  WorldState right=state();right.haruX=500;right.catX=620;right.catState.x=620;right.catState.awake=true;right.currentIntention="find_cat";EmotionEpisodeState er=episode("relieved",.70);er.targetId="cat";er.socialRelevance=.9;er.relief=.8;right.emotionEpisodes.add(er);
   HaruExpressionEngine.Visual vr=HaruExpressionEngine.derive(right,2500L);assertTrue(vr.socialFocus);assertTrue(vr.gazeX>.30);
 
-  WorldState left=state();left.haruX=500;left.catX=380;left.currentIntention="find_cat";EmotionEpisodeState el=episode("relieved",.70);el.targetId="cat";el.socialRelevance=.9;el.relief=.8;left.emotionEpisodes.add(el);
+  WorldState left=state();left.haruX=500;left.catX=380;left.catState.x=380;left.catState.awake=true;left.currentIntention="find_cat";EmotionEpisodeState el=episode("relieved",.70);el.targetId="cat";el.socialRelevance=.9;el.relief=.8;left.emotionEpisodes.add(el);
   HaruExpressionEngine.Visual vl=HaruExpressionEngine.derive(left,2500L);assertTrue(vl.socialFocus);assertTrue(vl.gazeX<-.30);
  }
 
