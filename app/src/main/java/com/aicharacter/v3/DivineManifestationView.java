@@ -23,12 +23,15 @@ public final class DivineManifestationView extends View {
   if(phase==Phase.DISAPPEARING)strength=Math.max(0f,1f-t/.60f);
   Palette pal=palette();
   drawAtmosphericField(c,cx,cy,d,pulse,breath,strength,pal);
+  drawDepthVeil(c,cx,cy,d,t,pulse,breath,strength,pal);
   drawLightColumn(c,cx,cy,d,breath,strength,pal);
   drawFloorEcho(c,cx,cy,d,t,pulse,strength,pal);
   drawRays(c,cx,cy,d,t,strength,pal);
   drawHaloLattice(c,cx,cy,d,t,pulse,strength,pal);
   drawOrbitBands(c,cx,cy,d,t,pulse,strength,pal);
+  drawPresenceCore(c,cx,cy,d,t,pulse,breath,strength,pal);
   drawSigil(c,cx,cy,d,t,pulse,strength,pal);
+  drawConstellationThreads(c,cx,cy,d,t,pulse,strength,pal);
   drawMotes(c,cx,cy,d,t,breath,strength,pal);
   drawPhaseAccent(c,cx,cy,d,t,pulse,strength,pal);
   if((phase!=Phase.DISAPPEARING&&phase!=Phase.DEGRADED)||(phase==Phase.DISAPPEARING&&strength>0))postInvalidateDelayed(33);
@@ -53,6 +56,33 @@ public final class DivineManifestationView extends View {
   float r=(260+36*pulse)*d;c.save();c.scale(1.18f,.82f,cx,cy);p.setShader(new RadialGradient(cx,cy,r,new int[]{alpha(q.core,(int)(62*s)),alpha(q.mid,(int)(30*s)),Color.TRANSPARENT},new float[]{0f,.42f,1f},Shader.TileMode.CLAMP));c.drawCircle(cx,cy,r,p);c.restore();
   float outer=(390+24*breath)*d;c.save();c.scale(1.35f,.70f,cx,cy);p.setShader(new RadialGradient(cx,cy,outer,alpha(q.cool,(int)(20*s)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.drawCircle(cx,cy,outer,p);c.restore();p.setShader(null);
   p.setColor(Color.argb((int)(12*s),12,25,37));c.drawRect(0,0,getWidth(),getHeight(),p);
+ }
+
+ private void drawDepthVeil(Canvas c,float cx,float cy,float d,float t,float pulse,float breath,float s,Palette q){
+  p.setStyle(Paint.Style.FILL);
+  float inner=(112+14*breath)*d,outer=(228+22*pulse)*d;
+  p.setShader(new RadialGradient(cx,cy,outer,new int[]{alpha(q.spark,(int)(30*s)),alpha(q.core,(int)(22*s)),alpha(q.cool,(int)(10*s)),Color.TRANSPARENT},new float[]{0f,.24f,.58f,1f},Shader.TileMode.CLAMP));
+  c.save();c.scale(.82f,1.18f,cx,cy);c.drawCircle(cx,cy,outer,p);c.restore();p.setShader(null);
+  p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.ROUND);
+  for(int i=0;i<4;i++){float rr=inner+i*26*d,ry=rr*(.62f+i*.035f);float drift=(float)Math.sin(t*(.34+i*.07)+i*.8f)*5*d;p.setStrokeWidth((.65f+i*.28f)*d);p.setColor(alpha(i%2==0?q.core:q.cool,(int)((52-i*7)*s)));c.drawArc(new RectF(cx-rr+drift,cy-ry,cx+rr+drift,cy+ry),-32+i*26+t*(5+i*2),212-i*18,false,p);}p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
+ }
+
+ private void drawPresenceCore(Canvas c,float cx,float cy,float d,float t,float pulse,float breath,float s,Palette q){
+  float h=(124+10*breath)*d,w=(48+5*pulse)*d;
+  Path shell=new Path();shell.moveTo(cx,cy-h*.66f);shell.cubicTo(cx+w*.72f,cy-h*.42f,cx+w,cy-h*.05f,cx+w*.56f,cy+h*.38f);shell.cubicTo(cx+w*.24f,cy+h*.63f,cx-w*.24f,cy+h*.63f,cx-w*.56f,cy+h*.38f);shell.cubicTo(cx-w,cy-h*.05f,cx-w*.72f,cy-h*.42f,cx,cy-h*.66f);shell.close();
+  p.setStyle(Paint.Style.FILL);p.setShader(new LinearGradient(cx,cy-h*.70f,cx,cy+h*.62f,new int[]{alpha(q.spark,(int)(70*s)),alpha(q.core,(int)(34*s)),alpha(q.cool,(int)(20*s)),Color.TRANSPARENT},new float[]{0f,.28f,.64f,1f},Shader.TileMode.CLAMP));c.drawPath(shell,p);p.setShader(null);
+  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.1f*d);p.setColor(alpha(q.spark,(int)(148*s)));c.drawPath(shell,p);
+  float spineTop=cy-h*.44f,spineBottom=cy+h*.38f;p.setStrokeWidth(.8f*d);p.setColor(alpha(q.core,(int)(112*s)));for(int i=0;i<5;i++){float off=(i-2)*5.5f*d,sw=(float)Math.sin(t*.8+i*.9f)*2.5f*d;c.drawLine(cx+off,spineTop+Math.abs(i-2)*6*d,cx+off+sw,spineBottom-Math.abs(i-2)*8*d,p);}p.setStyle(Paint.Style.FILL);
+  float coreR=(17+2.5f*pulse)*d;p.setShader(new RadialGradient(cx,cy-8*d,coreR*2.2f,new int[]{alpha(q.spark,(int)(248*s)),alpha(q.core,(int)(118*s)),Color.TRANSPARENT},new float[]{0f,.34f,1f},Shader.TileMode.CLAMP));c.drawCircle(cx,cy-8*d,coreR*2.2f,p);p.setShader(null);
+  p.setColor(alpha(q.spark,(int)(235*s)));c.drawCircle(cx,cy-8*d,coreR*.42f,p);
+ }
+
+ private void drawConstellationThreads(Canvas c,float cx,float cy,float d,float t,float pulse,float s,Palette q){
+  p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeWidth(.72f*d);
+  final int n=7;float[] xs=new float[n],ys=new float[n];
+  for(int i=0;i<n;i++){double a=t*.18+i*.92;float r=(92+i*18+pulse*5*(i%2==0?1:-1))*d;xs[i]=cx+(float)Math.cos(a)*r;ys[i]=cy+(float)Math.sin(a)*r*.56f;}
+  for(int i=0;i<n-1;i++){p.setColor(alpha(i%2==0?q.cool:q.core,(int)((40+i*5)*s)));c.drawLine(xs[i],ys[i],xs[i+1],ys[i+1],p);}
+  p.setStyle(Paint.Style.FILL);for(int i=0;i<n;i++){p.setColor(alpha(i%3==0?q.spark:q.core,(int)((112+i*8)*s)));c.drawCircle(xs[i],ys[i],(1.25f+(i%3)*.45f)*d,p);}p.setStrokeCap(Paint.Cap.BUTT);
  }
 
  private void drawLightColumn(Canvas c,float cx,float cy,float d,float breath,float s,Palette q){
