@@ -63,7 +63,7 @@ public final class SocialProximityEngine {
   if(s==null||s.catState==null||s.world==null||"girl".equals(s.catState.attachedToEntity))return false;return s.catState.awake&&GirlCatSearchEngine.canPerceiveCat(s);
  }
  public static double gazeEngagement(WorldState s){
-  if(s==null)return 0;double warm=warmth(s),guard=guardedness(s);double curiosity=s.emotion==null?0:cl01(s.emotion.curiosity),joy=s.emotion==null?0:cl01(s.emotion.joy);return cl01(.24+warm*.58+curiosity*.16+joy*.10-guard*.62);
+  if(s==null)return 0;double warm=warmth(s),guard=guardedness(s);double curiosity=s.emotion==null?0:cl01(s.emotion.curiosity),joy=s.emotion==null?0:cl01(s.emotion.joy);return cl01(.52+warm*.42+curiosity*.12+joy*.08-guard*.68);
  }
  public static double gazeDownBias(WorldState s){double guard=guardedness(s),sad=s==null||s.emotion==null?0:cl01(s.emotion.sadness),lonely=s==null||s.emotion==null?0:cl01(s.emotion.loneliness);return cl01(guard*.54+sad*.34+lonely*.18);}
  public static boolean preferFacingRight(WorldState s,boolean fallback){if(!shouldOrientToCat(s))return fallback;return s.catState.x>=s.haruX;}
