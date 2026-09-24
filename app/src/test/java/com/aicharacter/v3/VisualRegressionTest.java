@@ -220,7 +220,30 @@ public final class VisualRegressionTest{
   assertTrue(main.contains("Manifest.permission.POST_NOTIFICATIONS"));
   assertTrue(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
   assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
-  assertTrue(world.contains("SAVE_VERSION = 53"));
+  assertTrue(world.contains("SAVE_VERSION = 54"));
+ }
+
+ @Test public void divineOntologyWorshipRemainsEvidenceBoundAndSpeciesNeutral()throws Exception{
+  Path app=appRoot();
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  String living=read(app.resolve("src/main/java/com/aicharacter/v3/LivingWorldState.java"));
+  String kernel=read(app.resolve("src/main/java/com/aicharacter/v3/LifeSimulationKernel.java"));
+  String worship=read(app.resolve("src/main/java/com/aicharacter/v3/DivineWorshipEngine.java"));
+  String species=read(app.resolve("src/main/java/com/aicharacter/v3/SpeciesDivineState.java"));
+  String capacity=read(app.resolve("src/main/java/com/aicharacter/v3/DivineCognitiveCapacityState.java"));
+  String context=read(app.resolve("src/main/java/com/aicharacter/v3/GodContextBuilder.java"));
+  String contract=read(app.resolve("src/main/java/com/aicharacter/v3/GodWorldConditionContract.java"));
+  assertTrue(world.contains("DivineOntologyState divineOntology"));
+  assertTrue(living.contains("Map<String,SpeciesDivineState> divineStates"));
+  assertTrue(kernel.contains("DivineWorshipEngine.advance"));
+  assertTrue(worship.contains("GOD_WORLD_CONDITION_APPLIED"));
+  assertFalse(worship.contains("if(species"));
+  assertTrue(species.contains("awareness=1.0"));
+  assertTrue(capacity.contains("referenceBudget"));
+  assertTrue(capacity.contains("selfCheckStrength"));
+  assertTrue(context.contains("higher worship may increase"));
+  assertTrue(context.contains("NEVER creates facts"));
+  assertTrue(contract.contains("GOD_WORLD_CONDITION_APPLIED"));
  }
 
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
