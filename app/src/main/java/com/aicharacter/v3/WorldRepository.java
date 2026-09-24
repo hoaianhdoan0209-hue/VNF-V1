@@ -23,6 +23,16 @@ public final class WorldRepository{
   tmpFile=new File(dir,"world.tmp");
  }
 
+ public synchronized WorldState loadPreviewOrCreate(){
+  WorldState state=tryLoad(saveFile);
+  if(state==null)state=tryLoad(backupFile);
+  if(state==null)state=tryLoad(tmpFile);
+  if(state==null)return loadOrCreate();
+  StateInvariantChecker.normalize(state,System.currentTimeMillis());
+  attachDefinition(state);
+  return state;
+ }
+
  public synchronized WorldState loadOrCreate(){
   long now=System.currentTimeMillis();
   WorldState primary=tryLoad(saveFile),backup=tryLoad(backupFile),pending=tryLoad(tmpFile);
