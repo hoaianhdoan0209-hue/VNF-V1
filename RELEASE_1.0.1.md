@@ -19,3 +19,4 @@ Release requirements:
 - Sign with existing Codemagic identity vnf-release.
 - Publish GitHub release v1.0.1 with APK + vnf-release.json.
 - Do not replace or reset world save data.
+- Debug regression gate passed on release/v1.0.1 before stable signing.
