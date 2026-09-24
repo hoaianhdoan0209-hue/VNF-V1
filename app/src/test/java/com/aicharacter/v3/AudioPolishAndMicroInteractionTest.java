@@ -70,4 +70,15 @@ public final class AudioPolishAndMicroInteractionTest {
   s.catSocial=new CatSocialState();s.girlTravel=new TravelState();s.catTravel=new TravelState();s.girlPhysics=PhysicsBodyState.fromJson(null,52);s.catPhysics=PhysicsBodyState.fromJson(null,4.2);s.girlPhysics.grounded=true;s.girlPhysics.falling=false;s.catPhysics.grounded=true;s.catPhysics.falling=false;
   s.body.energy=90;s.body.sleepiness=8;s.body.pain=0;s.environment=new EnvironmentState();s.environment.weather="CLEAR";s.environment.wind=.12;s.respiration=new RespirationState();s.lastOpenedAt=now;s.lastSimulatedAt=now;s.haruActivity="idle";s.currentIntention="";s.emotion.joy=0;s.emotion.fear=0;s.emotion.sadness=0;s.emotion.anger=0;s.emotion.curiosity=0;s.emotion.loneliness=0;s.emotion.calm=.7;return s;
  }
+
+ @Test public void ambienceAndRainFollowPlayerCatAreaNotHarusArea(){
+  WorldState s=state();s.environment.weather="RAIN";s.environment.weatherIntensity=.9;s.environment.wind=.6;
+  s.haruX=1500f;s.catState.x=300f;s.catX=300f;
+  AudioSceneFrame home=AudioSceneEmitter.derive(s,0);
+  assertTrue(home.areaId.contains("home"));assertTrue("sheltered cat should hear muffled rain",home.weatherExposure<.5);assertEquals(0.0,home.water,.0001);
+  s.catState.x=1500f;s.catX=1500f;
+  AudioSceneFrame lake=AudioSceneEmitter.derive(s,0);
+  assertTrue(lake.areaId.contains("lake"));assertTrue(lake.weatherExposure>.5);assertTrue(lake.water>.5);
+ }
+
 }
