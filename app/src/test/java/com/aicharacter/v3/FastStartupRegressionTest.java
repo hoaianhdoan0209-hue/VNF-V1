@@ -82,16 +82,19 @@ public final class FastStartupRegressionTest {
   assertFalse(previewBody.contains("VNF-World-Catchup"));
   String firstBody=main.substring(first,catchup);
   assertTrue(firstBody.contains("STARTUP_FIRST_WORLD_FRAME"));
-  assertTrue(firstBody.contains("new VoiceController"));
-  assertTrue(firstBody.contains("new ProceduralAudioEngine"));
+  assertTrue(firstBody.contains("postDelayed(()->new Thread"));
+  assertTrue(firstBody.contains("initializeDeferredAudio"));
+  assertTrue(firstBody.contains("initializeDeferredVoice"));
   assertTrue(firstBody.contains("maybeCheckAppUpdate(true)"));
-  assertTrue(firstBody.contains("GodSessionManager.warmup"));
+  assertFalse(firstBody.contains("GodSessionManager.warmup"));
   assertTrue(firstBody.contains("VNF-World-Catchup"));
+  assertTrue(main.contains("private void initializeDeferredVoice()"));
+  assertTrue(main.contains("private void initializeDeferredAudio()"));
   assertTrue(view.contains("void onFirstWorldFrame()"));
   assertTrue(view.contains("firstWorldFrameReported"));
   assertTrue(view.contains("host.onFirstWorldFrame()"));
+  assertTrue(view.contains("if(firstWorldFrameReported)dispatchAudio(wall)"));
  }
-
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 119"));
