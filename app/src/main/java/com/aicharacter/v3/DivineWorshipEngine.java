@@ -36,10 +36,8 @@ public final class DivineWorshipEngine {
    d.devotion=follow(d.devotion,targetDev,minutes,3*1440.0);
    d.reverence=follow(d.reverence,targetRev,minutes,4*1440.0);
    d.trust=follow(d.trust,targetTrust,minutes,5*1440.0);
-   double ritualTarget=Math.max(.02,Math.min(1,Math.max(0,d.devotion-.34)*.72+d.witnessInfluence*.24));
-   d.ritualization=follow(d.ritualization,ritualTarget,minutes,12*1440.0);
-   double offeringTarget=Math.max(0,Math.min(1,Math.max(0,d.ritualization-.28)*.70+Math.max(0,d.reverence-.50)*.26));
-   d.offeringTradition=follow(d.offeringTradition,offeringTarget,minutes,24*1440.0);
+   d.ritualization=follow(d.ritualization,.02,minutes,60*1440.0);
+   d.offeringTradition=follow(d.offeringTradition,0,minutes,120*1440.0);
    d.lastUpdatedAt=now;d.clamp();
   }
 
@@ -80,6 +78,7 @@ public final class DivineWorshipEngine {
     d.devotion=Math.max(DEVOTION_FLOOR,Math.min(1,d.devotion+.035+.055*unit(p.intensity,0)));
     d.reverence=Math.max(DEVOTION_FLOOR,Math.min(1,d.reverence+.045+.060*unit(p.intensity,0)));
     d.trust=unit(d.trust+.020+.035*unit(p.intensity,0),0);
+    d.ritualization=unit(d.ritualization+.025+.055*unit(p.intensity,0),0);
     d.lastWitnessAt=e.time;d.witnessedDivineEvents++;d.clamp();
    }
    if(individualInScope(s,s.haruX,null,p))o.haruDevotion=Math.min(1,o.haruDevotion+.03+.05*unit(p.intensity,0));
