@@ -66,8 +66,8 @@ public final class DivineWorshipEngine {
    double cost=Math.min(.012,Math.max(.0025,p.relativeAbundance*.015));
    p.relativeAbundance=unit(p.relativeAbundance-cost);
    b.cumulativePopulationCost=Math.max(0,b.cumulativePopulationCost+cost);b.totalOfferings++;b.lastOfferingAt=now;
-   god.totalOfferings++;god.lastOfferingAt=now;god.graceReserve=unit(god.graceReserve+cost*5.0+b.devotion*.006);
-   WorldEventBus.publishId(s,now,"divine_offering_"+god.id+"_"+b.speciesKey+"_"+Long.toHexString(now),"DIVINE_OFFERING_MADE",b.speciesKey,"Một phần quần thể Tín đồ "+b.speciesKey+" tự dâng hiến; population cost="+round(cost)+", quyền năng dự trữ của Thần Con tăng nhưng không miễn phí.");
+   god.totalOfferings++;god.lastOfferingAt=now;god.graceReserve=unit(god.graceReserve+cost*5.0+b.devotion*.006);b.blessingPower=unit(b.blessingPower+cost*2.5+b.devotion*.004);
+   WorldEventBus.publishId(s,now,"divine_offering_"+god.id+"_"+b.speciesKey+"_"+Long.toHexString(now),"DIVINE_OFFERING_MADE",b.speciesKey,"Một phần quần thể Tín đồ "+b.speciesKey+" tự dâng hiến; population cost="+round(cost)+", quyền năng dự trữ Thần Con và blessing của chính Tín đồ tăng nhưng không miễn phí.");
   }
  }
 
