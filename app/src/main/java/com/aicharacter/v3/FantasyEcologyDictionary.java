@@ -1,19 +1,26 @@
 package com.aicharacter.v3;
 import java.util.*;
-/** Original VNF ecological relations. These are fictional and intentionally do not model Earth food chains. */
+/**
+ * Original VNF ecological relations for every present-era BASE species.
+ * Biology identity comes from SpeciesRegistryV2; this dictionary exposes the ecology projection only.
+ */
 public final class FantasyEcologyDictionary{
  private static final Map<String,SpeciesEcologyProfile> P=new LinkedHashMap<>();
  static{
-  add(new SpeciesEcologyProfile("reedling","lumenmere,wet_margin,lam_thread","lumenmere,lam_thread,blue_reed","driftwing","root_husher","lam_thread,blue_reed",.82,.48,.62,.12));
-  add(new SpeciesEcologyProfile("driftwing","verge,mist,rootmat","mist,glow_seed,mistleaf,silverfold","reedling","root_husher","mistleaf,silverfold,vegetation",.58,.72,.74,.22));
-  add(new SpeciesEcologyProfile("root_husher","veilroot,shade,echo_frond","echo_frond,veilroot,ember_moss","","driftwing","veilroot,ember_moss,vegetation",.72,.36,.42,.28));
-  add(new SpeciesEcologyProfile("ripplekin","lumenmere,wet_margin,water","shimmer_mat,lam_thread,blue_reed","reedling","","lam_thread,shimmer_mat,vegetation",.76,.44,.68,.18));
-  add(new SpeciesEcologyProfile("hearthmote","interior,dry,quiet,warm","hearth,bloom,quiet","","","hearth,bloom,vegetation",.38,.10,.82,.10));
+  for(SpeciesDefinition d:SpeciesRegistryV2.all())add(d.ecologyProfile());
+  if(P.size()!=SpeciesRegistryV2.BASE_SPECIES_COUNT)throw new IllegalStateException("Ecology projection must cover every base species.");
  }
  private FantasyEcologyDictionary(){}
  private static void add(SpeciesEcologyProfile p){P.put(p.key,p);}
  public static SpeciesEcologyProfile forObject(WorldObject o){String key=keyForObject(o);return key.isEmpty()?null:P.get(key);}
- public static String keyForObject(WorldObject o){if(o==null)return"";for(String k:P.keySet())if(hasTag(o.tags,k)||o.id.startsWith(k))return k;return"";}
+ public static String keyForObject(WorldObject o){
+  if(o==null)return"";
+  String tags=o.tags==null?"":o.tags;
+  for(String token:tags.split(",")){String k=token.trim().toLowerCase(Locale.ROOT);if(P.containsKey(k))return k;}
+  String id=o.id==null?"":o.id.toLowerCase(Locale.ROOT);
+  for(String k:P.keySet())if(id.startsWith(k))return k;
+  return"";
+ }
  public static SpeciesEcologyProfile get(String k){return P.get(k);}
  public static Collection<SpeciesEcologyProfile> all(){return Collections.unmodifiableCollection(P.values());}
  public static boolean anyTag(String csv,String tags){if(csv==null||tags==null)return false;for(String q:csv.split(","))if(hasTag(tags,q))return true;return false;}
