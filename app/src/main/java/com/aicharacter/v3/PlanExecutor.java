@@ -1,7 +1,27 @@
 package com.aicharacter.v3;
 /** Arrival -> physical target when required -> action -> learned outcome. Observation may be non-contact. */
 public final class PlanExecutor{private PlanExecutor(){}
- public static void onArrival(WorldState s,TravelState travel,long now){PlanState p=s.planState;if(p==null||!"girl".equals(travel.actor)||!p.planId.equals(travel.currentPlanId))return;p.lastArrival=("LOCAL".equals(travel.travelMode)?travel.targetId:travel.destinationArea)+" @"+now;PlanCausalAudit.arrival(s,p,now,p.lastArrival);p.lastProgressAt=now;if("find_cat".equals(p.intentionId)){GirlCatSearchEngine.onArrival(s,now);return;}if("LOCAL".equals(travel.travelMode)){WorldObject localTarget=resolveTarget(s,p);if(requiresContact(p.plannedAction)&&localTarget!=null&&!PhysicalInteraction.inRangeForAction(s,localTarget,p.plannedAction)){float tx=PhysicalInteraction.targetXForAction(s,localTarget,"girl",s.haruX,p.plannedAction);float rr=PhysicalInteraction.rangeForAction(localTarget,p.plannedAction);if(Math.abs(tx-s.haruX)<=rr||!TravelEngine.startLocal(s,s.girlTravel,"girl",localTarget.id,tx,rr,p.planId,now))failPlan(s,p,now,"local arrival did not satisfy physical action occupancy");return;}executeAction(s,now);return;}WorldObject target=resolveTarget(s,p);if(requiresContact(p.plannedAction)&&target!=null&&!PhysicalInteraction.inRangeForAction(s,target,p.plannedAction)){p.lastAction="approaching "+target.id;float tx=PhysicalInteraction.targetXForAction(s,target,"girl",s.haruX,p.plannedAction);if(!TravelEngine.startLocal(s,s.girlTravel,"girl",target.id,tx,PhysicalInteraction.rangeForAction(target,p.plannedAction),p.planId,now)){failPlan(s,p,now,"object target not physically reachable");}return;}executeAction(s,now);}
+ public static void onArrival(WorldState s,TravelState travel,long now){PlanState p=s.planState;if(p==null||!"girl".equals(travel.actor)||!p.planId.equals(travel.currentPlanId))return;p.lastArrival=("LOCAL".equals(travel.travelMode)?travel.targetId:travel.destinationArea)+" @"+now;PlanCausalAudit.arrival(s,p,now,p.lastArrival);p.lastProgressAt=now;if("find_cat".equals(p.intentionId)){GirlCatSearchEngine.onArrival(s,now);return;}if("LOCAL".equals(travel.travelMode)){WorldObject localTarget=resolveTarget(s,p);if(requiresContact(p.plannedAction)&&localTarget!=null&&!PhysicalInteraction.inRangeForAction(s,localTarget,p.plannedAction)){float tx=PhysicalInteraction.targetXForAction(s,localTarget,"girl",s.haruX,p.plannedAction);float rr=PhysicalInteraction.rangeForAction(localTarget,p.plannedAction);if(Math.abs(tx-s.haruX)<=rr||!TravelEngine.startLocal(s,s.girlTravel,"girl",localTarget.id,tx,rr,p.planId,now))failPlan(s,p,now,"local arrival did not satisfy physical action occupancy");return;}executeAction(s,now);return;}WorldObject target=resolveTarget(s,p);if(requiresContact(p.plannedAction)&&target!=null&&!PhysicalInteraction.inRangeForAction(s,target,p.plannedAction)){p.lastAction="approaching "+target.id;float tx=PhysicalInteraction.targetXForAction(s,target,"girl",s.haruX,p.plannedAction);if(!TravelEngine.startLocal(s,s.girlTravel,"girl",target.id,tx,PhysicalInteraction.rangeForAction(target,p.plannedAction),p.planId,now)){failPlan(s,p,now,"object target not physically reachable");}return;}if("OBSERVE".equals(p.plannedAction)&&beginVisibleObservationTravel(s,p,target,now))return;executeAction(s,now);}
+ private static boolean beginVisibleObservationTravel(WorldState s,PlanState p,WorldObject target,long now){
+  if(s==null||p==null||s.world==null||s.girlTravel==null)return false;
+  if(target!=null){
+   float tx=PhysicalInteraction.reachableTargetX(s,target,"girl",s.haruX);
+   float range=observationRange(target);
+   if(!Float.isFinite(tx)||Math.abs(tx-s.haruX)<=range)return false;
+   p.lastAction="choosing a viewing position near "+target.id;
+   return TravelEngine.startLocal(s,s.girlTravel,"girl",target.id,tx,range,p.planId,now);
+  }
+  WorldArea area=s.world.area(routeDestination(s,p));
+  if(area==null||s.world.areaAt(s.haruX)==null||!area.id.equals(s.world.areaAt(s.haruX).id))return false;
+  float width=Math.max(1f,area.right-area.left),inset=Math.min(100f,Math.max(34f,width*.12f));
+  float left=area.left+inset,right=area.right-inset,mid=(left+right)*.5f;
+  float desired=s.haruX<=mid?right:left;
+  if(Math.abs(desired-s.haruX)<72f)desired=s.haruX<=mid?Math.min(right,s.haruX+96f):Math.max(left,s.haruX-96f);
+  if(Math.abs(desired-s.haruX)<56f)return false;
+  p.lastAction="choosing a different viewpoint inside "+area.id;
+  return TravelEngine.startLocal(s,s.girlTravel,"girl",area.id,desired,26f,p.planId,now);
+ }
+ private static float observationRange(WorldObject o){return o==null?26f:Math.max(92f,Math.min(168f,o.width*.72f+64f));}
  private static WorldObject resolveTarget(WorldState s,PlanState p){WorldObject t=s.world.object(p.destination);if(t!=null)return t;if("REST_PROTECT".equals(p.plannedAction))return s.world.firstTagged("rest");if("REFLECT".equals(p.plannedAction))return s.world.firstTagged("reflect");return null;}
  private static boolean requiresContact(String action){return"REST_PROTECT".equals(action)||"REFLECT".equals(action)||"EAT".equals(action)||"DRINK".equals(action)||"TOILET".equals(action)||"STUDY_HERB".equals(action)||"HARVEST_HERB".equals(action)||"PREPARE_HERB".equals(action)||"TRY_HERB".equals(action);}
  private static String routeDestination(WorldState s,PlanState p){if(p==null)return"";WorldObject target=s.world.object(p.destination);if(target!=null)return target.areaId;WorldArea area=s.world.area(p.destination);return area==null?"":area.id;}
