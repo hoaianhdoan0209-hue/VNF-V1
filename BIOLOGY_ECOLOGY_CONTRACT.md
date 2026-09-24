@@ -34,3 +34,14 @@ Invariant: visual consumers must never write these states back or invent body/ec
 - Runtime population state is sparse. The catalog may know 500 species without materializing 500 x every area or spawning hundreds of visible objects.
 - Existing authored creatures remain representative individuals, not literal population counts.
 - The full evolutionary catalog is `GOD_SYSTEM_ONLY`. Haru can infer ecology from lived observation, and can learn lineage only if Thần chooses to reveal/teach it through Haru's autonomous learning pipeline.
+
+
+## Divine ecology — child gods / followers / offerings
+- Divine ecology is persistent **System Reality** and is separate from Haru cognition, memory, personality, relationship and plans.
+- A **Thần Con** chooses follower populations autonomously from currently viable living populations. The player never preselects a follower species.
+- A Thần Con may maintain multiple follower bonds over time; selection is bounded by real population state and deterministic affinity, not by a hard-coded favored species list.
+- Blessing power is bounded and may only provide small ecological support to recovery/carrying capacity while slightly reducing mortality pressure. It cannot make a species immortal or bypass resource/weather/competition pressure.
+- Only **some** base species are offering-capable. Eligibility is derived from their generated evolutionary trait fingerprint/social/reproduction traits rather than species name.
+- An offering requires high devotion plus a healthy enough population, has a real relative-abundance cost, and replenishes only bounded divine grace. No free-power loop.
+- Offering, follower selection and child-god awakening emit durable world-history events.
+- The full divine state is GOD_SYSTEM_ONLY. It does not automatically become Haru knowledge; any revelation to Haru still uses the autonomous teaching/learning pipeline.
