@@ -76,6 +76,44 @@ public final class RealExperienceRegressionTest {
   assertTrue(body.contains("StateInvariantChecker.normalizeSpatialState(state,now)"));
  }
 
+
+ @Test public void directBodyCommandsAreRejectedButInvitationsRemainChoices(){
+  WorldState s=state(T0);String before=s.currentIntention;
+  HaruMind.Response forced=HaruMind.respond(s,"đi ra bờ hồ ngay");
+  assertTrue(forced.controlAttempt);assertTrue(forced.speech.contains("không có quyền điều khiển"));
+  assertEquals("direct command must not become Haru intention",before,s.currentIntention);
+  IntentParser.Parsed invitation=IntentParser.parse("đi cùng mình nhé?");
+  assertEquals(IntentParser.SpeechAct.INVITATION,invitation.act);assertFalse(invitation.isControlAttempt());
+ }
+
+ @Test public void firstMicTapCanEnableVoiceWithoutHiddenDoubleTapRequirement()throws Exception{
+  String voice=read(appRoot().resolve("src/main/java/com/aicharacter/v3/VoiceController.java"));
+  int listen=voice.indexOf("public void listen()");
+  int speak=voice.indexOf("public void speak(",listen);
+  assertTrue(listen>=0&&speak>listen);
+  String body=voice.substring(listen,speak);
+  assertTrue(body.contains("enabled=true"));
+  assertFalse(body.contains("Double tap nút mic để bật Voice"));
+ }
+
+ @Test public void cameraStateIsResetWhenWorldViewOrLiveStateIsRecreated()throws Exception{
+  String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String camera=read(appRoot().resolve("src/main/java/com/aicharacter/v3/CatCameraDirector.java"));
+  assertTrue(camera.contains("resetForNewView()"));
+  assertTrue(view.contains("CatCameraDirector.resetForNewView();state=s"));
+  assertTrue(view.contains("CatCameraDirector.resetForNewView();visualCameraReady=false"));
+ }
+
+ @Test public void ambienceUsesPlayerCatAsListener(){
+  WorldState s=state(T0);s.environment.weather="RAIN";s.environment.weatherIntensity=.9;
+  s.haruX=1450f;s.catState.x=s.catX=315f;
+  AudioSceneFrame home=AudioSceneEmitter.derive(s,0);
+  assertEquals("home_shelter",home.areaId);assertTrue(home.weatherExposure<.5);assertEquals(0.0,home.water,.0001);
+  s.catState.x=s.catX=1450f;
+  AudioSceneFrame lake=AudioSceneEmitter.derive(s,0);
+  assertEquals("lakeside",lake.areaId);assertTrue(lake.weatherExposure>.5);assertTrue(lake.water>.5);
+ }
+
  private static WorldState state(long now){
   WorldState s=WorldState.fresh();s.createdAt=now-3600000;s.lastOpenedAt=now;s.lastSimulatedAt=now;s.lastSavedAt=now;s.world=world();
   s.haruX=315;s.catX=340;s.catState.x=340;s.catState.areaId="home_shelter";s.catState.awake=true;s.catState.attachedToEntity="";s.catState.carryKnownByGirl=false;
