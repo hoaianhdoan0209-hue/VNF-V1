@@ -8,6 +8,7 @@ on:
       - release/v1.0.1
       - release/v1.0.2
       - release/v1.0.3
+      - release/v1.0.4
       - team/haru-intelligence-v1
   workflow_dispatch:
 
