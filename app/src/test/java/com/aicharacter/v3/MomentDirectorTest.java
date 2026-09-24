@@ -59,4 +59,18 @@ public final class MomentDirectorTest {
  private static WorldState state(){
   WorldState s=WorldState.fresh();s.world=new WorldModel();s.world.areas.add(new WorldArea("test","Test","test",0,1000,846,true,"test"));s.haruX=430;s.catX=560;s.catState=CatState.fromJson(null,560,0);s.catState.x=560;s.catState.areaId="test";s.catState.awake=true;s.catState.attachedToEntity="";s.girlTravel=new TravelState();s.catTravel=new TravelState();s.lastOpenedAt=1;s.lastSimulatedAt=1;return s;
  }
+
+ @Test public void retreatCanActuallyWidenACompetingCloseEmotionFrame(){
+  WorldState s=state();long now=T0+5000;
+  s.emotion.fear=.92;
+  EmotionCameraDirector emotionDirector=new EmotionCameraDirector();
+  EmotionCameraDirector.Frame emotional=emotionDirector.direct(s,now);
+  s.worldHistory.add(new WorldHistoryEntry(now-50,"retreat_real","CAT_SOCIAL_RESPONSE_STARTED","cat","mode=RETREAT distance=220"));
+  MomentDirector.Cue retreat=new MomentDirector().direct(s,now);
+  assertEquals(MomentDirector.Kind.SOCIAL_RETREAT,retreat.kind);
+  float composed=CameraCompositionPolicy.targetZoom(emotional,retreat);
+  assertTrue("retreat must cap close emotional framing",composed<=retreat.minZoom+.0001f);
+  assertTrue(composed<=emotional.zoom+.0001f);
+ }
+
 }
