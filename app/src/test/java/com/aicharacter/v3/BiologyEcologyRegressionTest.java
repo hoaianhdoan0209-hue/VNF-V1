@@ -119,8 +119,8 @@ public class BiologyEcologyRegressionTest {
   for(String k:populationKeys){
    SpeciesPopulationState a=active.livingWorld.populations.get(k),b=offline.livingWorld.populations.get(k);
    double aa=a==null?0:a.relativeAbundance,bb=b==null?0:b.relativeAbundance;
-   assertTrue(Double.isFinite(aa)&&Double.isFinite(bb)&&Math.abs(aa-bb)<=.02);
-   if(a!=null&&b!=null)assertTrue(Double.isFinite(a.carryingCapacity)&&Double.isFinite(b.carryingCapacity)&&Math.abs(a.carryingCapacity-b.carryingCapacity)<=.035);
+   assertTrue("population abundance "+k+" active="+aa+" offline="+bb+" diff="+Math.abs(aa-bb),Double.isFinite(aa)&&Double.isFinite(bb)&&Math.abs(aa-bb)<=.02);
+   if(a!=null&&b!=null)assertTrue("population capacity "+k+" active="+a.carryingCapacity+" offline="+b.carryingCapacity+" diff="+Math.abs(a.carryingCapacity-b.carryingCapacity),Double.isFinite(a.carryingCapacity)&&Double.isFinite(b.carryingCapacity)&&Math.abs(a.carryingCapacity-b.carryingCapacity)<=.035);
   }
  }
 
