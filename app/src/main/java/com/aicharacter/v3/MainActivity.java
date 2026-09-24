@@ -9,11 +9,15 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   final android.content.Context app=getApplicationContext();
   new Thread(()->{
    try{
+    Log.i(TAG,"STARTUP_BOOTSTRAP_BEGIN");
     WorldRepository r=new WorldRepository(app);
+    Log.i(TAG,"STARTUP_REPOSITORY_READY");
     WorldState preview=r.loadPreviewOrCreate();
+    Log.i(TAG,"STARTUP_PREVIEW_READY simulatedAt="+preview.lastSimulatedAt+" haruX="+preview.haruX);
     applyDebugVisualCapture(preview);
+    Log.i(TAG,"STARTUP_PREVIEW_DEBUG_APPLIED");
     runOnUiThread(()->showWorldPreview(r,preview));
-   }catch(Throwable e){runOnUiThread(()->showStartupFailure(e));}
+   }catch(Throwable e){Log.e(TAG,"STARTUP_BOOTSTRAP_FAILED",e);runOnUiThread(()->showStartupFailure(e));}
   },"VNF-World-Bootstrap").start();
  }
  private void showWorldPreview(WorldRepository r,WorldState preview){
