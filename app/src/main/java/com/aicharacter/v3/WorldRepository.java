@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 public final class WorldRepository{
  private final File saveFile,backupFile,tmpFile;
  private final Context context;
+ private WorldState pendingInitialSeed;
 
  public WorldRepository(Context context){
   this.context=context.getApplicationContext();
@@ -27,11 +28,33 @@ public final class WorldRepository{
   WorldState state=tryLoad(saveFile);
   if(state==null)state=tryLoad(backupFile);
   if(state==null)state=tryLoad(tmpFile);
-  if(state==null)return loadOrCreate();
-  long now=System.currentTimeMillis();StateInvariantChecker.normalize(state,now);
+  long now=System.currentTimeMillis();
+  if(state==null){
+   state=WorldState.fresh();
+   StateInvariantChecker.normalize(state,now);
+   attachDefinition(state);
+   StateInvariantChecker.normalizeSpatialState(state,now);
+   try{
+    pendingInitialSeed=WorldState.fromJson(state.toJson());
+    attachDefinition(pendingInitialSeed);
+    StateInvariantChecker.normalizeSpatialState(pendingInitialSeed,now);
+   }catch(Exception e){pendingInitialSeed=null;}
+   return state;
+  }
+  StateInvariantChecker.normalize(state,now);
   attachDefinition(state);
   StateInvariantChecker.normalizeSpatialState(state,now);
   return state;
+ }
+
+ /** Persist a fresh-install seed only after the first world frame is already visible. */
+ public synchronized void commitPendingInitialSeed(){
+  if(pendingInitialSeed==null)return;
+  WorldState seed=pendingInitialSeed;pendingInitialSeed=null;
+  // Never overwrite a world that another writer has already committed.
+  WorldState current=tryLoad(saveFile);
+  if(current!=null)return;
+  save(seed);
  }
 
  public synchronized WorldState loadOrCreate(){
