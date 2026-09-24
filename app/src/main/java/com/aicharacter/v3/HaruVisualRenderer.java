@@ -13,6 +13,17 @@ public final class HaruVisualRenderer{
 
  public static void drawReflection(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float strength,boolean water){
   if(strength<=.01f)return;
+  if(useIllustratedRenderer()){
+   float squash=water?.66f:.54f,wobble=water?(float)Math.sin(anim*.82f)*3.2f:(float)Math.sin(anim*.37f)*1.1f;
+   String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes),area="";
+   if(s.world!=null){WorldArea a=s.world.areaAt(s.haruX);if(a!=null)area=a.id==null?"":a.id;}
+   c.save();c.clipRect(x-115,contactGround-1,x+115,1080);c.translate(wobble,0);c.scale(1f,-squash,x,contactGround);
+   try{HaruIllustratedRenderer.draw(c,p,s,v,x,bodyGround,anim,(int)Math.max(10,Math.min(62,62*strength)),0f,0f,phase,area);}catch(Throwable ignored){}
+   c.restore();
+   p.setStyle(Paint.Style.FILL);int bands=water?7:4;
+   for(int i=0;i<bands;i++){float y=contactGround+10+i*(water?17f:13f),phaseWave=(float)Math.sin(anim*(.65f+i*.03f)+i*.9f),ww=(water?52:38)+(i%3)*18f;p.setColor(Color.argb((int)Math.max(3,(water?15:8)*strength),water?184:145,water?211:162,water?211:153));c.drawRoundRect(x-ww+phaseWave*9,y,x+ww+phaseWave*9,y+(water?2.2f:1.5f),1,1,p);}
+   return;
+  }
   Bitmap sheet=assets.get(v.asset);if(sheet==null)sheet=assets.get("girl_idle_right");if(sheet==null)return;
   int frames=Math.max(1,v.frames),fw=Math.max(1,sheet.getWidth()/frames),fh=sheet.getHeight(),frame=frameIndex(s,v,anim,frames);
   float sc=BODY_SCALE,ax=v.anchorX*fw*sc,left=x-ax,top=GirlAnimationController.renderTop(bodyGround,fh,sc,v.anchorY);
