@@ -55,6 +55,33 @@ public final class GameplayContinuityRegressionTest {
   assertEquals(T0+5L*60000L,s.lastSimulatedAt);
  }
 
+ @Test public void bareBodyCommandIsRejectedWithoutChangingHaruPlan(){
+  WorldState s=state();
+  s.currentIntention="observe_lake";
+  s.haruActivity="watching the lake";
+  s.planState=new PlanState();s.planState.planId="keep";s.planState.status="ACTIVE";s.planState.intentionId="observe_lake";
+  HaruMind.Response r=HaruMind.respond(s,"đi sang trái");
+  assertTrue(r.controlAttempt);
+  assertEquals("observe_lake",s.currentIntention);
+  assertEquals("watching the lake",s.haruActivity);
+  assertEquals("keep",s.planState.planId);
+ }
+
+ @Test public void friendlyWalkInvitationDoesNotDirectlyWriteMovementState(){
+  WorldState s=state();
+  s.currentIntention="observe_lake";
+  s.haruActivity="watching the lake";
+  s.relationship.trust=100;s.relationship.comfort=100;s.relationship.attachment=100;
+  s.body.energy=95;s.body.pain=0;
+  String planId=s.planState.planId;
+  HaruMind.Response r=HaruMind.respond(s,"đi dạo cùng mình nhé?");
+  assertFalse(r.controlAttempt);
+  assertEquals("observe_lake",s.currentIntention);
+  assertEquals("watching the lake",s.haruActivity);
+  assertEquals(planId,s.planState.planId);
+  assertFalse(s.girlTravel.active);
+ }
+
  private static WorldState state(){
   WorldState s=WorldState.fresh();
   s.createdAt=T0;s.lastOpenedAt=T0;s.lastSimulatedAt=T0;s.lastSavedAt=T0;
