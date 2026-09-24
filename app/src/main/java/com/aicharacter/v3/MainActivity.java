@@ -11,7 +11,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   new Thread(()->{
    try{
     WorldRepository r=new WorldRepository(app);
-    WorldState preview=r.loadOrCreate();
+    WorldState preview=r.loadPreviewOrCreate();
     applyDebugVisualCapture(preview);
     runOnUiThread(()->showWorldPreview(r,preview));
    }catch(Throwable e){runOnUiThread(()->showStartupFailure(e));}
