@@ -2,7 +2,7 @@ package com.aicharacter.v3;
 
 /** Presentation-only feline animation selection from real cat physics/social state. */
 public final class CatAnimationController {
- public enum State{IDLE,WATCH,WALK,APPROACH,RETREAT,SETTLE,SLEEP,ATTACHED,BRACE}
+ public enum State{IDLE,WATCH,WALK,APPROACH,RETREAT,RUB,SETTLE,SLEEP,ATTACHED,BRACE}
  public static final class Visual{
   public final State state;public final boolean facingRight;public final double attention,guardedness,energy;public final String reason;
   Visual(State state,boolean facingRight,double attention,double guardedness,double energy,String reason){this.state=state;this.facingRight=facingRight;this.attention=cl(attention);this.guardedness=cl(guardedness);this.energy=cl(energy);this.reason=reason==null?"":reason;}
@@ -22,6 +22,7 @@ public final class CatAnimationController {
    if("APPROACH".equals(social.mode))return new Visual(State.APPROACH,right,social.attention,guard,energy,"cat is voluntarily approaching");
    return new Visual(State.WALK,right,social.attention,guard,energy,"cat is physically travelling");
   }
+  MicroInteractionDirector.Cue micro=MicroInteractionDirector.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));if(micro.active&&micro.kind==MicroInteractionDirector.Kind.CAT_RUB)return new Visual(State.RUB,right,Math.max(social.attention,.78),guard,energy,micro.reason);
   if("SETTLE_NEAR".equals(social.mode)||c.sleepiness>72)return new Visual(State.SETTLE,right,social.attention,guard,energy,"cat has chosen a settled/resting posture");
   if("girl".equals(social.gazeTarget)||social.attention>.26)return new Visual(State.WATCH,right,social.attention,guard,energy,"cat attention is currently on Haru");
   return new Visual(State.IDLE,right,social.attention,guard,energy,"cat is locally idle");
