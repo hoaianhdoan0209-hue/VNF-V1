@@ -67,11 +67,19 @@ public final class PopulationEcologyEngine {
    for(WorldObject o:s.world.objects){if(o==null||!o.enabled||!"creature".equals(o.type))continue;String actual=HaruVisionEngine.actualAreaId(s,o);if(!a.id.equals(actual))continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(o);if(p!=null)selected.put(p.key,p);}
    if(s.livingWorld!=null)for(SpeciesPopulationState pop:s.livingWorld.populations.values()){if(pop==null||!a.id.equals(pop.areaId)||pop.relativeAbundance<=1e-7)continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.get(pop.speciesKey);if(p!=null)selected.put(p.key,p);}
    ArrayList<SpeciesEcologyProfile> candidates=new ArrayList<>();for(SpeciesEcologyProfile p:all)if(!selected.containsKey(p.key))candidates.add(p);
-   candidates.sort((x,y)->{int d=Double.compare(profileSuitability(s,y,a,null),profileSuitability(s,x,a,null));return d!=0?d:x.key.compareTo(y.key);});
-   int background=0;for(SpeciesEcologyProfile p:candidates){if(background>=18)break;double fit=profileSuitability(s,p,a,null);if(fit<.42)break;selected.put(p.key,p);background++;}
+   candidates.sort((x,y)->{int d=Double.compare(backgroundSuitability(s,y,a),backgroundSuitability(s,x,a));return d!=0?d:x.key.compareTo(y.key);});
+   int background=0;for(SpeciesEcologyProfile p:candidates){if(background>=18)break;double fit=backgroundSuitability(s,p,a);if(fit<.42)break;selected.put(p.key,p);background++;}
    out.put(a.id,new ArrayList<>(selected.values()));
   }
   return out;
+ }
+ private static double backgroundSuitability(WorldState s,SpeciesEcologyProfile p,WorldArea a){
+  if(s==null||p==null||a==null)return 0;
+  BiomeProfile b=s.world==null?null:s.world.biome(a.biomeId);
+  String context=(a.tags==null?"":a.tags)+","+(b==null?"":b.tags)+","+(b==null?"":b.vegetation)+","+(b==null?"":b.fauna)+","+(b==null?"":b.waterRegime);
+  double preferred=resourceOverlap(p.preferredAreaTags,context),resources=resourceOverlap(p.resourceTags,context);
+  double stable=(((p.key+"@"+a.id).hashCode()&0x7fffffff)%1000)/1000.0;
+  return unit(preferred*.68+resources*.27+stable*.05,0);
  }
  private static double profileSuitability(WorldState s,SpeciesEcologyProfile p,WorldArea a,WorldObject rep){
   if(s==null||p==null||a==null)return 0;if(rep!=null)return unit(EcologyEngine.creatureSuitability(s,a,rep),0);
