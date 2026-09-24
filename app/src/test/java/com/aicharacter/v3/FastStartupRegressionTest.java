@@ -96,6 +96,27 @@ public final class FastStartupRegressionTest {
   assertTrue(view.contains("host.onFirstWorldFrame()"));
   assertTrue(view.contains("if(firstWorldFrameReported)dispatchAudio(wall)"));
  }
+ @Test public void permissionPromptIsScheduledFromFirstWorldFrameNotCatchupCompletion()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  int first=main.indexOf("public void onFirstWorldFrame()");
+  int catchup=main.indexOf("private void completeCausalStartup",first);
+  int finish=main.indexOf("private void finishCausalStartup",catchup);
+  int resume=main.indexOf("private void startResumeCausalCatchup",finish);
+  assertTrue(first>=0&&catchup>first&&finish>catchup&&resume>finish);
+  String firstBody=main.substring(first,catchup);
+  assertTrue(firstBody.contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L)"));
+  String deferred=main.substring(catchup,resume);
+  assertFalse(deferred.contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L)"));
+ }
+
+ @Test public void proactiveTtsChecksLocaleSupportAndFallsBack()throws Exception{
+  String voice=read(appRoot().resolve("src/main/java/com/aicharacter/v3/VoiceController.java"));
+  assertTrue(voice.contains("TextToSpeech.LANG_MISSING_DATA"));
+  assertTrue(voice.contains("TextToSpeech.LANG_NOT_SUPPORTED"));
+  assertTrue(voice.contains("Locale.getDefault()"));
+  assertTrue(voice.contains("ttsReady=lang!="));
+ }
+
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 119"));
