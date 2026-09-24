@@ -26,7 +26,8 @@ public final class FastStartupRegressionTest {
   String onCreateBody=main.substring(onCreate,catchupMethod);
   assertFalse("cold start must not run offline reconstruction before first world",onCreateBody.contains("OfflineLifeEngine.reconstruct"));
   assertTrue(main.substring(catchupMethod).contains("OfflineLifeEngine.reconstruct(live,now)"));
-  assertTrue(main.contains("WorldState preview=r.loadPreviewOrCreate()"));\n  assertTrue(main.contains("new GameView(this,state,this,false)"));
+  assertTrue(main.contains("WorldState preview=r.loadPreviewOrCreate()"));
+  assertTrue(main.contains("new GameView(this,state,this,false)"));
   assertTrue(main.contains("gameView.replaceState(live,true)"));
   assertTrue(main.contains("STARTUP_WORLD_VISIBLE"));
   assertTrue(main.contains("STARTUP_CAUSAL_READY"));
