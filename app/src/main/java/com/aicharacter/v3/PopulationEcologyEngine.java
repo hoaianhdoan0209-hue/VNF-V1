@@ -65,10 +65,10 @@ public final class PopulationEcologyEngine {
   for(WorldArea a:s.world.areas){
    LinkedHashMap<String,SpeciesEcologyProfile> selected=new LinkedHashMap<>();
    for(WorldObject o:s.world.objects){if(o==null||!o.enabled||!"creature".equals(o.type))continue;String actual=HaruVisionEngine.actualAreaId(s,o);if(!a.id.equals(actual))continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(o);if(p!=null)selected.put(p.key,p);}
-   if(s.livingWorld!=null)for(SpeciesPopulationState pop:s.livingWorld.populations.values()){if(pop==null||!a.id.equals(pop.areaId)||pop.relativeAbundance<=1e-7)continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.get(pop.speciesKey);if(p!=null)selected.put(p.key,p);}
    ArrayList<SpeciesEcologyProfile> candidates=new ArrayList<>();for(SpeciesEcologyProfile p:all)if(!selected.containsKey(p.key))candidates.add(p);
    candidates.sort((x,y)->{int d=Double.compare(discoverySuitability(s,y,a),discoverySuitability(s,x,a));return d!=0?d:x.key.compareTo(y.key);});
    int background=0;for(SpeciesEcologyProfile p:candidates){if(background>=18)break;double fit=discoverySuitability(s,p,a);if(fit<.42)break;selected.put(p.key,p);background++;}
+   if(s.livingWorld!=null)for(SpeciesPopulationState pop:s.livingWorld.populations.values()){if(pop==null||!a.id.equals(pop.areaId)||pop.relativeAbundance<=1e-7)continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.get(pop.speciesKey);if(p!=null)selected.put(p.key,p);}
    out.put(a.id,new ArrayList<>(selected.values()));
   }
   return out;
