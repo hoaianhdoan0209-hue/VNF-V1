@@ -197,7 +197,7 @@ public final class VisualRegressionTest{
   assertFalse(world.contains("weatherExposure"));
  }
 
- @Test public void HaruCanSpeakFirstAndPermissionsAreRequestedAtStartup()throws Exception{
+ @Test public void HaruCanSpeakFirstAndAsksBeforeRuntimePermissions()throws Exception{
   Path app=appRoot();
   String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   String main=read(app.resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
@@ -218,9 +218,9 @@ public final class VisualRegressionTest{
   assertTrue(main.contains("requestCoreRuntimePermissions"));
   assertTrue(main.contains("Manifest.permission.RECORD_AUDIO"));
   assertTrue(main.contains("Manifest.permission.POST_NOTIFICATIONS"));
-  assertTrue(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
+  assertTrue(main.contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions"));\n  assertTrue(main.contains("Haru chủ động hỏi"));\n  assertTrue(main.contains("setPositiveButton(\\\"Cho phép\\\""));\n  assertFalse(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
   assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
-  assertTrue(world.contains("SAVE_VERSION = 53"));
+  assertTrue(world.contains("SAVE_VERSION = 54"));
  }
 
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
