@@ -26,6 +26,7 @@ public final class DivineOfferingEngine {
    s.divineOntology.offerings.put(id,o);
    WorldHistoryEntry e=WorldEventBus.publishId(s,now,"divine_offering_accept_"+safe(id)+"_"+Long.toHexString(now),"DIVINE_OFFERING_ACCEPTED",giverId,"Offering accepted as divine power; kind="+k+" requestedGift="+o.requestedGiftKind+".");
    DivineFollowerEngine.recordOffering(s,giverId,e.eventId,unit(.08+o.devotionalMeaning*.10+o.sacrificeCost*.06),now);
+   if(s.livingWorld!=null&&!o.speciesKey.isEmpty()&&!o.areaId.isEmpty()){SpeciesDivineState culture=s.livingWorld.divine(o.speciesKey,o.areaId);culture.ritualization=unit(culture.ritualization+.02+.035*o.devotionalMeaning);culture.offeringTradition=unit(culture.offeringTradition+.04+.08*o.devotionalMeaning);culture.clamp();}
    return new Result(true,"offering accepted",o);
   }
   o.accepted=false;o.status="REFUSED";o.divineYield=0;o.decidedAt=now;s.divineOntology.power.refusedOfferings++;s.divineOntology.power.lastOfferingAt=now;s.divineOntology.power.clamp();s.divineOntology.offerings.put(id,o);
