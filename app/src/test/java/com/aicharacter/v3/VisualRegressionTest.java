@@ -145,7 +145,7 @@ public final class VisualRegressionTest{
   assertTrue(moment.contains("RECENT_EVENT_MS"));
   assertTrue(moment.contains("lastAcceptedEventTime"));
   assertTrue(moment.contains("CAT_SOCIAL_SETTLE_NEAR"));
-  assertTrue(moment.contains("HARU_CAUSAL_EXPERIMENT_RESOLVED"));
+  assertTrue(moment.contains("CAUSAL_EXPERIMENT_RESOLVED"));
   assertTrue(sound.contains("semanticId"));
   assertTrue(sound.contains("Layer"));
   assertFalse(world.contains("pendingSoundEvent"));
