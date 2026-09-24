@@ -79,6 +79,29 @@ public final class RealExperienceRegressionTest {
   assertTrue("deep-sleep fallback must remain bounded",steps<=56);
  }
 
+ @Test public void sameAreaObjectObservationCreatesVisiblePhysicalApproach(){
+  WorldState s=state(T0);s.haruX=1450f;
+  PlanState p=new PlanState();p.planId="observe_creature";p.status="ACTIVE";p.intentionId="watch_reedling";p.destination="reedling_01";p.plannedAction="OBSERVE";p.createdAt=T0;p.lastProgressAt=T0;
+  s.planState=p;s.currentIntention=p.intentionId;s.girlTravel=new TravelState();
+  assertTrue(TravelEngine.start(s,s.girlTravel,"girl","lakeside",p.planId,T0));
+  assertTrue("same-area observation must create local physical movement",s.girlTravel.active);
+  assertEquals("LOCAL",s.girlTravel.travelMode);
+  assertEquals("reedling_01",s.girlTravel.targetId);
+  assertTrue(p.lastAction.contains("viewing position"));
+ }
+
+ @Test public void areaExplorationChoosesANewVisibleViewpointInsteadOfStandingStill(){
+  WorldState s=state(T0);s.haruX=720f;
+  PlanState p=new PlanState();p.planId="explore_area";p.status="ACTIVE";p.intentionId="explore_garden";p.destination="garden_path";p.plannedAction="OBSERVE";p.createdAt=T0;p.lastProgressAt=T0;
+  s.planState=p;s.currentIntention=p.intentionId;s.girlTravel=new TravelState();
+  float before=s.haruX;
+  assertTrue(TravelEngine.start(s,s.girlTravel,"girl","garden_path",p.planId,T0));
+  assertTrue("area observation must produce visible local travel",s.girlTravel.active);
+  assertEquals("LOCAL",s.girlTravel.travelMode);
+  assertTrue(Math.abs(s.girlTravel.segmentEndX-before)>56f);
+  assertTrue(p.lastAction.contains("different viewpoint"));
+ }
+
  @Test public void proactiveBubbleAndTtsCannotLoseCueDuringDeferredStartup()throws Exception{
   String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
   String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
