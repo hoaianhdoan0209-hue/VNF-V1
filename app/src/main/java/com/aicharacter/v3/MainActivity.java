@@ -31,16 +31,23 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   startupAfterFirstFrameStarted=true;
   long visibleMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
   Log.i(TAG,"STARTUP_FIRST_WORLD_FRAME ms="+visibleMs+" catchup=deferred");
-  try{
-   voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});
-  }catch(Throwable e){Log.w(TAG,"Voice init deferred startup failed",e);voice=null;}
-  if(!isDebugVisualCapture()){
-   try{audio=new ProceduralAudioEngine();audio.resume();}catch(Throwable e){Log.w(TAG,"Audio init deferred startup failed",e);audio=null;}
-   maybeCheckAppUpdate(true);
-  }
-  try{GodSessionManager.addListener(this);GodSessionManager.warmup(getApplicationContext());}catch(Throwable e){Log.w(TAG,"God warmup deferred startup failed",e);}
+  try{GodSessionManager.addListener(this);}catch(Throwable e){Log.w(TAG,"God listener deferred startup failed",e);}
   final WorldRepository r=repository;
-  new Thread(()->completeCausalStartup(r),"VNF-World-Catchup").start();
+  gameView.postDelayed(()->new Thread(()->completeCausalStartup(r),"VNF-World-Catchup").start(),80L);
+  if(!isDebugVisualCapture()){
+   gameView.postDelayed(this::initializeDeferredAudio,120L);
+   gameView.postDelayed(this::initializeDeferredVoice,220L);
+   gameView.postDelayed(()->maybeCheckAppUpdate(true),320L);
+  }else gameView.postDelayed(this::initializeDeferredVoice,220L);
+ }
+ private void initializeDeferredVoice(){
+  if(voice!=null||isFinishing()||isDestroyed())return;
+  try{voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});}
+  catch(Throwable e){Log.w(TAG,"Voice init deferred startup failed",e);voice=null;}
+ }
+ private void initializeDeferredAudio(){
+  if(audio!=null||isFinishing()||isDestroyed())return;
+  try{audio=new ProceduralAudioEngine();audio.resume();}catch(Throwable e){Log.w(TAG,"Audio init deferred startup failed",e);audio=null;}
  }
  private void completeCausalStartup(WorldRepository r){
   try{
