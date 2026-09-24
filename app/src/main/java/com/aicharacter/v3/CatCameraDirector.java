@@ -13,7 +13,7 @@ public final class CatCameraDirector{
  private static String lastMode="CHARACTER_FRAME";
  private static int stableTicks=0;
  private CatCameraDirector(){}
- public static void resetForTest(){smoothElev=0;smoothAir=0;smoothLookX=Float.NaN;lastMode="CHARACTER_FRAME";stableTicks=0;}
+ public static void resetForNewView(){smoothElev=0;smoothAir=0;smoothLookX=Float.NaN;lastMode="CHARACTER_FRAME";stableTicks=0;} public static void resetForTest(){resetForNewView();}
 
  public static Frame direct(WorldState s){
   float dx=s.haruX-s.catX;
