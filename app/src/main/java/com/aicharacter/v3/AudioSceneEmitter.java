@@ -7,10 +7,11 @@ public final class AudioSceneEmitter {
  public static AudioSceneFrame derive(WorldState s,double divinePresence){
   if(s==null)return AudioSceneFrame.quiet();
   WorldArea haruArea=s.world==null?null:s.world.areaAt(s.haruX),catArea=s.world==null||s.catState==null?null:s.world.areaAt(s.catState.x);
-  String area=haruArea==null?"unknown":haruArea.id;
+  WorldArea listenerArea=catArea!=null?catArea:haruArea;
+  String area=listenerArea==null?"unknown":listenerArea.id;
   EnvironmentState e=s.environment==null?new EnvironmentState():s.environment;
   String phase=e.dayPhase(s.worldMinutes),weather=e.weather==null?"CLEAR":e.weather;
-  double rain="RAIN".equals(weather)?cl(e.weatherIntensity):0,wind=cl(e.wind),wet=cl(s.worldWetness),water=haruArea!=null&&has(haruArea,"water")?1:0,exposure=cl(WorldSemantics.exposure(haruArea));
+  double rain="RAIN".equals(weather)?cl(e.weatherIntensity):0,wind=cl(e.wind),wet=cl(s.worldWetness),water=listenerArea!=null&&has(listenerArea,"water")?1:0,exposure=cl(WorldSemantics.exposure(listenerArea));
   double haruSpeed=s.girlTravel==null?0:cl(Math.abs(s.girlTravel.lastSpeed)/120.0),catSpeed=s.catTravel==null?0:cl(Math.abs(s.catTravel.lastSpeed)/95.0);
   BiologyVisualOutput bio=BiologyVisualOutput.from(s);double breathing=cl(bio.breathingIntensity),fear=s.emotion==null?0:cl(s.emotion.fear),anger=s.emotion==null?0:cl(s.emotion.anger),stress=cl(Math.max(Math.max(fear,anger*.72),breathing*.78));
   double catAttention=s.catSocial==null?0:cl(s.catSocial.attention);String catMode=s.catSocial==null?"IDLE":safe(s.catSocial.mode,"IDLE");
