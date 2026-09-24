@@ -11,7 +11,7 @@ public final class CharacterGodContractTest {
 
  @Test public void capabilityModelContainsRequiredBoundaries() throws Exception{
   for(GodCapabilityModel.Capability c:GodCapabilityModel.Capability.values())assertTrue(GodCapabilityModel.supports(c));
-  assertEquals(8,GodCapabilityModel.toJson().length());
+  assertEquals(11,GodCapabilityModel.toJson().length());
  }
 
  @Test public void godCannotRewriteHaruMindOrPastHistory() throws Exception{
