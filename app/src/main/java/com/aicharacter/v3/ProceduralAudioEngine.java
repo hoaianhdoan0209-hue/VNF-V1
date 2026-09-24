@@ -19,7 +19,7 @@ public final class ProceduralAudioEngine {
  private volatile boolean active=false,destroyed=false;
  private AudioTrack track;private Thread worker;
  private long rng=0x51A7B33FL;
- private double windLp,leafLp,waterLp,windPhase,waterPhase,divinePhase,breathPhase,haruStepPhase,catStepPhase,stepTonePhase;
+ private double windLp,leafLp,waterLp,windPhase,waterPhase,divinePhase,breathPhase,haruStepPhase,catStepPhase,stepTonePhase,purrPhase,purrPhase2;
  private double haruStepEnv,catStepEnv;
  private CueVoice cueVoice;
 
@@ -79,9 +79,9 @@ public final class ProceduralAudioEngine {
    windPhase=wrap(windPhase+TWO_PI*.075/SAMPLE_RATE);
    waterPhase=wrap(waterPhase+TWO_PI*184/SAMPLE_RATE);
    divinePhase=wrap(divinePhase+TWO_PI*73.4/SAMPLE_RATE);
-   double windMod=.72+.28*Math.sin(windPhase);
-   ambient+=windLp*(.004+.030*f.wind)*windMod;
-   if(f.rain>0)ambient+=(noise*.72+(noise-leafLp)*.28)*(.008+.035*f.rain);
+   double windMod=.72+.28*Math.sin(windPhase),exposure=Math.max(.02,Math.min(1,f.weatherExposure));
+   ambient+=windLp*(.003+.028*f.wind*(.24+.76*exposure))*windMod;
+   if(f.rain>0){double openRain=(noise*.72+(noise-leafLp)*.28)*(.007+.034*f.rain)*exposure;double muffledRain=windLp*(.004+.016*f.rain)*(1-exposure);ambient+=openRain+muffledRain;}
    if(f.water>0)ambient+=(waterLp*.012+Math.sin(waterPhase)*.0028)*f.water;
    if(f.areaId.contains("grove"))ambient+=(noise-leafLp)*(.0035+.007*f.wind);
    else if(f.areaId.contains("garden"))ambient+=leafLp*.0045;
@@ -99,10 +99,11 @@ public final class ProceduralAudioEngine {
    double breathEnv=Math.max(0,Math.sin(breathPhase));
    breath=(windLp*.018+noise*.002)*breathEnv*f.haruBreathing*(.45+.55*f.haruStress);
 
-   double haruFoot=stepSample(true,f.haruWalking,f.haruSpeed,noise);
-   double catFoot=stepSample(false,f.catMoving,f.catSpeed,noise);
+   double haruFoot=stepSample(true,f.haruWalking,f.haruSpeed,noise,f.haruSurface);
+   double catFoot=stepSample(false,f.catMoving,f.catSpeed,noise,f.catSurface);
+   double purr=0;if(f.catPurr>.001){purrPhase=wrap(purrPhase+TWO_PI*48.5/SAMPLE_RATE);purrPhase2=wrap(purrPhase2+TWO_PI*97.0/SAMPLE_RATE);double trem=.76+.24*Math.sin(waterPhase*.37);purr=(Math.sin(purrPhase)*.0075+Math.sin(purrPhase2)*.0035+windLp*.003)*f.catPurr*trem;}
 
-   double left=ambient+divine+breath+haruFoot+catFoot,right=left;
+   double left=ambient+divine+breath+haruFoot+catFoot+purr,right=left;
    if(cueVoice!=null){
     CueVoice.Sample cs=cueVoice.next(noise);
     left+=cs.left;right+=cs.right;
@@ -114,17 +115,21 @@ public final class ProceduralAudioEngine {
   }
  }
 
- private double stepSample(boolean haru,boolean walking,double speed,double noise){
-  double rate=(haru?1.25:1.75)+speed*(haru?1.85:2.55),inc=TWO_PI*rate/SAMPLE_RATE;
+ private double stepSample(boolean haru,boolean walking,double speed,double noise,String surfaceName){
+  double rate=(haru?1.25:1.75)+speed*(haru?1.85:2.55),inc=TWO_PI*rate/SAMPLE_RATE;SurfaceAcoustics.Profile material=surfaceProfile(surfaceName);
+  double toneHz=material.lowTone+speed*(material.highTone-material.lowTone)*.32;
   if(haru){
    double old=haruStepPhase;haruStepPhase=wrap(haruStepPhase+inc);if(walking&&haruStepPhase<old)haruStepEnv=.92;
-   haruStepEnv*=walking?.9945:.982;stepTonePhase=wrap(stepTonePhase+TWO_PI*(82+speed*28)/SAMPLE_RATE);
-   double surface=(.58*noise+.42*Math.sin(stepTonePhase));return surface*haruStepEnv*(.010+.013*speed);
+   haruStepEnv*=walking?.9945:.982;stepTonePhase=wrap(stepTonePhase+TWO_PI*toneHz/SAMPLE_RATE);
+   double tonal=Math.sin(stepTonePhase),texture=noise*material.noiseMix+tonal*(1-material.noiseMix),wetSlap=material.surface==SurfaceAcoustics.Surface.WET_BANK?Math.sin(stepTonePhase*2.7)*.18:0;
+   return (texture+wetSlap)*haruStepEnv*(.009+.013*speed)*(1-material.damping*.20);
   }else{
    double old=catStepPhase;catStepPhase=wrap(catStepPhase+inc);if(walking&&catStepPhase<old)catStepEnv=.70;
-   catStepEnv*=walking?.990:.970;double tone=Math.sin(stepTonePhase*1.43);return (.70*noise+.30*tone)*catStepEnv*(.0035+.0065*speed);
+   catStepEnv*=walking?.990:.970;double tone=Math.sin(stepTonePhase*1.43),texture=noise*Math.min(.78,material.noiseMix+.12)+tone*Math.max(.22,1-material.noiseMix-.12);
+   return texture*catStepEnv*(.0032+.0062*speed)*(1-material.damping*.26);
   }
  }
+ public static SurfaceAcoustics.Profile surfaceProfile(String name){try{return SurfaceAcoustics.profile(SurfaceAcoustics.Surface.valueOf(name==null?"SOFT_GROUND":name));}catch(Throwable ignored){return SurfaceAcoustics.profile(SurfaceAcoustics.Surface.SOFT_GROUND);}}
 
  public static CueProfile profileFor(String semanticId){
   String id=semanticId==null?"":semanticId.toLowerCase(java.util.Locale.ROOT);
