@@ -31,6 +31,7 @@ public final class LifeSimulationKernel {
   BodyPerceptionEngine.observe(s,now);
   EnvironmentConsequences.advance(s,minutes);
   CreatureLifeEngine.advance(s,minutes,now);
+  DivineWorshipEngine.advance(s,minutes,now);
   EcologyObservationLearningEngine.observe(s,now);
   HaruNamingEngine.observe(s,now);
   HaruConceptEngine.observe(s,now);
