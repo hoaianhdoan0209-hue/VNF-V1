@@ -152,7 +152,8 @@ public final class HaruVisualRenderer{
   p.setStyle(Paint.Style.FILL);p.setShader(new RadialGradient(cx,cy,r,Color.argb(alpha,Color.red(color),Color.green(color),Color.blue(color)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.save();c.scale(.72f,1f,cx,cy);c.drawCircle(cx,cy,r,p);c.restore();p.setShader(null);
  }
 
- private static boolean useIllustratedRenderer(){return true;}\n  static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
+ private static boolean useIllustratedRenderer(){return true;}
+ static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
   if(frames<=1)return 0;
   if(v.isWalk()&&s.bodyRig!=null){
    int f=(int)Math.floor(s.bodyRig.stridePhase*frames);
