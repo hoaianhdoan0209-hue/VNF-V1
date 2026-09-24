@@ -48,11 +48,13 @@ public class BiologyEcologyRegressionTest {
   BiologyVisualOutput out=BiologyVisualOutput.from(s);assertTrue(s.musculoskeletal.leftLegForce<s.musculoskeletal.rightLegForce);assertEquals(HumanAnatomyModel.Region.LEFT_LEG,out.dominantPainRegion);assertTrue(out.gaitChange>.25);assertTrue(Math.abs(out.gaitAsymmetry)>.4);
  }
 
- @Test public void unsuitableAreasDoNotSpontaneouslySeedSpecies(){
+ @Test public void unsuitableAreasDoNotAllocatePopulationState(){
   WorldState s=state();PopulationEcologyEngine.advance(s,1,T0+60000L);
   SpeciesPopulationState authored=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","home"));
   SpeciesPopulationState impossible=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","lake"));
-  assertNotNull(authored);assertNotNull(impossible);assertTrue(authored.relativeAbundance>0);assertEquals(0,impossible.relativeAbundance,1e-12);
+  assertNotNull(authored);assertTrue(authored.relativeAbundance>0);assertNull(impossible);
+  assertTrue("current map should allocate sparse population fields, got "+s.livingWorld.populations.size(),s.livingWorld.populations.size()<SpeciesRegistryV2.BASE_SPECIES_COUNT);
+  for(SpeciesPopulationState x:s.livingWorld.populations.values())assertTrue(SpeciesRegistryV2.isBaseSpecies(x.speciesKey));
  }
 
  @Test public void populationAndResourceFieldsStayBounded(){
