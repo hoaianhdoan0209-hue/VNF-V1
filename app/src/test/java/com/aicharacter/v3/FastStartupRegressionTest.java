@@ -96,6 +96,17 @@ public final class FastStartupRegressionTest {
   assertTrue(view.contains("host.onFirstWorldFrame()"));
   assertTrue(view.contains("if(firstWorldFrameReported)dispatchAudio(wall)"));
  }
+ @Test public void permissionsDoNotWaitForOfflineCatchup()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  int first=main.indexOf("public void onFirstWorldFrame()");
+  int catchup=main.indexOf("private void completeCausalStartup",first);
+  int finish=main.indexOf("private void finishCausalStartup",catchup);
+  int resume=main.indexOf("private void startResumeCausalCatchup",finish);
+  assertTrue(first>=0&&catchup>first&&finish>catchup&&resume>finish);
+  assertTrue(main.substring(first,catchup).contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L)"));
+  assertFalse(main.substring(catchup,resume).contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L)"));
+ }
+
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 120"));
