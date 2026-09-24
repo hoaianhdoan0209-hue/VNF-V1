@@ -10,9 +10,9 @@ public final class StateInvariantChecker{private static final int MAX_REPORTS=80
   float lo=min+2f,hi=max-2f;boolean repaired=false;
   if(!Float.isFinite(s.haruX)||s.world.areaAt(s.haruX)==null){
    float recovered;
-   if(Float.isFinite(s.haruX))recovered=Math.max(lo,Math.min(hi,s.haruX));
+   if(Float.isFinite(s.haruX))recovered=nearestValidX(s,s.haruX);
    else if(s.catState!=null&&Float.isFinite(s.catState.x)&&s.world.areaAt(s.catState.x)!=null)recovered=s.catState.x;
-   else{WorldArea home=s.world.area("home_shelter");recovered=home!=null?(home.left+home.right)*.5f:(lo+hi)*.5f;}
+   else{WorldArea home=s.world.area("home_shelter");recovered=home!=null?(home.left+home.right)*.5f:nearestValidX(s,(lo+hi)*.5f);}
    s.haruX=recovered;repaired=true;
    if(s.girlTravel!=null&&s.girlTravel.active){s.girlTravel.active=false;s.girlTravel.interruption="spatial_recovery";}
    if(s.planState!=null&&"ACTIVE".equals(s.planState.status)){
@@ -23,12 +23,25 @@ public final class StateInvariantChecker{private static final int MAX_REPORTS=80
   if(s.catState!=null){
    if("girl".equals(s.catState.attachedToEntity)){s.catState.x=s.haruX;s.catX=s.haruX;s.catState.carryKnownByGirl=true;if(s.catTravel!=null)s.catTravel.active=false;}
    else if(!Float.isFinite(s.catState.x)||s.world.areaAt(s.catState.x)==null){
-    float recovered=Float.isFinite(s.catState.x)?Math.max(lo,Math.min(hi,s.catState.x)):s.haruX;
+    float recovered=Float.isFinite(s.catState.x)?nearestValidX(s,s.catState.x):s.haruX;
     s.catState.x=recovered;s.catX=recovered;WorldArea a=s.world.areaAt(recovered);if(a!=null)s.catState.areaId=a.id;if(s.catTravel!=null)s.catTravel.active=false;repaired=true;
    }else s.catX=s.catState.x;
   }
   if(repaired){s.developerReports.add(new DeveloperReport(now,"SPATIAL_RECOVERY","MEDIUM","StateInvariantChecker","Recovered actor coordinates into authored world bounds.","invalid/non-finite persisted actor position","haruX="+s.haruX+" catX="+s.catX,"preserve save and continue without world reset"));while(s.developerReports.size()>MAX_REPORTS)s.developerReports.remove(0);}
   return repaired;
+ }
+ private static float nearestValidX(WorldState s,float raw){
+  if(s==null||s.world==null||s.world.areas==null||s.world.areas.isEmpty())return Float.isFinite(raw)?raw:0f;
+  float best=Float.NaN,bestDistance=Float.POSITIVE_INFINITY;
+  for(WorldArea a:s.world.areas){
+   if(a==null||!Float.isFinite(a.left)||!Float.isFinite(a.right)||a.right<a.left)continue;
+   float margin=Math.min(2f,Math.max(0f,(a.right-a.left)*.25f));
+   float left=a.left+margin,right=a.right-margin;if(right<left){left=a.left;right=a.right;}
+   float candidate=Float.isFinite(raw)?Math.max(left,Math.min(right,raw)):(left+right)*.5f;
+   float distance=Float.isFinite(raw)?Math.abs(candidate-raw):0f;
+   if(!Float.isFinite(best)||distance<bestDistance){best=candidate;bestDistance=distance;}
+  }
+  return Float.isFinite(best)?best:(Float.isFinite(raw)?raw:0f);
  }
  private static void normalizeLivingWorld(WorldState s,long now){
   if(s.reedling.body==null)s.reedling.body=new OrganismBodyState();if(s.reedling.sense==null)s.reedling.sense=new OrganismSenseState();if(s.reedling.cycle==null)s.reedling.cycle=new OrganismCycleState();normalizeOrganism(s.reedling.body,s.reedling.sense,s.reedling.cycle,now);s.reedling.relationPressure=OrganismBodyState.cl(s.reedling.relationPressure);s.reedling.migrationIntent=OrganismBodyState.cl(s.reedling.migrationIntent);s.reedling.ecologyTargetAreaId=validEcologyTarget(s,s.reedling.areaId,s.reedling.ecologyTargetAreaId)?s.reedling.ecologyTargetAreaId:"";
