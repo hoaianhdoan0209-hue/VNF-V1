@@ -174,6 +174,29 @@ public final class VisualRegressionTest{
   assertFalse(world.contains("SoundEvent"));
  }
 
+ @Test public void audioSurfaceAndMicroInteractionStayPresentationOnly()throws Exception{
+  Path app=appRoot();
+  String emitter=read(app.resolve("src/main/java/com/aicharacter/v3/AudioSceneEmitter.java"));
+  String audio=read(app.resolve("src/main/java/com/aicharacter/v3/ProceduralAudioEngine.java"));
+  String cat=read(app.resolve("src/main/java/com/aicharacter/v3/CatAnimationController.java"));
+  String haru=read(app.resolve("src/main/java/com/aicharacter/v3/GirlAnimationController.java"));
+  String micro=read(app.resolve("src/main/java/com/aicharacter/v3/MicroInteractionDirector.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(emitter.contains("WorldSemantics.exposure"));
+  assertTrue(emitter.contains("SurfaceAcoustics.surfaceAt"));
+  assertTrue(emitter.contains("catPurr"));
+  assertTrue(audio.contains("weatherExposure"));
+  assertTrue(audio.contains("surfaceProfile"));
+  assertTrue(audio.contains("catPurr"));
+  assertTrue(cat.contains("State.RUB"));
+  assertTrue(haru.contains("MicroInteractionDirector"));
+  assertTrue(micro.contains("CAT_SOCIAL_RESPONSE_COMPLETED"));
+  assertTrue(micro.contains("CAT_SOCIAL_SETTLE_NEAR"));
+  assertFalse(world.contains("MicroInteractionDirector"));
+  assertFalse(world.contains("catPurr"));
+  assertFalse(world.contains("weatherExposure"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
