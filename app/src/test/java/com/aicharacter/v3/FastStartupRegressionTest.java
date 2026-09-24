@@ -112,6 +112,22 @@ public final class FastStartupRegressionTest {
   assertFalse(main.contains("Đang đánh thức thế giới"));
  }
 
+ @Test public void visibleRendererNeverConsumesLongHistoricalBacklog()throws Exception{
+  String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  assertTrue(view.contains("MAX_VISIBLE_CAUSAL_LAG_MS=2500L"));
+  assertTrue(view.contains("historicalReconcilePending"));
+  assertTrue(view.contains("if(historicalReconcilePending){activeBacklogMs=0;syncRealClock(wallNow);anim+=frameDt;return;}"));
+  assertTrue(view.contains("MAX_ACTIVE_CATCHUP_STEPS=8"));
+ }
+
+ @Test public void persistentRefreshRetriesConflictsInsteadOfDroppingTimeline()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  assertTrue(main.contains("worldRefreshRetryCount<3"));
+  assertTrue(main.contains("refreshPersistentWorldAfterResume(System.currentTimeMillis()),120L"));
+  assertTrue(main.contains("RESUME_WORLD_REFRESH conflict=true"));
+  assertTrue(main.contains("if(!isDebugVisualCapture())gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L)"));
+ }
+
  @Test public void v104UsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 121"));
