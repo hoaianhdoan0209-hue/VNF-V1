@@ -112,6 +112,25 @@ public final class FastStartupRegressionTest {
   assertFalse(main.contains("Đang đánh thức thế giới"));
  }
 
+ @Test public void freshInstallDoesNotCreateAndValidateDiskSaveBeforeFirstFrame()throws Exception{
+  String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
+  int preview=repo.indexOf("public synchronized WorldState loadPreviewOrCreate()");
+  int full=repo.indexOf("public synchronized WorldState loadOrCreate()",preview);
+  assertTrue(preview>=0&&full>preview);
+  String body=repo.substring(preview,full);
+  assertTrue(body.contains("WorldState.fresh()"));
+  assertFalse("fresh preview must not fall into full load/save recovery before rendering",body.contains("return loadOrCreate()"));
+  assertFalse("fresh preview must not synchronously save before rendering",body.contains("save(state)"));
+  assertTrue(repo.contains("commitPendingInitialSeed()"));
+
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  int create=main.indexOf("protected void onCreate(Bundle b)");
+  int show=main.indexOf("showWorldPreview(r,preview)",create);
+  assertTrue(create>=0&&show>create);
+  assertFalse(main.substring(create,show).contains("commitPendingInitialSeed"));
+  assertTrue(main.contains("r.commitPendingInitialSeed();"));
+ }
+
  @Test public void visibleRendererNeverConsumesLongHistoricalBacklog()throws Exception{
   String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   assertTrue(view.contains("MAX_VISIBLE_CAUSAL_LAG_MS=2500L"));
