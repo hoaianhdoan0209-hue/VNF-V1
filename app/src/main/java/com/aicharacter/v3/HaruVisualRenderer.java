@@ -7,7 +7,7 @@ import android.graphics.*;
  * but never changes body width/height or world truth.
  */
 public final class HaruVisualRenderer{
- static final float BODY_SCALE=1.42f;
+ static final float BODY_SCALE=1.42f,ILLUSTRATED_SCALE=1.17f;
  static final int AUTHORED_FRAME_W=144,AUTHORED_FRAME_H=216;
  private HaruVisualRenderer(){}
 
@@ -17,7 +17,7 @@ public final class HaruVisualRenderer{
    float squash=water?.66f:.54f,wobble=water?(float)Math.sin(anim*.82f)*3.2f:(float)Math.sin(anim*.37f)*1.1f;
    String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes),area="";
    if(s.world!=null){WorldArea a=s.world.areaAt(s.haruX);if(a!=null)area=a.id==null?"":a.id;}
-   c.save();c.clipRect(x-115,contactGround-1,x+115,1080);c.translate(wobble,0);c.scale(1f,-squash,x,contactGround);
+   c.save();c.clipRect(x-138,contactGround-1,x+138,1080);c.translate(wobble,0);c.scale(ILLUSTRATED_SCALE,-squash*ILLUSTRATED_SCALE,x,contactGround);
    try{HaruIllustratedRenderer.draw(c,p,s,v,x,bodyGround,anim,(int)Math.max(10,Math.min(62,62*strength)),0f,0f,phase,area);}catch(Throwable ignored){}
    c.restore();
    p.setStyle(Paint.Style.FILL);int bands=water?7:4;
@@ -96,6 +96,7 @@ public final class HaruVisualRenderer{
    c.save();
    c.translate(postureX,postureY);
    c.rotate(rotation,x,bodyGround);
+   c.scale(ILLUSTRATED_SCALE,ILLUSTRATED_SCALE,x,bodyGround);
    if(v.flipX)c.scale(-1f,1f,x,bodyGround);
    try{HaruIllustratedRenderer.draw(c,p,s,v,x,bodyGround,anim,bodyAlpha,closeT,divinePresence,phase,area);c.restore();return;}
    catch(Throwable ignored){c.restore();p.setShader(null);p.setColorFilter(null);p.setAlpha(255);}
