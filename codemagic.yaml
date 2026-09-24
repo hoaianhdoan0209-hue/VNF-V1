@@ -3,66 +3,116 @@ workflows:
     name: VNF Android Debug APK
     instance_type: mac_mini_m2
     max_build_duration: 120
-
     environment:
       java: 17
       vars:
         PACKAGE_NAME: "com.aicharacter.v3"
         GRADLE_VERSION: "8.14.1"
-
     scripts:
       - name: Verify project
         script: |
           set -e
-          echo "Repository: $CM_BUILD_DIR"
           test -f "$CM_BUILD_DIR/settings.gradle"
           test -f "$CM_BUILD_DIR/build.gradle"
           test -f "$CM_BUILD_DIR/app/build.gradle"
-          echo "VNF project structure found."
-
       - name: Set Android SDK location
         script: |
           set -e
-          if [ -n "$ANDROID_SDK_ROOT" ]; then
-            echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"
-          elif [ -n "$ANDROID_HOME" ]; then
-            echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"
-          fi
+          if [ -n "$ANDROID_SDK_ROOT" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"; elif [ -n "$ANDROID_HOME" ]; then echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"; fi
           java -version
-
       - name: Build VNF debug APK
         script: |
           set -e
           cd "$CM_BUILD_DIR"
-
-          if [ -x "./gradlew" ]; then
-            echo "Using repository Gradle wrapper."
-            ./gradlew --version
-            ./gradlew :app:assembleDebug --stacktrace
-          else
-            echo "Gradle wrapper is missing. Using official Gradle ${GRADLE_VERSION} distribution."
-            DIST_ROOT="$HOME/.vnf-gradle"
-            DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"
-            ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"
-
-            mkdir -p "$DIST_ROOT"
-
-            if [ ! -x "$DIST_DIR/bin/gradle" ]; then
-              curl -fL --retry 3 --retry-delay 3 \
-                "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
-                -o "$ZIP_FILE"
-              rm -rf "$DIST_DIR"
-              unzip -q "$ZIP_FILE" -d "$DIST_ROOT"
-            fi
-
-            "$DIST_DIR/bin/gradle" --version
+          if [ -x "./gradlew" ]; then ./gradlew :app:assembleDebug --stacktrace; else
+            DIST_ROOT="$HOME/.vnf-gradle"; DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"; ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"; mkdir -p "$DIST_ROOT"
+            if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
             "$DIST_DIR/bin/gradle" :app:assembleDebug --stacktrace
           fi
-
           test -f "$CM_BUILD_DIR/app/build/outputs/apk/debug/app-debug.apk"
-          echo "APK BUILD SUCCESS: app/build/outputs/apk/debug/app-debug.apk"
-
     artifacts:
       - app/build/outputs/apk/debug/app-debug.apk
-      - app/build/outputs/**/*.apk
+      - app/build/reports/**
+
+  vnf-android-release:
+    name: VNF Stable Signed Release APK
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'release/*'
+          include: true
+          source: true
+    environment:
+      groups:
+        - github_credentials
+      java: 17
+      android_signing:
+        - vnf-release
+      vars:
+        PACKAGE_NAME: "com.aicharacter.v3"
+        GRADLE_VERSION: "8.14.1"
+    scripts:
+      - name: Verify stable signing identity
+        script: |
+          set -eu
+          : "${CM_KEYSTORE_PATH:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PATH}"
+          : "${CM_KEYSTORE_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEYSTORE_PASSWORD}"
+          : "${CM_KEY_ALIAS:?Codemagic signing identity vnf-release did not provide CM_KEY_ALIAS}"
+          : "${CM_KEY_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEY_PASSWORD}"
+          test -s "$CM_KEYSTORE_PATH"
+      - name: Set Android SDK location
+        script: |
+          set -e
+          if [ -n "$ANDROID_SDK_ROOT" ]; then echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/local.properties"; elif [ -n "$ANDROID_HOME" ]; then echo "sdk.dir=$ANDROID_HOME" > "$CM_BUILD_DIR/local.properties"; fi
+          java -version
+      - name: Build stable signed VNF release
+        script: |
+          set -eu
+          cd "$CM_BUILD_DIR"
+          if [ -x "./gradlew" ]; then GRADLE="./gradlew"; else
+            DIST_ROOT="$HOME/.vnf-gradle"; DIST_DIR="$DIST_ROOT/gradle-${GRADLE_VERSION}"; ZIP_FILE="$DIST_ROOT/gradle-${GRADLE_VERSION}-bin.zip"; mkdir -p "$DIST_ROOT"
+            if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
+            GRADLE="$DIST_DIR/bin/gradle"
+          fi
+          "$GRADLE" :app:testDebugUnitTest :app:assembleRelease --stacktrace
+          test -f "$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+      - name: Verify stable APK signature and metadata
+        script: |
+          set -eu
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          APK_SIGNER="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APK_SIGNER"
+          "$APK_SIGNER" verify --verbose --print-certs "$APK"
+          shasum -a 256 "$APK"
+      - name: Publish stable release to GitHub
+        script: |
+          set -eu
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          : "${GITHUB_TOKEN:?github_credentials did not provide GITHUB_TOKEN}"
+          command -v gh >/dev/null
+          VERSION_CODE=$(sed -n "s/.*versionCode[[:space:]]*\\([0-9][0-9]*\\).*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
+          VERSION_NAME=$(sed -n "s/.*versionName[[:space:]]*'\\([^']*\\)'.*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
+          test -n "$VERSION_CODE"
+          test -n "$VERSION_NAME"
+          TAG="v$VERSION_NAME"
+          ASSET_NAME="VNF-$VERSION_NAME.apk"
+          META="$CM_BUILD_DIR/vnf-release.json"
+          SHA256=$(shasum -a 256 "$APK" | awk '{print $1}')
+          SIZE=$(stat -f%z "$APK")
+          NOTES="VNF $VERSION_NAME (versionCode $VERSION_CODE) — stable signed release."
+          node -e 'const fs=require("fs"); const [p,vc,vn,sha,size,notes,asset]=process.argv.slice(1); fs.writeFileSync(p,JSON.stringify({versionCode:Number(vc),versionName:vn,sha256:sha,size:Number(size),notes,apkAssetName:asset},null,2)+"\\n")' "$META" "$VERSION_CODE" "$VERSION_NAME" "$SHA256" "$SIZE" "$NOTES" "$ASSET_NAME"
+          export GH_TOKEN="$GITHUB_TOKEN"
+          if gh release view "$TAG" --repo "$CM_REPO_SLUG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK#$ASSET_NAME" "$META#vnf-release.json" --clobber --repo "$CM_REPO_SLUG"
+            gh release edit "$TAG" --title "VNF $VERSION_NAME" --notes "$NOTES" --repo "$CM_REPO_SLUG"
+          else
+            gh release create "$TAG" "$APK#$ASSET_NAME" "$META#vnf-release.json" --target "$CM_COMMIT" --title "VNF $VERSION_NAME" --notes "$NOTES" --latest --repo "$CM_REPO_SLUG"
+          fi
+          echo "Published GitHub Release $TAG"
+    artifacts:
+      - app/build/outputs/apk/release/app-release.apk
+      - vnf-release.json
       - app/build/reports/**
