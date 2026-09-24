@@ -52,7 +52,29 @@ public class BiologyEcologyRegressionTest {
   WorldState s=state();PopulationEcologyEngine.advance(s,1,T0+60000L);
   SpeciesPopulationState authored=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","home"));
   SpeciesPopulationState impossible=s.livingWorld.populations.get(LivingWorldState.populationKey("hearthmote","lake"));
-  assertNotNull(authored);assertNotNull(impossible);assertTrue(authored.relativeAbundance>0);assertEquals(0,impossible.relativeAbundance,1e-12);
+  assertNotNull(authored);assertTrue(authored.relativeAbundance>0);assertTrue(impossible==null||impossible.relativeAbundance==0);
+ }
+
+ @Test public void exactlyFiveHundredUniqueBaseSpeciesShareOneAncestor(){
+  assertEquals(500,SpeciesEvolutionCatalog.all().size());assertEquals(500,FantasyEcologyDictionary.baseSpeciesCount());
+  java.util.Set<String> keys=new java.util.HashSet<>(),fingerprints=new java.util.HashSet<>();
+  for(SpeciesEvolutionCatalog.Species sp:SpeciesEvolutionCatalog.all()){
+   assertTrue("duplicate species key "+sp.key,keys.add(sp.key));assertTrue("duplicate trait fingerprint "+sp.key,fingerprints.add(sp.traitFingerprint));
+   String path=SpeciesEvolutionCatalog.lineagePath(sp.key);assertTrue(path.startsWith(SpeciesEvolutionCatalog.ROOT_ANCESTOR_ID+">"));assertTrue(path.endsWith(">"+sp.key));
+  }
+  assertTrue(keys.contains("reedling"));assertTrue(keys.contains("driftwing"));assertTrue(keys.contains("root_husher"));assertTrue(keys.contains("ripplekin"));assertTrue(keys.contains("hearthmote"));
+ }
+
+ @Test public void fiveHundredSpeciesDoNotMaterializeAsDenseWorldObjects(){
+  WorldState s=state();PopulationEcologyEngine.advance(s,1,T0+60000L);
+  int theoreticalDense=SpeciesEvolutionCatalog.BASE_SPECIES_COUNT*s.world.areas.size();
+  assertTrue("population fields should remain sparse, got "+s.livingWorld.populations.size(),s.livingWorld.populations.size()<Math.max(120,theoreticalDense/8));
+  assertEquals(5,s.world.objects.stream().filter(o->"creature".equals(o.type)).count());
+ }
+
+ @Test public void godEvolutionContextIsHiddenSystemReality(){
+  JSONObject god=SpeciesEvolutionCatalog.godContext("to tien tien hoa 500 loai",8);
+  assertEquals("GOD_SYSTEM_ONLY",god.optString("visibility"));assertEquals(500,god.optInt("terminalBaseSpeciesCount"));assertTrue(god.optBoolean("sharedCommonAncestor"));assertFalse(god.optBoolean("hybridsCounted"));assertFalse(god.optBoolean("mutationsCounted"));
  }
 
  @Test public void populationAndResourceFieldsStayBounded(){
