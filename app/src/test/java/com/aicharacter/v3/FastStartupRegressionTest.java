@@ -29,7 +29,7 @@ public final class FastStartupRegressionTest {
   assertTrue(main.contains("WorldState preview=r.loadPreviewOrCreate()"));
   assertTrue(main.contains("new GameView(this,state,this,false)"));
   assertTrue(main.contains("gameView.replaceState(live,true)"));
-  assertTrue(main.contains("STARTUP_WORLD_VISIBLE"));
+  assertTrue(main.contains("STARTUP_WORLD_ATTACHED"));\n  assertTrue(main.contains("STARTUP_FIRST_WORLD_FRAME"));
   assertTrue(main.contains("STARTUP_CAUSAL_READY"));
  }
 
