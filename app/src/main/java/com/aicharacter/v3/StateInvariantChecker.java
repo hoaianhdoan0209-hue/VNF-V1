@@ -17,7 +17,29 @@ public final class StateInvariantChecker{private static final int MAX_REPORTS=80
   if(attached){c.carryKnownByGirl=true;c.x=s.haruX;s.catX=s.haruX;WorldArea a=s.world==null?null:s.world.areaAt(s.haruX);if(a!=null)c.areaId=a.id;s.catTravel.active=false;if(c.awake){c.actualSleepStartedAt=0;c.sleepMode="WITH_GIRL_AWAKE";}else{c.sleepMode="WITH_GIRL";if(c.actualSleepStartedAt<=0)c.actualSleepStartedAt=c.sleepStartedAt>0?c.sleepStartedAt:now;}}
   else{c.carryKnownByGirl=false;if(c.awake){c.actualSleepStartedAt=0;if(c.sleepMode==null||c.sleepMode.isEmpty()||c.sleepMode.startsWith("TRAVELLING_TO_")||"APPROACHING_GIRL".equals(c.sleepMode)||"RESTING_WHERE_STRANDED".equals(c.sleepMode)||"STRANDED".equals(c.sleepMode))c.sleepMode="AWAKE";s.catTravel.active=false;}else if("STRANDED".equals(c.sleepMode)){c.sleepMode="RESTING_WHERE_STRANDED";if(c.actualSleepStartedAt<=0)c.actualSleepStartedAt=c.sleepStartedAt>0?c.sleepStartedAt:now;}s.catX=c.x;}
   normalizeTravel(s.girlTravel,"girl");normalizeTravel(s.catTravel,"cat");
+  normalizeActorPositions(s);
   if(s.girlTravel.active&&(!s.planState.active()||!s.girlTravel.currentPlanId.equals(s.planState.planId))){s.girlTravel.active=false;s.girlTravel.interruption="stale travel detached from current plan";}
+ }
+ private static void normalizeActorPositions(WorldState s){
+  if(s==null||s.world==null||s.world.areas==null||s.world.areas.isEmpty())return;
+  float min=Float.POSITIVE_INFINITY,max=Float.NEGATIVE_INFINITY;
+  for(WorldArea a:s.world.areas){if(a==null)continue;min=Math.min(min,a.left);max=Math.max(max,a.right);}
+  if(!Float.isFinite(min)||!Float.isFinite(max)||max<=min)return;
+  s.haruX=repairActorX(s,s.haruX,min,max,960f);
+  if(s.catState!=null){
+   float candidate=Float.isFinite(s.catState.x)?s.catState.x:s.catX;
+   candidate=repairActorX(s,candidate,min,max,320f);
+   s.catState.x=candidate;s.catX=candidate;
+   WorldArea ca=s.world.areaAt(candidate);if(ca!=null)s.catState.areaId=ca.id;
+  }else s.catX=repairActorX(s,s.catX,min,max,320f);
+ }
+ private static float repairActorX(WorldState s,float x,float min,float max,float preferred){
+  float repaired=Float.isFinite(x)?Math.max(min+1f,Math.min(max-1f,x)):preferred;
+  if(s.world.areaAt(repaired)!=null)return repaired;
+  WorldArea nearest=null;float best=Float.POSITIVE_INFINITY;
+  for(WorldArea a:s.world.areas){if(a==null)continue;float center=(a.left+a.right)*.5f,d=Math.abs(center-repaired);if(d<best){best=d;nearest=a;}}
+  if(nearest!=null)return Math.max(nearest.left+1f,Math.min(nearest.right-1f,(nearest.left+nearest.right)*.5f));
+  return Math.max(min+1f,Math.min(max-1f,preferred));
  }
  private static void normalizeTravel(TravelState t,String actor){if(t==null)return;t.actor=actor;t.progress=Math.max(0,Math.min(1,t.progress));t.interactionRange=Math.max(0,t.interactionRange);t.distanceTravelled=Math.max(0,t.distanceTravelled);if(!t.active)return;boolean local="LOCAL".equals(t.travelMode),valid=local?Float.isFinite(t.segmentEndX):t.route.size()>1&&t.routeIndex>=0&&t.routeIndex<t.route.size()-1&&Float.isFinite(t.segmentEndX);if(!valid){t.active=false;t.interruption="invalid runtime travel state";t.lastSpeed=0;t.lastDelta=0;}}
  private static <T> void trimOldest(java.util.List<T> list,int max){if(list==null)return;while(list.size()>max)list.remove(0);}
