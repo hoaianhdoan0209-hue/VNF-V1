@@ -39,6 +39,19 @@ public final class FastStartupRegressionTest {
   assertTrue(view.contains("public void replaceState(WorldState next,boolean ready)"));
  }
 
+
+ @Test public void resumeDoesNotReconstructOnUiThread()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  int resume=main.indexOf("protected void onResume()");
+  int pause=main.indexOf("protected void onPause()",resume);
+  assertTrue(resume>=0&&pause>resume);
+  String body=main.substring(resume,pause);
+  assertTrue(body.contains("startResumeCausalCatchup(resumedAt)"));
+  assertFalse(body.contains("OfflineLifeEngine.reconstruct"));
+  assertTrue(main.contains("\"VNF-Resume-Catchup\""));
+  assertTrue(main.contains("gameView.setSimulationReady(false)"));
+ }
+
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 119"));
