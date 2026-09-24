@@ -24,6 +24,10 @@ public final class WorldHeartbeatWorker extends Worker {
    long now=System.currentTimeMillis();
    long before=s.lastSimulatedAt;
    WorldContinuityEngine.advanceBackground(s,now);
+   if(WorldRuntimePresence.isForeground()){
+    Log.i(TAG,"foreground resumed during heartbeat; leaving visible world authoritative");
+    return Result.success();
+   }
    repository.save(s);
    Log.i(TAG,"advanced world from="+before+" to="+s.lastSimulatedAt);
    return Result.success();
