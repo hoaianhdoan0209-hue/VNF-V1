@@ -28,7 +28,7 @@ public final class HaruIllustratedRenderer {
 
   float hipY=ground-(sit||crouch?74f:111f)-bounce;
   float shoulderY=hipY-(sit||crouch?73f:92f);
-  float headY=shoulderY-55f+(think?2f:0f);
+  float headY=shoulderY-55f+(think?2f:0f);float profile=(v.isWalk()||search)?.62f:0f;
   float headTilt=think?-4f:react?4f:search?-3f:0f;
 
   // Divine presence gets a subtle silhouette glow, never a different body.
@@ -60,7 +60,7 @@ public final class HaruIllustratedRenderer {
 
   // Neck and head.
   p.setColor(withAlpha(Color.rgb(226,179,145),bodyAlpha));c.drawRoundRect(x-9,headY+26,x+9,shoulderY+11,7,7,p);
-  drawHead(c,p,s,x,headY,headTilt,anim,v,bodyAlpha,closeT);
+  drawHead(c,p,s,x,headY,headTilt,anim,v,bodyAlpha,closeT,profile);
 
   // Small cloth details make the silhouette read as a person rather than a mannequin.
   p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.2f);p.setColor(withAlpha(Color.rgb(202,177,151),Math.min(210,bodyAlpha)));
@@ -71,12 +71,12 @@ public final class HaruIllustratedRenderer {
  }
 
  private static void drawStandingLegs(Canvas c,Paint p,float x,float hipY,float ground,float stride,int alpha){
-  float swing=stride*15f;
-  float kneeLY=hipY+55f,kneeRY=hipY+55f;
-  float footLX=x-17+swing,footRX=x+17-swing;
-  drawLimb(c,p,x-16,hipY+8,x-17+swing*.45f,kneeLY,footLX,ground-15,Color.rgb(48,55,68),18,alpha);
-  drawLimb(c,p,x+16,hipY+8,x+17-swing*.45f,kneeRY,footRX,ground-15,Color.rgb(48,55,68),18,alpha);
-  drawBoot(c,p,footLX,ground-8,-1,alpha);drawBoot(c,p,footRX,ground-8,1,alpha);
+  float swing=stride*18f,leftLift=Math.max(0,stride)*10f,rightLift=Math.max(0,-stride)*10f;
+  float kneeLY=hipY+53f-leftLift*.35f,kneeRY=hipY+53f-rightLift*.35f;
+  float footLX=x-15+swing,footRX=x+15-swing;
+  drawLimb(c,p,x-13,hipY+8,x-16+swing*.38f,kneeLY,footLX,ground-15-leftLift,Color.rgb(55,59,72),16,alpha);
+  drawLimb(c,p,x+13,hipY+8,x+16-swing*.38f,kneeRY,footRX,ground-15-rightLift,Color.rgb(55,59,72),16,alpha);
+  drawBoot(c,p,footLX,ground-8-leftLift,-1,alpha);drawBoot(c,p,footRX,ground-8-rightLift,1,alpha);
  }
 
  private static void drawSeatedLegs(Canvas c,Paint p,float x,float hipY,float ground,int alpha){
@@ -92,24 +92,29 @@ public final class HaruIllustratedRenderer {
  }
 
  private static void drawTorso(Canvas c,Paint p,float x,float shoulderY,float hipY,float breath,int alpha,String phase,String area){
-  // soft outline
-  p.setColor(withAlpha(Color.rgb(42,35,37),alpha));
-  Path outline=new Path();outline.moveTo(x-36,shoulderY+2);outline.quadTo(x-44,shoulderY+38,x-31,hipY+10);
-  outline.quadTo(x,hipY+24,x+31,hipY+10);outline.quadTo(x+44,shoulderY+38,x+36,shoulderY+2);outline.quadTo(x,shoulderY-10,x-36,shoulderY+2);outline.close();c.drawPath(outline,p);
-  // dusty rose shirt
-  p.setColor(withAlpha(Color.rgb(164,104,108),alpha));
-  Path shirt=new Path();shirt.moveTo(x-29,shoulderY+2);shirt.quadTo(x-32,shoulderY+35,x-25,hipY+6);shirt.lineTo(x+25,hipY+6);shirt.quadTo(x+32,shoulderY+35,x+29,shoulderY+2);shirt.close();c.drawPath(shirt,p);
-  // olive vest
-  p.setColor(withAlpha(Color.rgb(76,105,75),alpha));
-  Path vest=new Path();vest.moveTo(x-23,shoulderY+17);vest.lineTo(x-18,hipY+4);vest.lineTo(x+18,hipY+4);vest.lineTo(x+23,shoulderY+17);vest.lineTo(x+14,shoulderY+9);vest.lineTo(x,shoulderY+25);vest.lineTo(x-14,shoulderY+9);vest.close();c.drawPath(vest,p);
-  // scarf/collar
-  p.setColor(withAlpha(Color.rgb(221,188,165),alpha));c.drawRoundRect(x-25,shoulderY-5,x+25,shoulderY+11+breath*.15f,8,8,p);
-  p.setColor(withAlpha(Color.rgb(184,128,130),alpha));c.drawRoundRect(x-22,shoulderY-1,x+22,shoulderY+5,4,4,p);
-  // subtle environment key on vest
-  int hi="NIGHT".equals(phase)?Color.rgb(126,145,149):"quiet_grove".equals(area)?Color.rgb(128,147,108):Color.rgb(134,151,112);
-  p.setColor(withAlpha(hi,Math.min(alpha,105)));c.drawRoundRect(x+10,shoulderY+29,x+14,hipY-5,2,2,p);
- }
+  float waistY=shoulderY+(hipY-shoulderY)*.62f;
+  p.setColor(withAlpha(Color.rgb(48,37,40),alpha));
+  Path outline=new Path();outline.moveTo(x-33,shoulderY+4);outline.cubicTo(x-40,shoulderY+28,x-31,waistY,x-25,hipY+7);
+  outline.quadTo(x,hipY+16,x+25,hipY+7);outline.cubicTo(x+31,waistY,x+40,shoulderY+28,x+33,shoulderY+4);
+  outline.quadTo(x,shoulderY-9,x-33,shoulderY+4);outline.close();c.drawPath(outline,p);
 
+  p.setColor(withAlpha(Color.rgb(171,105,111),alpha));
+  Path shirt=new Path();shirt.moveTo(x-28,shoulderY+4);shirt.cubicTo(x-32,shoulderY+27,x-25,waistY,x-21,hipY+4);
+  shirt.quadTo(x,hipY+11,x+21,hipY+4);shirt.cubicTo(x+25,waistY,x+32,shoulderY+27,x+28,shoulderY+4);shirt.close();c.drawPath(shirt,p);
+
+  int vest=Color.rgb(74,103,78),vestHi=Color.rgb(103,128,96);
+  p.setColor(withAlpha(vest,alpha));
+  Path lv=new Path();lv.moveTo(x-22,shoulderY+16);lv.lineTo(x-4,shoulderY+27);lv.lineTo(x-6,hipY+3);lv.lineTo(x-20,hipY+1);lv.close();c.drawPath(lv,p);
+  Path rv=new Path();rv.moveTo(x+22,shoulderY+16);rv.lineTo(x+4,shoulderY+27);rv.lineTo(x+6,hipY+3);rv.lineTo(x+20,hipY+1);rv.close();c.drawPath(rv,p);
+  p.setColor(withAlpha(vestHi,Math.min(alpha,145)));p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2f);
+  c.drawLine(x-16,shoulderY+24,x-13,hipY-2,p);c.drawLine(x+16,shoulderY+24,x+13,hipY-2,p);p.setStyle(Paint.Style.FILL);
+
+  p.setColor(withAlpha(Color.rgb(229,194,171),alpha));c.drawRoundRect(x-22,shoulderY-5,x+22,shoulderY+10+breath*.12f,8,8,p);
+  p.setColor(withAlpha(Color.rgb(190,132,135),alpha));c.drawRoundRect(x-20,shoulderY-1,x+20,shoulderY+5,4,4,p);
+
+  int hi="NIGHT".equals(phase)?Color.rgb(137,151,154):"quiet_grove".equals(area)?Color.rgb(131,151,113):Color.rgb(139,154,116);
+  p.setColor(withAlpha(hi,Math.min(alpha,90)));c.drawRoundRect(x+10,shoulderY+31,x+13,hipY-7,2,2,p);
+ }
  private static void drawNaturalArms(Canvas c,Paint p,float x,float shoulderY,float hipY,float stride,boolean walking,int alpha){
   float swing=walking?stride*17f:0f;
   drawSleevedArm(c,p,x-30,shoulderY+10,x-37-swing*.35f,shoulderY+57,x-34-swing,hipY+1,alpha);
@@ -157,8 +162,8 @@ public final class HaruIllustratedRenderer {
   p.setColor(withAlpha(Color.rgb(74,66,72),Math.min(alpha,180)));c.drawRoundRect(x-7,y-8,x+7,y-5,2,2,p);
  }
 
- private static void drawHead(Canvas c,Paint p,WorldState s,float x,float y,float tilt,float anim,GirlAnimationController.Visual v,int alpha,float closeT){
-  c.save();c.rotate(tilt,x,y);
+ private static void drawHead(Canvas c,Paint p,WorldState s,float x,float y,float tilt,float anim,GirlAnimationController.Visual v,int alpha,float closeT,float profile){
+  float faceX=x+profile*3.5f;c.save();c.rotate(tilt,x,y);
   // ears
   p.setColor(withAlpha(Color.rgb(222,173,140),alpha));c.drawOval(x-37,y-12,x-27,y+10,p);c.drawOval(x+27,y-12,x+37,y+10,p);
   // face outline
@@ -171,33 +176,37 @@ public final class HaruIllustratedRenderer {
 
   boolean blink=((anim+0.37f)%4.7f)<.11f;
   float mood=s.mood==null?0f:(float)Math.max(-1,Math.min(1,(s.mood.pleasantness-.5)*2.0));
-  float eyeY=y-4f,gaze=0f;
-  try{HaruExpressionEngine.Visual e=HaruExpressionEngine.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));gaze=(float)Math.max(-2.2,Math.min(2.2,e.gazeX*2.1));}catch(Throwable ignored){}
+  double sadness=s.emotion==null?0:s.emotion.sadness,fear=s.emotion==null?0:s.emotion.fear,pain=s.body==null?0:s.body.pain;
+  boolean genuinelyDown=sadness>.34||fear>.36||pain>24;
+  float eyeY=y-4f,gaze=profile*2.2f;
+  try{HaruExpressionEngine.Visual e=HaruExpressionEngine.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));gaze+=(float)Math.max(-1.8,Math.min(1.8,e.gazeX*1.65));}catch(Throwable ignored){}
 
-  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.4f);p.setStrokeCap(Paint.Cap.ROUND);p.setColor(withAlpha(Color.rgb(64,44,43),alpha));
-  if(blink){c.drawLine(x-18,eyeY,x-8,eyeY,p);c.drawLine(x+8,eyeY,x+18,eyeY,p);}
+  float farScale=1f-profile*.18f;
+  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.2f);p.setStrokeCap(Paint.Cap.ROUND);p.setColor(withAlpha(Color.rgb(64,44,43),alpha));
+  if(blink){c.drawLine(faceX-17,eyeY,faceX-8,eyeY,p);c.drawLine(faceX+8,eyeY,faceX+17*farScale,eyeY,p);}
   else{
-   p.setStyle(Paint.Style.FILL);p.setColor(withAlpha(Color.rgb(248,239,218),alpha));c.drawOval(x-20,eyeY-5,x-7,eyeY+6,p);c.drawOval(x+7,eyeY-5,x+20,eyeY+6,p);
-   p.setColor(withAlpha(Color.rgb(76,61,50),alpha));c.drawCircle(x-13+gaze,eyeY+1,3.8f,p);c.drawCircle(x+13+gaze,eyeY+1,3.8f,p);
-   if(closeT>.18f){p.setColor(withAlpha(Color.WHITE,Math.min(alpha,190)));c.drawCircle(x-12+gaze,eyeY-.3f,1.1f,p);c.drawCircle(x+14+gaze,eyeY-.3f,1.1f,p);}
+   p.setStyle(Paint.Style.FILL);p.setColor(withAlpha(Color.rgb(249,241,222),alpha));
+   c.drawOval(faceX-19,eyeY-4.5f,faceX-8,eyeY+5.5f,p);c.drawOval(faceX+8,eyeY-4.2f,faceX+8+11*farScale,eyeY+5.2f,p);
+   p.setColor(withAlpha(Color.rgb(78,62,51),alpha));c.drawCircle(faceX-13+gaze,eyeY+.7f,3.4f,p);c.drawCircle(faceX+13*farScale+gaze,eyeY+.7f,3.2f,p);
+   if(closeT>.18f){p.setColor(withAlpha(Color.WHITE,Math.min(alpha,185)));c.drawCircle(faceX-12.3f+gaze,eyeY-.5f,1f,p);c.drawCircle(faceX+13.7f*farScale+gaze,eyeY-.5f,1f,p);}
   }
-  // brows
-  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.1f);p.setColor(withAlpha(Color.rgb(73,48,45),alpha));
-  float browLift=v.state==GirlAnimationController.State.REACT?-3f:v.state==GirlAnimationController.State.THINK?1f:0f;
-  c.drawLine(x-20,eyeY-11+browLift,x-8,eyeY-12-browLift*.2f,p);c.drawLine(x+8,eyeY-12-browLift*.2f,x+20,eyeY-11+browLift,p);
-  // nose
-  p.setStrokeWidth(1.6f);p.setColor(withAlpha(Color.rgb(177,125,104),Math.min(alpha,175)));c.drawLine(x+1,y+1,x-1,y+9,p);
-  // mouth expressive but restrained
-  float mouthY=y+19;
-  p.setStrokeWidth(2f);p.setColor(withAlpha(Color.rgb(125,72,74),alpha));
-  if(v.state==GirlAnimationController.State.REACT)c.drawArc(x-9,mouthY-4,x+9,mouthY+8,196,148,false,p);
-  else if(mood>.16f)c.drawArc(x-10,mouthY-6,x+10,mouthY+6,18,144,false,p);
-  else if(mood<-.18f)c.drawArc(x-9,mouthY-1,x+9,mouthY+9,200,140,false,p);
-  else c.drawLine(x-7,mouthY,x+7,mouthY,p);
-  p.setStyle(Paint.Style.FILL);
 
-  // cheek life
-  p.setColor(withAlpha(Color.rgb(210,126,124),Math.min(alpha,44)));c.drawOval(x-25,y+8,x-13,y+14,p);c.drawOval(x+13,y+8,x+25,y+14,p);
+  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.9f);p.setColor(withAlpha(Color.rgb(76,50,46),alpha));
+  float browLift=v.state==GirlAnimationController.State.REACT?-2.5f:v.state==GirlAnimationController.State.THINK?.8f:0f;
+  float emotionalDrop=genuinelyDown?2.0f:0f;
+  c.drawLine(faceX-19,eyeY-11+browLift+emotionalDrop,faceX-8,eyeY-12-browLift*.15f,p);
+  c.drawLine(faceX+8,eyeY-12-browLift*.15f,faceX+18*farScale,eyeY-11+browLift+emotionalDrop,p);
+
+  p.setStrokeWidth(1.45f);p.setColor(withAlpha(Color.rgb(179,127,105),Math.min(alpha,165)));
+  c.drawLine(faceX+profile*2f,y+1,faceX-1+profile*3.2f,y+9,p);
+
+  float mouthY=y+19;p.setStrokeWidth(1.9f);p.setColor(withAlpha(Color.rgb(126,73,75),alpha));
+  if(v.state==GirlAnimationController.State.REACT)c.drawArc(faceX-8,mouthY-4,faceX+8,mouthY+7,196,148,false,p);
+  else if(mood>.16f&&!genuinelyDown)c.drawArc(faceX-9,mouthY-6,faceX+9,mouthY+5,18,144,false,p);
+  else if(genuinelyDown)c.drawArc(faceX-8,mouthY-1,faceX+8,mouthY+7,202,136,false,p);
+  else c.drawLine(faceX-6,mouthY,faceX+6,mouthY,p);
+  p.setStyle(Paint.Style.FILL);
+  p.setColor(withAlpha(Color.rgb(104,70,65),Math.min(alpha,80)));c.drawArc(x-24,y-35,x+19,y-3,205,92,false,p);\n  // cheek life\n  p.setColor(withAlpha(Color.rgb(210,126,124),Math.min(alpha,44)));c.drawOval(x-25,y+8,x-13,y+14,p);c.drawOval(x+13,y+8,x+25,y+14,p);
   c.restore();
  }
 
