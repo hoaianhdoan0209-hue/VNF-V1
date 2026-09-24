@@ -141,7 +141,7 @@ public final class VisualRegressionTest{
   assertTrue(game.contains("MomentDirector"));
   assertTrue(game.contains("drawMomentGrade"));
   assertTrue(game.contains("pollSoundEvent"));
-  assertTrue(game.contains("moment.minZoom"));
+  assertTrue(game.contains("CameraCompositionPolicy.targetZoom"));
   assertTrue(moment.contains("RECENT_EVENT_MS"));
   assertTrue(moment.contains("lastAcceptedEventTime"));
   assertTrue(moment.contains("CAT_SOCIAL_SETTLE_NEAR"));
