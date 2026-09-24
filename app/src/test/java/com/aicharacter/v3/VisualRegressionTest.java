@@ -218,7 +218,10 @@ public final class VisualRegressionTest{
   assertTrue(main.contains("requestCoreRuntimePermissions"));
   assertTrue(main.contains("Manifest.permission.RECORD_AUDIO"));
   assertTrue(main.contains("Manifest.permission.POST_NOTIFICATIONS"));
-  assertTrue(main.contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions"));\n  assertTrue(main.contains("Haru chủ động hỏi"));\n  assertTrue(main.contains("setPositiveButton(\\\"Cho phép\\\""));\n  assertFalse(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
+  assertTrue(main.contains("postDelayed(this::maybeHaruRequestCoreRuntimePermissions"));
+  assertTrue(main.contains("Haru chủ động hỏi"));
+  assertTrue(main.contains("setPositiveButton(\\\"Cho phép\\\""));
+  assertFalse(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
   assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
   assertTrue(world.contains("SAVE_VERSION = 54"));
  }
