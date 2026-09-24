@@ -22,6 +22,7 @@ public final class GodObservationSnapshot {
 
    JSONObject plan=new JSONObject();PlanState p=s.planState;if(p!=null){plan.put("active",p.active());plan.put("origin",p.origin);plan.put("goal",p.goal);plan.put("status",p.status);plan.put("currentStep",p.stepIndex);plan.put("stepCount",p.steps.size());plan.put("lastOutcome",p.lastOutcome);plan.put("lastReview",p.lastOutcomeReview);}root.put("currentPlanOutcome",plan);
 
+   JSONObject divine=new JSONObject();if(s.divineOntology!=null){s.divineOntology.clamp();divine.put("ontology","KNOWN_TO_ALL_LIFE");divine.put("worshipSustains","COGNITION_AND_ACTIVE_PRESENCE");divine.put("currentWorship",band(s.divineOntology.currentWorship));divine.put("historicalWorship",band(s.divineOntology.accumulatedWorship));divine.put("evidenceBoundKnowledge",true);divine.put("learnedKnowledgePersists",true);divine.put("cognitiveCapacity",s.divineOntology.capacity.qualitativeJson());divine.put("trackedSpeciesDevotion",s.livingWorld==null?0:s.livingWorld.divineStates.size());}root.put("divineOntology",divine);
    root.put("abnormalities",abnormalities(s));
   }catch(Exception ignored){}
   return root;
