@@ -197,6 +197,32 @@ public final class VisualRegressionTest{
   assertFalse(world.contains("weatherExposure"));
  }
 
+ @Test public void HaruCanSpeakFirstAndPermissionsAreRequestedAtStartup()throws Exception{
+  Path app=appRoot();
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String main=read(app.resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  String voice=read(app.resolve("src/main/java/com/aicharacter/v3/VoiceController.java"));
+  String kernel=read(app.resolve("src/main/java/com/aicharacter/v3/LifeSimulationKernel.java"));
+  String proactive=read(app.resolve("src/main/java/com/aicharacter/v3/HaruProactiveSpeechEngine.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(kernel.contains("HaruProactiveSpeechEngine.advance"));
+  assertTrue(proactive.contains("Mode.ACTIVE"));
+  assertTrue(proactive.contains("CAT_SOCIAL_SETTLE_NEAR"));
+  assertTrue(proactive.contains("intentionCandidate"));
+  assertTrue(game.contains("HaruProactiveSpeechEngine.consume"));
+  assertTrue(game.contains("drawProactiveSpeech"));
+  assertTrue(game.contains("onHaruProactiveSpeech"));
+  assertTrue(main.contains("voice.speakProactive"));
+  assertTrue(voice.contains("speakProactive"));
+  assertTrue(voice.contains("ttsReady"));
+  assertTrue(main.contains("requestCoreRuntimePermissions"));
+  assertTrue(main.contains("Manifest.permission.RECORD_AUDIO"));
+  assertTrue(main.contains("Manifest.permission.POST_NOTIFICATIONS"));
+  assertTrue(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
+  assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
+  assertTrue(world.contains("SAVE_VERSION = 53"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
