@@ -3,16 +3,69 @@ package com.aicharacter.v3;
 import android.Manifest;import android.app.Activity;import android.app.AlertDialog;import android.content.Intent;import android.content.pm.PackageManager;import android.net.Uri;import android.os.Bundle;import android.provider.Settings;import android.util.Log;import android.view.WindowInsets;import android.view.WindowInsetsController;import android.widget.EditText;import android.widget.Toast;import android.widget.TextView;import android.widget.ScrollView;import android.widget.FrameLayout;import android.graphics.Color;import java.io.File;
 
 public final class MainActivity extends Activity implements GameView.Host,GodSessionManager.Listener{
- private static final String TAG="VNF";private WorldRepository repository;private WorldState state;private GameView gameView;private FrameLayout gameRoot;private VoiceController voice;private ProceduralAudioEngine audio;private AppUpdateManager.Update pendingUpdate;private File pendingUpdateApk;private GodContactScene godScene;private boolean updateCheckInFlight=false,updateDialogVisible=false,backgrounded=false,updateExternalFlow=false,permissionRequestIntroVisible=false;private long lastUpdateCheckAt=0L;private static final long UPDATE_RESUME_GUARD_MS=15000L;
- @Override protected void onCreate(Bundle b){super.onCreate(b);showStartupScreen();try{hideSystemUi();}catch(Throwable ignored){}if(!isDebugVisualCapture())maybeCheckAppUpdate(true);final android.content.Context app=getApplicationContext();new Thread(()->{try{WorldRepository r=new WorldRepository(app);WorldState s=r.loadOrCreate();long now=System.currentTimeMillis();DivineMaintenanceEngine.maintain(s,now);LifeCycleEngine.apply(s,now);AgeDevelopmentEngine.apply(s,now);StateInvariantChecker.repairOrReport(s,now);if(!s.catState.awake)CatOfflineEngine.followAttachment(s);String reconstructed=OfflineLifeEngine.reconstruct(s,now);StateInvariantChecker.repairOrReport(s,now);GirlCatSearchEngine.advance(s,now);CatOfflineEngine.followAttachment(s);CatOfflineEngine.wakeForPlayer(s,now);applyDebugVisualCapture(s);r.save(s);runOnUiThread(()->{try{repository=r;state=s;voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});if(!isDebugVisualCapture()){audio=new ProceduralAudioEngine();audio.resume();}gameView=new GameView(this,state,this);if(BuildConfig.DEBUG){gameView.setDebugBiome(getIntent().getStringExtra("vnf_debug_biome"));gameView.setDebugHaruPose(getIntent().getStringExtra("vnf_debug_pose"));scheduleDebugVisualCapture();}gameRoot=new FrameLayout(this);gameRoot.addView(gameView,new FrameLayout.LayoutParams(-1,-1));setContentView(gameRoot);GodSessionManager.addListener(this);GodSessionManager.warmup(getApplicationContext());if(!reconstructed.isEmpty())Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();if(!isDebugVisualCapture())gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);}catch(Throwable e){showStartupFailure(e);}});}catch(Throwable e){runOnUiThread(()->showStartupFailure(e));}},"VNF-World-Startup").start();}
+ private static final String TAG="VNF";private WorldRepository repository;private WorldState state;private GameView gameView;private FrameLayout gameRoot;private VoiceController voice;private ProceduralAudioEngine audio;private AppUpdateManager.Update pendingUpdate;private File pendingUpdateApk;private GodContactScene godScene;private boolean updateCheckInFlight=false,updateDialogVisible=false,backgrounded=false,updateExternalFlow=false,permissionRequestIntroVisible=false,worldCatchupInFlight=false;private long lastUpdateCheckAt=0L,startupStartedAt=0L;private static final long UPDATE_RESUME_GUARD_MS=15000L;
+ @Override protected void onCreate(Bundle b){
+  super.onCreate(b);startupStartedAt=android.os.SystemClock.elapsedRealtime();showStartupScreen();try{hideSystemUi();}catch(Throwable ignored){}
+  if(!isDebugVisualCapture())maybeCheckAppUpdate(true);
+  final android.content.Context app=getApplicationContext();
+  new Thread(()->{
+   try{
+    WorldRepository r=new WorldRepository(app);
+    WorldState preview=r.loadOrCreate();
+    applyDebugVisualCapture(preview);
+    runOnUiThread(()->showWorldPreview(r,preview));
+   }catch(Throwable e){runOnUiThread(()->showStartupFailure(e));}
+  },"VNF-World-Bootstrap").start();
+ }
+ private void showWorldPreview(WorldRepository r,WorldState preview){
+  try{
+   repository=r;state=preview;worldCatchupInFlight=true;
+   voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});
+   if(!isDebugVisualCapture()){audio=new ProceduralAudioEngine();audio.resume();}
+   gameView=new GameView(this,state,this,false);
+   if(BuildConfig.DEBUG){gameView.setDebugBiome(getIntent().getStringExtra("vnf_debug_biome"));gameView.setDebugHaruPose(getIntent().getStringExtra("vnf_debug_pose"));scheduleDebugVisualCapture();}
+   gameRoot=new FrameLayout(this);gameRoot.addView(gameView,new FrameLayout.LayoutParams(-1,-1));setContentView(gameRoot);
+   GodSessionManager.addListener(this);GodSessionManager.warmup(getApplicationContext());
+   long visibleMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
+   Log.i(TAG,"STARTUP_WORLD_VISIBLE ms="+visibleMs+" catchup=pending");
+   new Thread(()->completeCausalStartup(r),"VNF-World-Catchup").start();
+  }catch(Throwable e){showStartupFailure(e);}
+ }
+ private void completeCausalStartup(WorldRepository r){
+  try{
+   WorldState live=r.loadOrCreate();long now=System.currentTimeMillis();
+   DivineMaintenanceEngine.maintain(live,now);LifeCycleEngine.apply(live,now);AgeDevelopmentEngine.apply(live,now);StateInvariantChecker.repairOrReport(live,now);
+   if(!live.catState.awake)CatOfflineEngine.followAttachment(live);
+   String reconstructed=OfflineLifeEngine.reconstruct(live,now);
+   StateInvariantChecker.repairOrReport(live,now);GirlCatSearchEngine.advance(live,now);CatOfflineEngine.followAttachment(live);CatOfflineEngine.wakeForPlayer(live,now);
+   applyDebugVisualCapture(live);r.save(live);
+   runOnUiThread(()->finishCausalStartup(live,reconstructed));
+  }catch(Throwable e){
+   Log.e(TAG,"Deferred world catch-up failed",e);
+   runOnUiThread(()->{
+    worldCatchupInFlight=false;
+    if(gameView!=null)gameView.setSimulationReady(true);
+    if(!isDebugVisualCapture())gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);
+   });
+  }
+ }
+ private void finishCausalStartup(WorldState live,String reconstructed){
+  if(isFinishing()||isDestroyed())return;
+  state=live;worldCatchupInFlight=false;
+  if(gameView!=null)gameView.replaceState(live,true);
+  long readyMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
+  Log.i(TAG,"STARTUP_CAUSAL_READY ms="+readyMs+" offlineTrace="+(reconstructed==null?0:reconstructed.length()));
+  if(reconstructed!=null&&!reconstructed.isEmpty())Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
+  if(!isDebugVisualCapture()&&gameView!=null)gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);
+ }
  private boolean isDebugVisualCapture(){return BuildConfig.DEBUG&&(getIntent().hasExtra("vnf_debug_biome")||getIntent().hasExtra("vnf_debug_pose"));}
  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);if(!BuildConfig.DEBUG||state==null||gameView==null)return;applyDebugVisualCapture(state);gameView.setDebugBiome(intent.getStringExtra("vnf_debug_biome"));gameView.setDebugHaruPose(intent.getStringExtra("vnf_debug_pose"));gameView.postInvalidate();scheduleDebugVisualCapture();Log.i(TAG,"VISUAL_CAPTURE_INTENT biome="+intent.getStringExtra("vnf_debug_biome")+" pose="+intent.getStringExtra("vnf_debug_pose"));}
  private void scheduleDebugVisualCapture(){if(!isDebugVisualCapture()||gameView==null)return;String raw=getIntent().getStringExtra("vnf_debug_capture_name");if(raw==null||raw.trim().isEmpty())raw=(getIntent().getStringExtra("vnf_debug_biome")+"_"+getIntent().getStringExtra("vnf_debug_pose"));final String name=raw.replaceAll("[^a-zA-Z0-9._-]","_");gameView.postDelayed(()->{try{File root=getFilesDir();File out=new File(new File(root,"visual-capture"),name+".png");boolean ok=gameView.writeDebugCapture(out);Log.i(TAG,"VISUAL_CAPTURE_FILE name="+name+" ok="+ok+" path="+out.getAbsolutePath()+" bytes="+(out.isFile()?out.length():0));}catch(Throwable e){Log.e(TAG,"VISUAL_CAPTURE_FILE failed name="+name,e);}},700L);}
  private void applyDebugVisualCapture(WorldState s){if(!isDebugVisualCapture()||s==null||s.world==null)return;String key=getIntent().getStringExtra("vnf_debug_biome");if(key==null||key.trim().isEmpty())return;String q=key.trim().toLowerCase(java.util.Locale.ROOT),id="home".equals(q)?"home_shelter":"garden".equals(q)?"garden_path":"grove".equals(q)?"quiet_grove":"lakeside".equals(q)?"lakeside":"";if(id.isEmpty())return;WorldArea a=s.world.area(id);if(a==null)return;s.haruX=(a.left+a.right)*.5f;if(s.girlTravel!=null)s.girlTravel.active=false;s.currentIntention="observe_lake";s.haruActivity="standing quietly";if(s.girlPhysics!=null){s.girlPhysics.falling=false;s.girlPhysics.grounded=true;s.girlPhysics.groundClearanceM=0;s.girlPhysics.velocityX=0;s.girlPhysics.velocityY=0;}}
  private void showStartupScreen(){TextView t=new TextView(this);t.setText("VNF\n\nĐang đánh thức thế giới…");t.setGravity(android.view.Gravity.CENTER);t.setTextColor(Color.rgb(241,229,201));t.setBackgroundColor(Color.rgb(18,31,33));t.setTextSize(22);setContentView(t);}
  @Override protected void onResume(){super.onResume();long resumedAt=System.currentTimeMillis();boolean returningFromUpdateFlow=updateExternalFlow;updateExternalFlow=false;if(pendingUpdateApk!=null&&android.os.Build.VERSION.SDK_INT>=26&&getPackageManager().canRequestPackageInstalls()){File apk=pendingUpdateApk;pendingUpdateApk=null;launchUpdateInstaller(apk);}else if(!returningFromUpdateFlow&&!isDebugVisualCapture())maybeCheckAppUpdate(false);if(backgrounded&&state!=null){backgrounded=false;try{long causalResume=Math.max(resumedAt,Math.max(state.lastSimulatedAt,state.lastOpenedAt));DivineMaintenanceEngine.maintain(state,causalResume);LifeCycleEngine.apply(state,causalResume);AgeDevelopmentEngine.apply(state,causalResume);OfflineLifeEngine.reconstruct(state,causalResume);StateInvariantChecker.repairOrReport(state,causalResume);GirlCatSearchEngine.advance(state,causalResume);CatOfflineEngine.followAttachment(state);CatOfflineEngine.wakeForPlayer(state,causalResume);repository.save(state);}catch(Throwable e){Log.e(TAG,"Resume recovery failed",e);}}if(audio!=null)audio.resume();if(gameView!=null)gameView.postInvalidate();}
- @Override protected void onPause(){super.onPause();if(audio!=null)audio.pause();if(state!=null&&repository!=null){try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save on pause failed",e);}}}
- @Override protected void onStop(){super.onStop();if(updateExternalFlow){if(state!=null&&repository!=null){try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save before update flow failed",e);}}return;}if(state!=null&&repository!=null&&!backgrounded){long wall=System.currentTimeMillis(),n=Math.max(wall,Math.max(state.lastOpenedAt,state.lastSimulatedAt));backgrounded=true;state.lastOpenedAt=Math.max(state.lastOpenedAt,n);state.catState.lastPlayerActiveAt=Math.max(state.catState.lastPlayerActiveAt,n);state.catState.x=state.catX;state.catState.awake=true;CatOfflineEngine.beginSleep(state,n);try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save on stop failed",e);}ProactiveScheduler.scheduleApproximate(this,state);}}
+ @Override protected void onPause(){super.onPause();if(audio!=null)audio.pause();if(state!=null&&repository!=null&&!worldCatchupInFlight){try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save on pause failed",e);}}}
+ @Override protected void onStop(){super.onStop();if(updateExternalFlow){if(state!=null&&repository!=null){try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save before update flow failed",e);}}return;}if(state!=null&&repository!=null&&!worldCatchupInFlight&&!backgrounded){long wall=System.currentTimeMillis(),n=Math.max(wall,Math.max(state.lastOpenedAt,state.lastSimulatedAt));backgrounded=true;state.lastOpenedAt=Math.max(state.lastOpenedAt,n);state.catState.lastPlayerActiveAt=Math.max(state.catState.lastPlayerActiveAt,n);state.catState.x=state.catX;state.catState.awake=true;CatOfflineEngine.beginSleep(state,n);try{repository.save(state);}catch(Throwable e){Log.e(TAG,"Save on stop failed",e);}ProactiveScheduler.scheduleApproximate(this,state);}}
  @Override protected void onDestroy(){GodSessionManager.removeListener(this);if(voice!=null)voice.destroy();if(audio!=null)audio.destroy();super.onDestroy();}
  @Override public void onBackPressed(){if(godScene!=null){if(godScene.isSending()){Toast.makeText(this,"Không gian vẫn đang dao động…",Toast.LENGTH_SHORT).show();return;}godScene.dismiss(this::closeGodScene);return;}super.onBackPressed();}
  @Override public void onGodSessionState(GodSessionManager.State s){if(godScene!=null)godScene.setSessionState(s);}
