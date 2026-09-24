@@ -38,6 +38,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
    gameView.postDelayed(this::initializeDeferredAudio,120L);
    gameView.postDelayed(this::initializeDeferredVoice,220L);
    gameView.postDelayed(()->maybeCheckAppUpdate(true),320L);
+   gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);
   }else gameView.postDelayed(this::initializeDeferredVoice,220L);
  }
  private void initializeDeferredVoice(){
@@ -63,7 +64,6 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
    runOnUiThread(()->{
     worldCatchupInFlight=false;
     if(gameView!=null)gameView.setSimulationReady(true);
-    if(!isDebugVisualCapture()&&gameView!=null)gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);
    });
   }
  }
@@ -74,7 +74,6 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   long readyMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
   Log.i(TAG,"STARTUP_CAUSAL_READY ms="+readyMs+" offlineTrace="+(reconstructed==null?0:reconstructed.length()));
   if(reconstructed!=null&&!reconstructed.isEmpty())Toast.makeText(this,"Thế giới đã tiếp tục sống khi mèo ngủ.",Toast.LENGTH_LONG).show();
-  if(!isDebugVisualCapture()&&gameView!=null)gameView.postDelayed(this::maybeHaruRequestCoreRuntimePermissions,1200L);
  }
  private void startResumeCausalCatchup(long resumedAt){
   if(repository==null||state==null||worldCatchupInFlight)return;
