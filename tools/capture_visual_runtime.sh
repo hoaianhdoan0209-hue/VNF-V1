@@ -60,21 +60,28 @@ PY
 pull_runtime_capture() {
   local name="$1" dest="$2"
   rm -f "$dest"
-  for _ in $(seq 1 90); do
-    if timeout 8s adb exec-out run-as "$PKG" cat "$APP_CAPTURE_DIR/$name.png" > "$dest" 2>/dev/null; then
-      if [[ -s "$dest" ]] && valid_png "$dest"; then
-        return 0
-      fi
-    fi
-    rm -f "$dest"
+  local ready=0
+  for _ in $(seq 1 180); do
     if adb logcat -d -s VNF:I VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE name=$name ok=true"; then
-      sleep 1
+      ready=1
+      break
     fi
     if adb logcat -d -s VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE failed name=$name"; then
       break
     fi
     sleep 1
   done
+  if [[ "$ready" -eq 1 ]]; then
+    for _ in $(seq 1 15); do
+      if timeout 12s adb exec-out run-as "$PKG" cat "$APP_CAPTURE_DIR/$name.png" > "$dest" 2>/dev/null; then
+        if [[ -s "$dest" ]] && valid_png "$dest"; then
+          return 0
+        fi
+      fi
+      rm -f "$dest"
+      sleep 1
+    done
+  fi
   echo "Runtime renderer did not export a valid PNG for $name" >&2
   dump_runtime_debug
   return 1
