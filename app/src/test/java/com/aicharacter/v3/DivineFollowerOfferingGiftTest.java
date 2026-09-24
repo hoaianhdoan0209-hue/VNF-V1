@@ -70,12 +70,16 @@ public final class DivineFollowerOfferingGiftTest {
   assertTrue(s.divineOntology.gifts.isEmpty());assertEquals(50,s.divineOntology.power.reserve,0);
  }
 
- @Test public void ritualAndOfferingTraditionEmergeWithoutSpeciesPreset(){
+ @Test public void ritualAndOfferingTraditionEmergeWithoutSpeciesPreset()throws Exception{
   WorldState s=state();pop(s,"alpha","area_a",.8);pop(s,"beta","area_a",.8);
+  GodWorldEventProposal p=proposal("shared_sign","area_a",.70,1000L);assertTrue(GodWorldConditionContract.propose(s,p,1000L).ok);assertTrue(GodWorldConditionContract.markApplied(s,"shared_sign","WorldPhysicsTest",1010L));DivineWorshipEngine.advance(s,1,1020L);
   SpeciesDivineState a=s.livingWorld.divine("alpha","area_a"),b=s.livingWorld.divine("beta","area_a");
-  a.devotion=b.devotion=.82;a.reverence=b.reverence=.85;a.witnessInfluence=b.witnessInfluence=.75;
-  DivineWorshipEngine.advance(s,45*1440.0,5000L);
-  assertTrue(a.ritualization>.02);assertTrue(a.offeringTradition>0);assertEquals(a.ritualization,b.ritualization,1e-9);assertEquals(a.offeringTradition,b.offeringTradition,1e-9);
+  assertTrue(a.ritualization>.02);assertEquals(a.ritualization,b.ritualization,1e-9);
+  WorldHistoryEntry sa=WorldEventBus.publishId(s,1030L,"alpha_surrender","RITUAL_RESOURCE_SURRENDERED","alpha_giver","Alpha offering was actually surrendered.");
+  WorldHistoryEntry sb=WorldEventBus.publishId(s,1031L,"beta_surrender","RITUAL_RESOURCE_SURRENDERED","beta_giver","Beta offering was actually surrendered.");
+  DivineOfferingState oa=DivineOfferingEngine.submit(s,"alpha_offer","alpha_giver","alpha","area_a","RESOURCE",.4,.7,.2,true,"",sa.eventId,1040L).offering;
+  DivineOfferingState ob=DivineOfferingEngine.submit(s,"beta_offer","beta_giver","beta","area_a","RESOURCE",.4,.7,.2,true,"",sb.eventId,1041L).offering;
+  assertTrue(oa.accepted);assertTrue(ob.accepted);assertTrue(a.offeringTradition>0);assertEquals(a.offeringTradition,b.offeringTradition,1e-9);
  }
 
  @Test public void saveRoundTripPreservesChosenOfferingGiftAndPower()throws Exception{
@@ -88,6 +92,7 @@ public final class DivineFollowerOfferingGiftTest {
   assertTrue(x.divineOntology.followers.get("chosen_save").chosen);assertTrue(x.divineOntology.offerings.get("save_offer").accepted);assertEquals("GRANTED",x.divineOntology.gifts.get("save_gift").status);assertEquals(s.divineOntology.power.reserve,x.divineOntology.power.reserve,1e-9);assertEquals(s.divineOntology.power.reservedForGifts,x.divineOntology.power.reservedForGifts,1e-9);
  }
 
+ private static GodWorldEventProposal proposal(String id,String area,double intensity,long now)throws Exception{org.json.JSONObject j=new org.json.JSONObject();j.put("kind","god-world-condition-v2");j.put("id",id);j.put("condition","WIND");j.put("desiredValue","BREEZE");j.put("scopeType","AREA");j.put("scopeTarget",area);j.put("intensity",intensity);j.put("durationMinutes",30);j.put("provenanceLayer","GOD_PROPOSAL");j.put("sourceRef","god:test");j.put("rollbackPolicy","RESTORE_PREVIOUS_BASELINE");j.put("requestedAt",now);return GodWorldEventProposal.fromJson(j,now);}
  private static SpeciesPopulationState pop(WorldState s,String species,String area,double abundance){SpeciesPopulationState p=s.livingWorld.population(species,area);p.relativeAbundance=abundance;p.carryingCapacity=.9;p.lastUpdatedAt=1;p.clamp();return p;}
  private static boolean hasType(WorldState s,String type){for(WorldHistoryEntry e:s.worldHistory)if(type.equals(e.type))return true;return false;}
  private static WorldState state(){WorldState s=WorldState.fresh();s.world=new WorldModel();s.world.areas.add(new WorldArea("area_a","A","a",0,100,0,true,"open"));s.world.areas.add(new WorldArea("area_b","B","b",100,200,0,true,"open"));s.haruX=20;s.catX=30;s.catState.x=30;s.catState.areaId="area_a";s.livingWorld=new LivingWorldState();s.divineOntology=new DivineOntologyState();return s;}
