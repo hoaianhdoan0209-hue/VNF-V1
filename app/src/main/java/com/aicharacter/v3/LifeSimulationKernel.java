@@ -27,7 +27,7 @@ public final class LifeSimulationKernel {
   if(s==null||seconds<=0)return;
   double minutes=seconds/60.0;
   boolean socialCatTravel=CatSocialEngine.tick(s,now);
-  if(mode==Mode.OFFLINE)PhysicalLifeStepEngine.advanceOffline(s,seconds,now,advanceGirlTravel,advanceCatTravel||socialCatTravel);else PhysicalLifeStepEngine.advance(s,seconds,now,advanceGirlTravel,advanceCatTravel||socialCatTravel);
+  if(mode==Mode.OFFLINE&&seconds>=60.0)PhysicalLifeStepEngine.advanceOffline(s,seconds,now,advanceGirlTravel,advanceCatTravel||socialCatTravel);else PhysicalLifeStepEngine.advance(s,seconds,now,advanceGirlTravel,advanceCatTravel||socialCatTravel);
   BodyPerceptionEngine.observe(s,now);
   EnvironmentConsequences.advance(s,minutes);
   CreatureLifeEngine.advance(s,minutes,now);
