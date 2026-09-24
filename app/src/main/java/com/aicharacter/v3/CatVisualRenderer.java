@@ -40,11 +40,11 @@ public final class CatVisualRenderer {
 
  private static void drawAwake(Canvas c,Paint p,WorldState s,CatAnimationController.Visual v,float x,float bodyY,float ground,float anim,float phase,float sc,float close,float divine){
   float guarded=(float)v.guardedness,attention=(float)v.attention;
-  float crouch=v.state==CatAnimationController.State.RETREAT?5.5f:v.state==CatAnimationController.State.BRACE?7f:v.state==CatAnimationController.State.APPROACH?2f:0;
+  float crouch=v.state==CatAnimationController.State.RETREAT?5.5f:v.state==CatAnimationController.State.BRACE?7f:v.state==CatAnimationController.State.APPROACH?2f:v.state==CatAnimationController.State.RUB?1.2f:0;
   float bodyH=(23-crouch*.45f)*sc,bodyW=(52+(v.state==CatAnimationController.State.BRACE?4:0))*sc;
   float headX=x+31*sc,headY=bodyY-7*sc+crouch*.28f*sc;
   float lean=s.catRig==null?0:(float)Math.max(-.10,Math.min(.10,s.catRig.trunkLean))*34f*sc;
-  headX+=lean;
+  headX+=lean;if(v.state==CatAnimationController.State.RUB){headX+=(5.2f+(float)Math.sin(anim*1.9f)*3.0f)*sc;headY+=(float)Math.sin(anim*3.8f)*1.1f*sc;}
 
   drawTail(c,p,v,x-bodyW*.44f,bodyY+5*sc,anim,sc,guarded,attention);
   p.setColor(COAT_DARK);c.drawRect(x-bodyW*.50f,bodyY-bodyH*.47f,x+bodyW*.48f,bodyY+bodyH*.48f,p);
@@ -57,6 +57,7 @@ public final class CatVisualRenderer {
   drawHead(c,p,headX,headY,sc,false,attention,earBack,divine);
   drawFace(c,p,headX,headY,sc,gaze,attention,guarded,close);
 
+  if(v.state==CatAnimationController.State.RUB){p.setColor(COAT_LIGHT);float rub=(float)Math.sin(anim*1.9f)*2.2f*sc;c.drawRect(headX-10*sc+rub,headY+7*sc,headX-2*sc+rub,headY+12*sc,p);}
   if(v.state==CatAnimationController.State.SETTLE){
    p.setColor(COAT_DARK);c.drawRect(x-18*sc,bodyY+9*sc,x+17*sc,ground-3*sc,p);
    p.setColor(COAT);c.drawRect(x-14*sc,bodyY+7*sc,x+14*sc,ground-5*sc,p);
@@ -81,7 +82,7 @@ public final class CatVisualRenderer {
   p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.SQUARE);p.setStrokeJoin(Paint.Join.MITER);p.setStrokeWidth(5.2f*sc);p.setColor(COAT_DARK);
   float sway=(float)Math.sin(anim*(v.moving()?2.0:.72)+.8)*7*sc;
   Path tail=new Path();tail.moveTo(x,y);
-  if(v.state==CatAnimationController.State.APPROACH||attention>.62f){tail.cubicTo(x-18*sc,y-7*sc,x-21*sc+sway,y-28*sc,x-8*sc+sway*.35f,y-34*sc);}
+  if(v.state==CatAnimationController.State.APPROACH||v.state==CatAnimationController.State.RUB||attention>.62f){tail.cubicTo(x-18*sc,y-7*sc,x-21*sc+sway,y-28*sc,x-8*sc+sway*.35f,y-34*sc);}
   else if(v.state==CatAnimationController.State.RETREAT||guarded>.58f){tail.cubicTo(x-18*sc,y+2*sc,x-28*sc+sway*.25f,y+8*sc,x-39*sc+sway*.45f,y+5*sc);}
   else{tail.cubicTo(x-17*sc,y-5*sc,x-30*sc+sway*.35f,y-10*sc,x-35*sc+sway*.55f,y-2*sc);}
   c.drawPath(tail,p);p.setStrokeWidth(3.0f*sc);p.setColor(COAT);c.drawPath(tail,p);p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
