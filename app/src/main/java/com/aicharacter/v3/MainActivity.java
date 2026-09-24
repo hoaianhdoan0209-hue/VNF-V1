@@ -56,6 +56,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   final long expectedSavedAt=state.lastSavedAt,expectedSimulatedAt=state.lastSimulatedAt;
   new Thread(()->{
    try{
+    r.commitPendingInitialSeed();
     WorldState live=r.loadOrCreate();
     long now=Math.max(resumedAt,System.currentTimeMillis());
     WorldContinuityEngine.advanceForPlayerOpen(live,now);
