@@ -17,16 +17,19 @@ public final class FastStartupRegressionTest {
  }
  private static String read(Path p)throws Exception{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
 
- @Test public void coldStartOpensAReadyPersistentWorldInsteadOfFrozenPreview()throws Exception{
+ @Test public void coldStartShowsExistingWorldBeforeAnyReconciliation()throws Exception{
   String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
-  assertTrue(main.contains("WorldState preview=r.loadOrCreate()"));
-  assertTrue(main.contains("WorldContinuityEngine.advanceForPlayerOpen(preview,now)"));
+  int create=main.indexOf("protected void onCreate(Bundle b)");
+  int show=main.indexOf("showWorldPreview(r,preview)",create);
+  int first=main.indexOf("public void onFirstWorldFrame()",show);
+  assertTrue(create>=0&&show>create&&first>show);
+  String coldPath=main.substring(create,show);
+  assertTrue(coldPath.contains("WorldState preview=r.loadPreviewOrCreate()"));
+  assertFalse("opening the app must not reconcile the world before first render",coldPath.contains("WorldContinuityEngine.advanceForPlayerOpen"));
   assertTrue(main.contains("new GameView(this,state,this,true)"));
   assertFalse(main.contains("new GameView(this,state,this,false)"));
-  assertFalse(main.contains("completeCausalStartup"));
-  assertFalse(main.contains("STARTUP_CAUSAL_READY"));
   assertTrue(main.contains("STARTUP_FIRST_WORLD_FRAME"));
-  assertTrue(main.contains("persistentWorldReady=true"));
+  assertTrue(main.substring(first).contains("refreshPersistentWorldAfterResume(System.currentTimeMillis())"));
  }
 
  @Test public void playerInteractionIsNeverBlockedByCatchupMessage()throws Exception{
