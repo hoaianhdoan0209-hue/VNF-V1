@@ -1,6 +1,7 @@
 package com.aicharacter.v3;
 
 import android.content.Context;
+import android.util.Log;
 import org.json.JSONObject;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,25 +26,36 @@ public final class WorldRepository{
  }
 
  public synchronized WorldState loadPreviewOrCreate(){
+  Log.i("VNF","PREVIEW_SCAN_BEGIN");
   WorldState state=tryLoad(saveFile);
   if(state==null)state=tryLoad(backupFile);
   if(state==null)state=tryLoad(tmpFile);
+  Log.i("VNF","PREVIEW_SCAN_DONE existing="+(state!=null));
   long now=System.currentTimeMillis();
   if(state==null){
    state=WorldState.fresh();
+   Log.i("VNF","PREVIEW_FRESH_STATE_READY");
    StateInvariantChecker.normalize(state,now);
+   Log.i("VNF","PREVIEW_NORMALIZED");
    attachDefinition(state);
+   Log.i("VNF","PREVIEW_DEFINITION_ATTACHED areas="+(state.world==null?0:state.world.areas.size()));
    StateInvariantChecker.normalizeSpatialState(state,now);
+   Log.i("VNF","PREVIEW_SPATIAL_READY");
    try{
     pendingInitialSeed=WorldState.fromJson(state.toJson());
+    Log.i("VNF","PREVIEW_SEED_CLONED");
     attachDefinition(pendingInitialSeed);
     StateInvariantChecker.normalizeSpatialState(pendingInitialSeed,now);
-   }catch(Exception e){pendingInitialSeed=null;}
+    Log.i("VNF","PREVIEW_SEED_READY");
+   }catch(Exception e){pendingInitialSeed=null;Log.w("VNF","PREVIEW_SEED_FAILED",e);}
    return state;
   }
   StateInvariantChecker.normalize(state,now);
+  Log.i("VNF","PREVIEW_EXISTING_NORMALIZED");
   attachDefinition(state);
+  Log.i("VNF","PREVIEW_EXISTING_DEFINITION_ATTACHED");
   StateInvariantChecker.normalizeSpatialState(state,now);
+  Log.i("VNF","PREVIEW_EXISTING_SPATIAL_READY");
   return state;
  }
 
