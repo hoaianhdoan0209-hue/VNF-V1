@@ -46,6 +46,8 @@ workflows:
           include: true
           source: true
     environment:
+      groups:
+        - github_credentials
       java: 17
       android_signing:
         - vnf-release
@@ -75,16 +77,21 @@ workflows:
             if [ ! -x "$DIST_DIR/bin/gradle" ]; then curl -fL --retry 3 --retry-delay 3 "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o "$ZIP_FILE"; rm -rf "$DIST_DIR"; unzip -q "$ZIP_FILE" -d "$DIST_ROOT"; fi
             GRADLE="$DIST_DIR/bin/gradle"
           fi
-          "$GRADLE" :app:assembleRelease --stacktrace
+          "$GRADLE" :app:testDebugUnitTest :app:assembleRelease --stacktrace
           test -f "$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+      - name: Verify stable APK signature and metadata
+        script: |
+          set -eu
+          APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
+          APK_SIGNER="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APK_SIGNER"
+          "$APK_SIGNER" verify --verbose --print-certs "$APK"
+          shasum -a 256 "$APK"
       - name: Publish stable release to GitHub
         script: |
           set -eu
           APK="$CM_BUILD_DIR/app/build/outputs/apk/release/app-release.apk"
-          if [ -z "${GITHUB_TOKEN:-}" ]; then
-            echo "GITHUB_TOKEN is not configured; signed APK was built but GitHub Release publishing is skipped."
-            exit 0
-          fi
+          : "${GITHUB_TOKEN:?github_credentials did not provide GITHUB_TOKEN}"
           command -v gh >/dev/null
           VERSION_CODE=$(sed -n "s/.*versionCode[[:space:]]*\\([0-9][0-9]*\\).*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
           VERSION_NAME=$(sed -n "s/.*versionName[[:space:]]*'\\([^']*\\)'.*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)
