@@ -267,6 +267,29 @@ public final class VisualRegressionTest{
   assertTrue(context.contains("never guarantees a gift"));
  }
 
+ @Test public void fiveHundredSpeciesPhylogenyStaysHiddenFromHaru()throws Exception{
+  Path app=appRoot();
+  String registry=read(app.resolve("src/main/java/com/aicharacter/v3/SpeciesRegistryV2.java"));
+  String phylogeny=read(app.resolve("src/main/java/com/aicharacter/v3/DivinePhylogenyTruth.java"));
+  String population=read(app.resolve("src/main/java/com/aicharacter/v3/PopulationEcologyEngine.java"));
+  String context=read(app.resolve("src/main/java/com/aicharacter/v3/GodContextBuilder.java"));
+  String cognition=read(app.resolve("src/main/java/com/aicharacter/v3/CognitionEngine.java"));
+  String reasoning=read(app.resolve("src/main/java/com/aicharacter/v3/HaruReasoningEngine.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(registry.contains("BASE_SPECIES_COUNT=500"));
+  assertTrue(phylogeny.contains("ROOT_ID=\"primordial_life_0\""));
+  assertTrue(phylogeny.contains("SPECIES_TO_NODE.size()!=SpeciesRegistryV2.BASE_SPECIES_COUNT"));
+  assertTrue(population.contains("MAX_POPULATION_FIELDS"));
+  assertTrue(population.contains("seedEligibleLocalSpecies"));
+  assertFalse(population.contains("for(SpeciesEcologyProfile p:profiles)for(WorldArea a"));
+  assertTrue(context.contains("GodPhylogenyQueryEngine.query"));
+  assertTrue(context.contains("never write it into Haru memory/beliefs automatically"));
+  assertFalse(cognition.contains("DivinePhylogenyTruth"));
+  assertFalse(reasoning.contains("DivinePhylogenyTruth"));
+  assertFalse(world.contains("DivinePhylogenyTruth"));
+  assertFalse(world.contains("primordial_life_0"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
