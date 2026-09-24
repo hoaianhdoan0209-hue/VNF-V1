@@ -64,11 +64,15 @@ public final class PopulationEcologyEngine {
   Map<String,List<SpeciesEcologyProfile>> out=new LinkedHashMap<>();if(s==null||s.world==null)return out;
   for(WorldArea a:s.world.areas){
    LinkedHashMap<String,SpeciesEcologyProfile> selected=new LinkedHashMap<>();
+   // Visible authored representatives are always simulated.
    for(WorldObject o:s.world.objects){if(o==null||!o.enabled||!"creature".equals(o.type))continue;String actual=HaruVisionEngine.actualAreaId(s,o);if(!a.id.equals(actual))continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.forObject(o);if(p!=null)selected.put(p.key,p);}
-   if(s.livingWorld!=null)for(SpeciesPopulationState pop:s.livingWorld.populations.values()){if(pop==null||!a.id.equals(pop.areaId)||pop.relativeAbundance<=1e-7)continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.get(pop.speciesKey);if(p!=null)selected.put(p.key,p);}
+   // Pick one deterministic habitat baseline from the full 500-species catalog.
+   // Do this BEFORE adding existing populations so repeated ticks cannot rotate in 18 new species each time.
    ArrayList<SpeciesEcologyProfile> candidates=new ArrayList<>();for(SpeciesEcologyProfile p:all)if(!selected.containsKey(p.key))candidates.add(p);
    candidates.sort((x,y)->{int d=Double.compare(backgroundSuitability(s,y,a),backgroundSuitability(s,x,a));return d!=0?d:x.key.compareTo(y.key);});
    int background=0;for(SpeciesEcologyProfile p:candidates){if(background>=18)break;double fit=backgroundSuitability(s,p,a);if(fit<.42)break;selected.put(p.key,p);background++;}
+   // Preserve genuinely established/migrated populations without using them to refill another 18-slot batch.
+   if(s.livingWorld!=null)for(SpeciesPopulationState pop:s.livingWorld.populations.values()){if(pop==null||!a.id.equals(pop.areaId)||pop.relativeAbundance<=1e-7)continue;SpeciesEcologyProfile p=FantasyEcologyDictionary.get(pop.speciesKey);if(p!=null)selected.put(p.key,p);}
    out.put(a.id,new ArrayList<>(selected.values()));
   }
   return out;
