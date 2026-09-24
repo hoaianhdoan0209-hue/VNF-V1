@@ -15,7 +15,7 @@ public final class MomentDirector {
  }
  private static final long RECENT_EVENT_MS=9000L;
  private Cue active=Cue.none();
- private String lastAcceptedEventId="";
+ private String lastAcceptedEventId="";private long lastAcceptedEventTime=-1;
 
  public Cue direct(WorldState s,long now){
   if(active.active&&now<active.endsAt)return active;
@@ -23,15 +23,15 @@ public final class MomentDirector {
   if(s==null||s.worldHistory==null||s.worldHistory.isEmpty())return active;
   WorldHistoryEntry best=null;int bestPriority=-1;
   for(int i=s.worldHistory.size()-1;i>=0;i--){
-   WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.eventId==null||e.eventId.equals(lastAcceptedEventId))continue;
+   WorldHistoryEntry e=s.worldHistory.get(i);if(e==null||e.eventId==null||e.eventId.equals(lastAcceptedEventId)||e.time<=lastAcceptedEventTime)continue;
    long age=now-e.time;if(age<0||age>RECENT_EVENT_MS)continue;
    int p=priority(e.type);if(p>bestPriority){best=e;bestPriority=p;if(p>=5)break;}
   }
   if(best==null||bestPriority<1)return active;
-  active=fromEvent(s,best,now);if(active.active)lastAcceptedEventId=best.eventId;return active;
+  active=fromEvent(s,best,now);if(active.active){lastAcceptedEventId=best.eventId;lastAcceptedEventTime=best.time;}return active;
  }
 
- public void reset(){active=Cue.none();lastAcceptedEventId="";}
+ public void reset(){active=Cue.none();lastAcceptedEventId="";lastAcceptedEventTime=-1;}
 
  private static Cue fromEvent(WorldState s,WorldHistoryEntry e,long now){
   String t=e.type==null?"":e.type.toUpperCase(java.util.Locale.ROOT);
