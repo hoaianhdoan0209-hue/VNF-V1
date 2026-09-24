@@ -7,7 +7,8 @@ import java.util.EnumSet;
 public final class GodCapabilityModel {
  public enum Capability {
   OBSERVE, EXPLAIN, REFERENCE_KNOWLEDGE, TEACH, WARN,
-  PROPOSE_WORLD_CONDITION, DIAGNOSE, SAFE_REPAIR
+  PROPOSE_WORLD_CONDITION, DIAGNOSE, SAFE_REPAIR,
+  SELECT_FOLLOWER, ACCEPT_OFFERING, GRANT_DIVINE_GIFT
  }
  private static final EnumSet<Capability> ENABLED=EnumSet.allOf(Capability.class);
  private GodCapabilityModel(){}
