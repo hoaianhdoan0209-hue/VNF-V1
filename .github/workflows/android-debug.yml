@@ -6,6 +6,7 @@ on:
       - mong/god-session-ui
       - integration/v1.0.1
       - release/v1.0.1
+      - release/v1.0.2
       - team/haru-intelligence-v1
   workflow_dispatch:
 
