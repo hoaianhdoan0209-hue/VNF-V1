@@ -4,6 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public final class MomentDirectorTest {
+ private static final long T0=1_800_000_000_000L;
 
  @Test public void reunionGetsStrongCloseBeatAndSemanticSound(){
   long now=10000L;WorldState s=state();s.worldHistory.add(new WorldHistoryEntry(now-80,"evt_reunion","CAT_REUNION","cat","cat returned"));
