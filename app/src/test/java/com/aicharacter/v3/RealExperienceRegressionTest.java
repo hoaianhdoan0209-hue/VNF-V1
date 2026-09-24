@@ -131,7 +131,7 @@ public final class RealExperienceRegressionTest {
 
  private static WorldModel world(){
   WorldModel w=new WorldModel();
-  WorldArea home=area("home_shelter",60,590,"interior,shelter,home,dry,quiet,rest,sleep");
+  WorldArea home=area("home_shelter",60,590,"interior,shelter,home,dry,quiet,rest,sleep");home.weatherExposed=false;
   WorldArea garden=area("garden_path",590,1050,"path,vegetation,verge");
   WorldArea lake=area("lakeside",1050,1900,"lake,water,wet_margin,open,reflect");
   WorldArea grove=area("quiet_grove",1900,2320,"grove,quiet,vegetation,shade");
