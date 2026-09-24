@@ -132,6 +132,26 @@ public final class VisualRegressionTest{
   assertTrue(haru.contains("HaruMotionStyleEngine.derive"));
  }
 
+ @Test public void momentDirectorAndSoundContractStayPresentationOnly()throws Exception{
+  Path app=appRoot();
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String moment=read(app.resolve("src/main/java/com/aicharacter/v3/MomentDirector.java"));
+  String sound=read(app.resolve("src/main/java/com/aicharacter/v3/SoundEvent.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(game.contains("MomentDirector"));
+  assertTrue(game.contains("drawMomentGrade"));
+  assertTrue(game.contains("pollSoundEvent"));
+  assertTrue(game.contains("moment.minZoom"));
+  assertTrue(moment.contains("RECENT_EVENT_MS"));
+  assertTrue(moment.contains("lastAcceptedEventTime"));
+  assertTrue(moment.contains("CAT_SOCIAL_SETTLE_NEAR"));
+  assertTrue(moment.contains("HARU_CAUSAL_EXPERIMENT_RESOLVED"));
+  assertTrue(sound.contains("semanticId"));
+  assertTrue(sound.contains("Layer"));
+  assertFalse(world.contains("pendingSoundEvent"));
+  assertFalse(world.contains("MomentDirector"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
