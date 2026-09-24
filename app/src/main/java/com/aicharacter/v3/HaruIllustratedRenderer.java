@@ -145,8 +145,8 @@ public final class HaruIllustratedRenderer {
 
  private static void drawNaturalArms(Canvas c,Paint p,float x,float shoulderY,float hipY,float stride,boolean walking,float profile,int alpha){
   if(!walking){
-   drawSleevedArm(c,p,x-29,shoulderY+11,x-35,shoulderY+52,x-31,hipY-4,alpha);
-   drawSleevedArm(c,p,x+29,shoulderY+11,x+35,shoulderY+52,x+31,hipY-4,alpha);
+   drawSleevedArm(c,p,x-29,shoulderY+11,x-36,shoulderY+49,x-30,hipY-3,alpha);
+   drawSleevedArm(c,p,x+29,shoulderY+11,x+34,shoulderY+54,x+28,hipY-7,Math.min(alpha,238));
    return;
   }
   float swing=stride*24f,far=1f-profile*.18f;
@@ -244,7 +244,7 @@ public final class HaruIllustratedRenderer {
    c.drawLine(faceX-17,eyeY,faceX-8,eyeY,p);c.drawLine(faceX+8,eyeY,faceX+17*far,eyeY,p);
   }else{
    p.setStyle(Paint.Style.FILL);p.setColor(withAlpha(Color.rgb(247,235,218),alpha));
-   c.drawOval(faceX-18,eyeY-4,faceX-8,eyeY+4.8f,p);c.drawOval(faceX+8,eyeY-4,faceX+8+10*far,eyeY+4.8f,p);
+   c.drawOval(faceX-18,eyeY-3.4f,faceX-8,eyeY+4.1f,p);c.drawOval(faceX+8,eyeY-3.4f,faceX+8+10*far,eyeY+4.1f,p);
    p.setColor(withAlpha(Color.rgb(103,76,58),alpha));c.drawCircle(faceX-13+gaze,eyeY+.5f,3.45f,p);c.drawCircle(faceX+13*far+gaze,eyeY+.5f,3.25f,p);
    p.setColor(withAlpha(Color.rgb(45,39,35),alpha));c.drawCircle(faceX-13+gaze,eyeY+.7f,1.65f,p);c.drawCircle(faceX+13*far+gaze,eyeY+.7f,1.55f,p);
    p.setColor(withAlpha(Color.WHITE,Math.min(alpha,205)));c.drawCircle(faceX-12.1f+gaze,eyeY-.7f,1.05f,p);c.drawCircle(faceX+13.8f*far+gaze,eyeY-.7f,.95f,p);
@@ -260,8 +260,9 @@ public final class HaruIllustratedRenderer {
    c.drawLine(faceX-18,eyeY-10+reactLift,faceX-8,eyeY-12+reactLift,p);
    c.drawLine(faceX+8,eyeY-12+reactLift,faceX+18*far,eyeY-10+reactLift,p);
   }else{
-   c.drawLine(faceX-18,eyeY-12+reactLift,faceX-8,eyeY-12.5f+reactLift,p);
-   c.drawLine(faceX+8,eyeY-12.5f+reactLift,faceX+18*far,eyeY-12+reactLift,p);
+   // Calm brows: inner ends sit slightly lower than the outer arch; avoid a permanent worried face.
+   c.drawLine(faceX-18,eyeY-12.6f+reactLift,faceX-8,eyeY-11.6f+reactLift,p);
+   c.drawLine(faceX+8,eyeY-11.6f+reactLift,faceX+18*far,eyeY-12.6f+reactLift,p);
   }
 
   // Small nose and stateful mouth.
@@ -272,7 +273,7 @@ public final class HaruIllustratedRenderer {
   if(v.state==GirlAnimationController.State.REACT){mouth.moveTo(faceX-6,mouthY);mouth.quadTo(faceX,mouthY+4,faceX+6,mouthY);}
   else if(genuinelyDown){mouth.moveTo(faceX-6,mouthY+2);mouth.quadTo(faceX,mouthY-1.5f,faceX+6,mouthY+2);}
   else if(mood>.12f){mouth.moveTo(faceX-7,mouthY-1);mouth.quadTo(faceX,mouthY+3.2f,faceX+7,mouthY-1);}
-  else{mouth.moveTo(faceX-6,mouthY);mouth.quadTo(faceX,mouthY+1.3f,faceX+6,mouthY);}
+  else{mouth.moveTo(faceX-6.5f,mouthY-.7f);mouth.quadTo(faceX,mouthY+2.0f,faceX+6.5f,mouthY-.7f);}
   c.drawPath(mouth,p);
 
   // Warm cheek tone only when the face is visible enough.
