@@ -24,6 +24,7 @@ public final class VoiceController implements TextToSpeech.OnInitListener {
     public boolean isEnabled(){return enabled;}
     public void listen(){ if(!enabled){listener.onStatus("Double tap nút mic để bật Voice.");return;} if(activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){activity.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},402);return;} if(recognizer==null){listener.onStatus("Thiết bị không hỗ trợ SpeechRecognizer.");return;} Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"vi-VN"); recognizer.startListening(i); }
     public void speak(String text){if(enabled&&tts!=null)tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"vnf_haru");}
+    public void speakProactive(String text){if(text!=null&&!text.trim().isEmpty()&&tts!=null)tts.speak(text,TextToSpeech.QUEUE_ADD,null,"vnf_haru_proactive_"+System.nanoTime());}
     public void destroy(){if(recognizer!=null)recognizer.destroy(); if(tts!=null)tts.shutdown();}
     @Override public void onInit(int status){if(status==TextToSpeech.SUCCESS)tts.setLanguage(new Locale("vi","VN"));}
 }
