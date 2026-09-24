@@ -3,6 +3,7 @@ package com.aicharacter.v3;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.*;
+import java.text.Normalizer;
 
 /**
  * Hidden System-Reality evolutionary catalog.
@@ -111,7 +112,7 @@ public final class SpeciesEvolutionCatalog {
 
  private static boolean mentionsEvolution(String q){return q.contains("evol")||q.contains("tien hoa")||q.contains("to tien")||q.contains("ancestor")||q.contains("species")||q.contains("loai")||q.contains("500");}
  private static double overlap(String q,String hay){double n=0;for(String t:q.split("\\s+"))if(t.length()>2&&hay.contains(t))n++;return n;}
- private static String norm(String s){return (s==null?"":s).toLowerCase(Locale.ROOT).replace('đ','d').replaceAll("[^a-z0-9_]+"," ").trim();}
+ private static String norm(String s){String x=Normalizer.normalize((s==null?"":s).toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}+","");return x.replace('đ','d').replaceAll("[^a-z0-9_]+"," ").trim();}
  private static String title(String s){if(s==null||s.isEmpty())return"";return Character.toUpperCase(s.charAt(0))+s.substring(1);}
  private static int indexOf(String[] a,String v){for(int i=0;i<a.length;i++)if(a[i].equals(v))return i;return 0;}
  private static double cl(double v){return Math.max(0,Math.min(1,v));}
