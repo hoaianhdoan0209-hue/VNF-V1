@@ -7,6 +7,46 @@ public final class TravelEngine{private TravelEngine(){}private static final flo
  private static boolean initRouteSegment(WorldState s,TravelState t,long now){WorldConnection c=WorldPathPlanner.connection(s.world,t.route.get(t.routeIndex),t.route.get(t.routeIndex+1));if(c==null){failTravel(s,t,now,"route segment missing");return false;}float x=currentX(s,t.actor);t.segmentStartX=x;t.segmentEndX=c.entryX;t.segmentStartedAt=now;t.progress=0;t.previousX=x;return true;}
  public static boolean enterTerrainDropIfNeeded(WorldState s,TravelState t,long now){if(s==null||t==null||!t.active||!Float.isFinite(t.segmentStartX)||!Float.isFinite(t.segmentEndX))return false;PhysicsBodyState pb="cat".equals(t.actor)?s.catPhysics:s.girlPhysics;if(pb==null||!pb.grounded)return false;float x=currentX(s,t.actor);double direction=Math.signum(t.segmentEndX-t.segmentStartX);if(direction==0)return false;double probe=WorldUnits.mToPx("cat".equals(t.actor)?.16:.22),probeX=x+direction*probe,risePx=GroundGeometry.signedHeightDeltaPx(s,x,probeX),dropThreshold=WorldUnits.mToPx("cat".equals(t.actor)?.16:.22);if(!GroundGeometry.hasDropAhead(s,x,direction,probe,dropThreshold))return false;double carry=Math.max(Math.abs(pb.velocityX),WorldUnits.pxPerSecToMps(Math.max(0,t.lastSpeed)));WholeBodyPhysicsEngine.loseGroundSupport(s,t.actor,Math.max(pb.groundClearanceM,WorldUnits.pxToM(risePx)),direction*carry,now);t.lastSpeed=0;t.lastDelta=0;WorldEventBus.publish(s,now,"TERRAIN_DROP_ENTERED",t.currentPlanId,t.actor+" lost ground support at a terrain drop.");return true;}
  public static void advanceSeconds(WorldState s,TravelState t,double seconds,long now){if(!t.active||seconds<=0)return;double total=Math.min(seconds,3600),remain=total;long causalFloor=Math.max(t.startedAt,t.segmentStartedAt);long startNow=Math.max(causalFloor,now-Math.max(0L,(long)(total*1000.0)));int guard=0,maxSteps=Math.min(14400,Math.max(64,(int)Math.ceil(remain/MAX_STEP_SECONDS)+8));while(t.active&&remain>0&&guard++<maxSteps){double step=Math.min(remain,MAX_STEP_SECONDS);long stepNow=Math.max(causalFloor,Math.min(now,startNow+Math.max(0L,(long)((total-remain+step)*1000.0))));if("ROUTE".equals(t.travelMode)&&!validateOrReplan(s,t,stepNow))return;WorldConnection c="ROUTE".equals(t.travelMode)?WorldPathPlanner.connection(s.world,t.route.get(t.routeIndex),t.route.get(t.routeIndex+1)):null;if(!Float.isFinite(t.segmentStartX)||!Float.isFinite(t.segmentEndX)){if("ROUTE".equals(t.travelMode)){if(!initRouteSegment(s,t,stepNow))return;}else return;}double dist=Math.max(1,Math.abs(t.segmentEndX-t.segmentStartX));double requested=speed(s,t,c);double sp=WholeBodyPhysicsEngine.realizeHorizontalSpeed(s,t.actor,requested,step,stepNow);t.lastSpeed=sp;double left=dist*(1-t.progress);double move=Math.min(left,sp*step);if(sp<=.001){remain-=step;continue;}double used=move/sp;float oldX=currentX(s,t.actor);double desiredMoveX=oldX+Math.signum(t.segmentEndX-t.segmentStartX)*move;if(WholeBodyPhysicsEngine.blockedBetween(s,t.actor,oldX,desiredMoveX)){t.lastSpeed=0;t.lastDelta=0;t.interruption="object_collision";WorldEventBus.publish(s,stepNow,"TRAVEL_OBJECT_BLOCKED",t.currentPlanId,t.actor+" was physically blocked by a solid world object.");if("girl".equals(t.actor))failTravel(s,t,stepNow,"solid object blocks current physical path");else t.active=false;return;}double direction=Math.signum(t.segmentEndX-t.segmentStartX),probeDistance=Math.max(4,Math.min(move,WorldUnits.mToPx(.22))),probeX=oldX+direction*probeDistance,risePx=GroundGeometry.signedHeightDeltaPx(s,oldX,probeX),maxStepPx=WorldUnits.mToPx("cat".equals(t.actor)?.24:.34)*("girl".equals(t.actor)?MusculoskeletalEngine.locomotorCapacity(s):1.0);if(GroundGeometry.hasRiseAhead(s,oldX,direction,probeDistance,maxStepPx)){t.lastSpeed=0;t.lastDelta=0;t.interruption="terrain_step_too_high";WorldEventBus.publish(s,stepNow,"TRAVEL_TERRAIN_BLOCKED",t.currentPlanId,t.actor+" could not physically clear the terrain step.");if("girl".equals(t.actor))failTravel(s,t,stepNow,"terrain step exceeds current body clearance");else t.active=false;return;}double dropThreshold=WorldUnits.mToPx("cat".equals(t.actor)?.16:.22);if(GroundGeometry.hasDropAhead(s,oldX,direction,Math.max(4,Math.min(move,WorldUnits.mToPx(.22))),dropThreshold)){enterTerrainDropIfNeeded(s,t,stepNow);remain-=step;continue;}t.progress=(float)Math.min(1,t.progress+move/dist);float x=t.segmentStartX+(t.segmentEndX-t.segmentStartX)*t.progress;t.previousX=oldX;t.lastDelta=x-oldX;setX(s,t,x);t.distanceTravelled+=Math.abs(t.lastDelta);remain-=used;if("girl".equals(t.actor))TravelPerceptionEngine.sample(s,t,stepNow);if(t.progress>=.999999f){setX(s,t,t.segmentEndX);if("LOCAL".equals(t.travelMode)){arrive(s,t,stepNow);break;}String to=t.route.get(t.routeIndex+1);WorldEventBus.publish(s,stepNow,"AREA_ENTERED",t.currentPlanId,t.actor+" entered "+to+" at connection anchor.");t.routeIndex++;if(t.routeIndex>=t.route.size()-1){arrive(s,t,stepNow);break;}if(!initRouteSegment(s,t,stepNow))return;}if(used<=0)break;}}
+ public static void advanceOfflineSeconds(WorldState s,TravelState t,double seconds,long now){
+  if(s==null||t==null||!t.active||seconds<=0)return;
+  double remain=Math.min(seconds,24*3600.0);int guard=0;
+  while(t.active&&remain>1e-6&&guard++<64){
+   if("ROUTE".equals(t.travelMode)&&!validateOrReplan(s,t,now))return;
+   WorldConnection connection="ROUTE".equals(t.travelMode)?WorldPathPlanner.connection(s.world,t.route.get(t.routeIndex),t.route.get(t.routeIndex+1)):null;
+   if(!Float.isFinite(t.segmentStartX)||!Float.isFinite(t.segmentEndX)){
+    if("ROUTE".equals(t.travelMode)){if(!initRouteSegment(s,t,now))return;}else return;
+   }
+   float oldX=currentX(s,t.actor);double dir=Math.signum(t.segmentEndX-t.segmentStartX),span=Math.max(1,Math.abs(t.segmentEndX-t.segmentStartX)),left=Math.max(0,Math.abs(t.segmentEndX-oldX));
+   double sp=Math.max(24.0,speed(s,t,connection)*offlineTerrainFactor(s,t.actor,oldX));
+   double move=Math.min(left,sp*remain);float desired=(float)(oldX+dir*move);
+   if(WholeBodyPhysicsEngine.blockedBetween(s,t.actor,oldX,desired)){
+    t.interruption="object_collision";t.lastSpeed=0;t.lastDelta=0;
+    if("girl".equals(t.actor))failTravel(s,t,now,"solid object blocks offline physical path");else t.active=false;
+    return;
+   }
+   double used=sp<=.001?remain:move/sp;
+   t.lastSpeed=sp;t.previousX=oldX;t.lastDelta=desired-oldX;t.distanceTravelled+=Math.abs(t.lastDelta);
+   t.progress=(float)Math.max(0,Math.min(1,Math.abs(desired-t.segmentStartX)/span));
+   setX(s,t,desired);remain-=Math.max(0,used);
+   if(left-move<=.01){
+    setX(s,t,t.segmentEndX);t.progress=1;
+    long eventNow=Math.max(t.segmentStartedAt,now-Math.max(0L,(long)(remain*1000.0)));
+    if("LOCAL".equals(t.travelMode)){arrive(s,t,eventNow);break;}
+    String to=t.route.get(t.routeIndex+1);
+    WorldEventBus.publish(s,eventNow,"AREA_ENTERED",t.currentPlanId,t.actor+" entered "+to+" during persistent-world travel.");
+    t.routeIndex++;
+    if(t.routeIndex>=t.route.size()-1){arrive(s,t,eventNow);break;}
+    if(!initRouteSegment(s,t,eventNow))return;
+   }else break;
+  }
+ }
+ private static double offlineTerrainFactor(WorldState s,String actor,float x){
+  double slope=Math.abs(GroundGeometry.slope(s,x)),wet=Math.max(0,Math.min(1,s.worldWetness)),rain=s.environment!=null&&"RAIN".equals(s.environment.weather)?s.environment.weatherIntensity:0;
+  double terrain=Math.max(.58,1-slope*.28-wet*.16-rain*.10);
+  if("girl".equals(actor))terrain*=Math.max(.48,MusculoskeletalEngine.locomotorCapacity(s)*BodyInstinctEngine.movementCapacity(s));
+  else terrain*=Math.max(.55,CatCardioMetabolicEngine.locomotorCapacity(s));
+  return Math.max(.35,Math.min(1,terrain));
+ }
  public static void syncAirborneProgress(WorldState s,String actor,float actualX){TravelState t="cat".equals(actor)?s.catTravel:s.girlTravel;if(t==null||!t.active||!Float.isFinite(t.segmentStartX)||!Float.isFinite(t.segmentEndX))return;double span=t.segmentEndX-t.segmentStartX;if(Math.abs(span)<1e-6)return;double raw=(actualX-t.segmentStartX)/span,clamped=Math.max(0,Math.min(1,raw));float synced=(float)(t.segmentStartX+span*clamped);setX(s,t,synced);t.progress=(float)clamped;t.previousX=synced;t.lastDelta=0;t.lastSpeed=0;}
  public static void advanceMinutes(WorldState s,TravelState t,double minutes,long now){advanceSeconds(s,t,minutes*60,now);}
  public static boolean validateOrReplan(WorldState s,TravelState t,long now){if(!t.active||!"ROUTE".equals(t.travelMode))return true;if(t.routeIndex<0||t.routeIndex>=t.route.size()-1){failTravel(s,t,now,"route state became inconsistent");return false;}WorldConnection c=WorldPathPlanner.connection(s.world,t.route.get(t.routeIndex),t.route.get(t.routeIndex+1));if(t.topologyRevision==s.routeRuntime.topologyRevision&&c!=null&&!s.routeRuntime.blocked(c.id))return true;return replan(s,t,now,"current connection invalid/topology changed");}
