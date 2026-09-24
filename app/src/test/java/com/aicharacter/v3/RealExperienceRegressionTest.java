@@ -69,7 +69,7 @@ public final class RealExperienceRegressionTest {
  @Test public void previewPathRepairsSpatialStateBeforeFirstFrame()throws Exception{
   String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
   int preview=repo.indexOf("loadPreviewOrCreate()");
-  int full=repo.indexOf("loadOrCreate()",preview);
+  int full=repo.indexOf("public synchronized WorldState loadOrCreate()",preview);
   assertTrue(preview>=0&&full>preview);
   String body=repo.substring(preview,full);
   assertTrue(body.contains("attachDefinition(state)"));
