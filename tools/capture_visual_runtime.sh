@@ -83,6 +83,15 @@ pull_runtime_capture() {
     done
   fi
   echo "Runtime renderer did not export a valid PNG for $name" >&2
+  mkdir -p "$OUT/diagnostics"
+  adb exec-out screencap -p > "$OUT/diagnostics/${name}_timeout_screen.png" 2>/dev/null || true
+  pid="$(adb shell pidof "$PKG" 2>/dev/null | tr -d '\\r' | awk '{print $1}')"
+  if [[ -n "$pid" ]]; then
+    adb shell kill -3 "$pid" >/dev/null 2>&1 || true
+    sleep 2
+  fi
+  adb logcat -d -t 1200 > "$OUT/diagnostics/${name}_logcat.txt" 2>/dev/null || true
+  adb shell dumpsys activity activities > "$OUT/diagnostics/${name}_activity.txt" 2>/dev/null || true
   dump_runtime_debug
   return 1
 }
