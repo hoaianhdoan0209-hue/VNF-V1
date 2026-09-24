@@ -72,13 +72,12 @@ public final class AudioPolishAndMicroInteractionTest {
  }
 
  @Test public void ambienceAndRainFollowPlayerCatAreaNotHarusArea(){
-  WorldState s=state();s.environment.weather="RAIN";s.environment.weatherIntensity=.9;s.environment.wind=.6;
-  s.haruX=1500f;s.catState.x=300f;s.catX=300f;
+  WorldState s=state(900,100,50000L);s.environment.weather="RAIN";s.environment.weatherIntensity=.9;s.environment.wind=.6;
   AudioSceneFrame home=AudioSceneEmitter.derive(s,0);
-  assertTrue(home.areaId.contains("home"));assertTrue("sheltered cat should hear muffled rain",home.weatherExposure<.5);assertEquals(0.0,home.water,.0001);
-  s.catState.x=1500f;s.catX=1500f;
+  assertEquals("home_shelter",home.areaId);assertTrue("sheltered cat should hear muffled rain",home.weatherExposure<.5);assertEquals(0.0,home.water,.0001);
+  s.catState.x=900f;s.catX=900f;
   AudioSceneFrame lake=AudioSceneEmitter.derive(s,0);
-  assertTrue(lake.areaId.contains("lake"));assertTrue(lake.weatherExposure>.5);assertTrue(lake.water>.5);
+  assertEquals("lakeside",lake.areaId);assertTrue(lake.weatherExposure>.5);assertTrue(lake.water>.5);
  }
 
 }
