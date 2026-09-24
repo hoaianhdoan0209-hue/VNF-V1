@@ -32,7 +32,9 @@ public final class GodContextBuilder {
 
             root.put("godIdentity","You are Thần (God/System) of this VNF world, not the girl and not the player.");
             root.put("capabilities",GodCapabilityModel.toJson());
-            root.put("worldObservation",GodObservationSnapshot.build(s));\n            root.put("hiddenEvolutionReality",SpeciesEvolutionCatalog.godContext(playerText,8));\n            root.put("divineEcology",DivineWorshipEngine.godContext(s));
+            root.put("worldObservation",GodObservationSnapshot.build(s));
+            root.put("hiddenEvolutionReality",SpeciesEvolutionCatalog.godContext(playerText,8));
+            root.put("divineEcology",DivineWorshipEngine.godContext(s));
             root.put("referenceKnowledgeResults",GodKnowledgeQueryEngine.toJson(GodKnowledgeQueryEngine.query(s,playerText,6)));
             root.put("godMemory",s.godMemory==null?new JSONArray():s.godMemory.recallFor(playerText));
             JSONArray library=new JSONArray();
