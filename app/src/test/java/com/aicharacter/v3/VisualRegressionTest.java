@@ -220,7 +220,7 @@ public final class VisualRegressionTest{
   assertTrue(main.contains("Manifest.permission.POST_NOTIFICATIONS"));
   assertTrue(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
   assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
-  assertTrue(world.contains("SAVE_VERSION = 54"));
+  assertTrue(world.contains("SAVE_VERSION = 55"));
  }
 
  @Test public void divineOntologyWorshipRemainsEvidenceBoundAndSpeciesNeutral()throws Exception{
@@ -244,6 +244,27 @@ public final class VisualRegressionTest{
   assertTrue(context.contains("higher worship may increase"));
   assertTrue(context.contains("NEVER creates facts"));
   assertTrue(contract.contains("GOD_WORLD_CONDITION_APPLIED"));
+ }
+
+ @Test public void chosenOfferingAndGiftStayBoundedAndSpeciesNeutral()throws Exception{
+  Path app=appRoot();
+  String follower=read(app.resolve("src/main/java/com/aicharacter/v3/DivineFollowerEngine.java"));
+  String offering=read(app.resolve("src/main/java/com/aicharacter/v3/DivineOfferingEngine.java"));
+  String gift=read(app.resolve("src/main/java/com/aicharacter/v3/DivineGiftContract.java"));
+  String kernel=read(app.resolve("src/main/java/com/aicharacter/v3/LifeSimulationKernel.java"));
+  String context=read(app.resolve("src/main/java/com/aicharacter/v3/GodContextBuilder.java"));
+  assertTrue(follower.contains("recordEvidence"));
+  assertTrue(follower.contains("WorldEventBus.has"));
+  assertFalse(follower.contains("speciesKey.equals"));
+  assertTrue(offering.contains("offering lacks durable surrender evidence"));
+  assertTrue(offering.contains("never mechanically more valuable"));
+  assertTrue(gift.contains("bearer is not chosen"));
+  assertTrue(gift.contains("reservedForGifts"));
+  assertTrue(gift.contains("consumerToken"));
+  assertTrue(kernel.contains("DivineFollowerEngine.observe"));
+  assertTrue(kernel.contains("DivineGiftContract.tick"));
+  assertTrue(context.contains("never privileges a species name"));
+  assertTrue(context.contains("never guarantees a gift"));
  }
 
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
