@@ -114,6 +114,14 @@ public final class RealExperienceRegressionTest {
   assertEquals("lakeside",lake.areaId);assertTrue(lake.weatherExposure>.5);assertTrue(lake.water>.5);
  }
 
+
+ @Test public void spatialRecoveryAlsoEscapesGapsBetweenAuthoredAreas(){
+  WorldState s=state(T0);s.haruX=1040f;
+  assertNull("test precondition: x=1040 sits in authored gap",s.world.areaAt(s.haruX));
+  assertTrue(StateInvariantChecker.normalizeSpatialState(s,T0));
+  assertNotNull(s.world.areaAt(s.haruX));
+ }
+
  private static WorldState state(long now){
   WorldState s=WorldState.fresh();s.createdAt=now-3600000;s.lastOpenedAt=now;s.lastSimulatedAt=now;s.lastSavedAt=now;s.world=world();
   s.haruX=315;s.catX=340;s.catState.x=340;s.catState.areaId="home_shelter";s.catState.awake=true;s.catState.attachedToEntity="";s.catState.carryKnownByGirl=false;
