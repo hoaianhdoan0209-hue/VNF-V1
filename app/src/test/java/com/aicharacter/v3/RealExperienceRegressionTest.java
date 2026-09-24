@@ -54,6 +54,20 @@ public final class RealExperienceRegressionTest {
   assertFalse("offline active catch-up must not inherit the 12-second active UI cadence",causal.contains("planReconsiderationBoundaryMs"));
  }
 
+ @Test public void healthyHaruStillChoosesAndActsWhilePlayerIsAway(){
+  WorldState s=state(T0);
+  s.lastOpenedAt=T0;s.lastSimulatedAt=T0;s.lastSavedAt=T0;
+  s.haruX=315f;s.catState.x=s.catX=340f;
+  s.body.energy=96;s.body.sleepiness=4;s.body.pain=0;s.body.health=100;
+  s.digestive.stomachFood=.82;s.digestive.nutrientReserve=.88;s.hydration.hydration=.94;s.hydration.bladderFill=.05;
+  s.emotion.curiosity=.92;s.currentIntention="";s.haruActivity="standing quietly";s.planState=new PlanState();s.girlTravel=new TravelState();
+  float before=s.haruX;
+  WorldContinuityEngine.advanceBackground(s,T0+20L*60000L);
+  boolean lived=!s.currentIntention.isEmpty()||!"IDLE".equals(s.planState.status)||Math.abs(s.haruX-before)>1f||!"standing quietly".equals(s.haruActivity);
+  assertTrue("background world must include Haru autonomy, not only clocks/body",lived);
+  assertEquals(T0+20L*60000L,s.lastSimulatedAt);
+ }
+
  @Test public void backgroundWorldAdvanceDoesNotPretendPlayerReopenedGame(){
   WorldState s=state(T0);
   s.lastOpenedAt=T0;
