@@ -24,3 +24,13 @@ FIELD: birthPressure/recoveryPressure/mortalityPressure/competitionPressure/migr
 FIELD: seasonalInfluence | UNIT: signed normalized | RANGE: -1..1 | MEANING: reserved input when WORLD/ENVIRONMENT publishes an authored season signal; BIOLOGY does not invent seasons | DEFAULT: 0 | SAVE/PERSISTENCE: saved
 
 Invariant: visual consumers must never write these states back or invent body/ecology events. Individual visible creatures remain representatives; population state does not spawn thousands of objects.
+
+
+## Evolutionary species reality — locked for V1.0.1
+- System Reality contains exactly **500 terminal base species**.
+- All 500 descend through 10 clades / 50 intermediate lineages from the single hidden root ancestor `first_lumen_ancestor`.
+- Hybrids, mutations, color morphs and individual variants are **not** counted toward the 500.
+- Every base species must have a unique trait fingerprint; collision is a release-blocking invariant.
+- Runtime population state is sparse. The catalog may know 500 species without materializing 500 x every area or spawning hundreds of visible objects.
+- Existing authored creatures remain representative individuals, not literal population counts.
+- The full evolutionary catalog is `GOD_SYSTEM_ONLY`. Haru can infer ecology from lived observation, and can learn lineage only if Thần chooses to reveal/teach it through Haru's autonomous learning pipeline.
