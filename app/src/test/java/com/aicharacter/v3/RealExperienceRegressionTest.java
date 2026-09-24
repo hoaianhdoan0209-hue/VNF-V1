@@ -54,6 +54,31 @@ public final class RealExperienceRegressionTest {
   assertFalse("offline active catch-up must not inherit the 12-second active UI cadence",causal.contains("planReconsiderationBoundaryMs"));
  }
 
+ @Test public void backgroundWorldAdvanceDoesNotPretendPlayerReopenedGame(){
+  WorldState s=state(T0);
+  s.lastOpenedAt=T0;
+  s.lastSimulatedAt=T0;
+  s.catState.lastPlayerActiveAt=T0;
+  s.catState.awake=true;
+  OfflineLifeEngine.reconstructBackground(s,T0+20L*60000L);
+  assertEquals(T0,s.lastOpenedAt);
+  assertEquals(T0+20L*60000L,s.lastSimulatedAt);
+  assertTrue("closing the app must not automatically put the player cat to sleep",s.catState.awake);
+ }
+
+ @Test public void longGapReconcileReportsABoundedStepCount(){
+  WorldState s=state(T0);
+  s.lastOpenedAt=T0;
+  s.lastSimulatedAt=T0;
+  String trace=OfflineLifeEngine.reconstructBackground(s,T0+7L*24L*60L*60000L);
+  int marker=trace.lastIndexOf("boundedSteps=");
+  assertTrue(marker>=0);
+  String tail=trace.substring(marker+"boundedSteps=".length());
+  int slash=tail.indexOf('/');
+  int steps=Integer.parseInt(tail.substring(0,slash).trim());
+  assertTrue("deep-sleep fallback must remain bounded",steps<=56);
+ }
+
  @Test public void proactiveBubbleAndTtsCannotLoseCueDuringDeferredStartup()throws Exception{
   String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
   String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
