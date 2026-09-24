@@ -116,8 +116,8 @@ public final class RealExperienceRegressionTest {
 
 
  @Test public void spatialRecoveryAlsoEscapesGapsBetweenAuthoredAreas(){
-  WorldState s=state(T0);s.haruX=1040f;
-  assertNull("test precondition: x=1040 sits in authored gap",s.world.areaAt(s.haruX));
+  WorldState s=state(T0);s.world.area("garden_path").right=1000f;s.world.area("lakeside").left=1100f;s.haruX=1050f;
+  assertNull("test precondition: x=1050 sits in authored gap",s.world.areaAt(s.haruX));
   assertTrue(StateInvariantChecker.normalizeSpatialState(s,T0));
   assertNotNull(s.world.areaAt(s.haruX));
  }
