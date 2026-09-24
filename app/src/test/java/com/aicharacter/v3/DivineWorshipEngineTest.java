@@ -27,8 +27,8 @@ public class DivineWorshipEngineTest {
   SpeciesPopulationState p=s.livingWorld.population(key,"lake");p.relativeAbundance=.60;p.carryingCapacity=.72;p.recoveryPressure=.70;p.resourcePressure=.10;p.mortalityPressure=.10;
   MinorGodState g=new MinorGodState();g.id="minor_god_01";g.graceReserve=.10;g.followersChosen=4;g.lastSelectionAt=System.currentTimeMillis();s.divineEcology.minorGods.put(g.id,g);
   WorshipBondState bond=s.divineEcology.bond(g.id,key,"lake");bond.selectedAt=1;bond.devotion=.92;bond.offeringAffinity=DivineWorshipEngine.offeringPotential(key);bond.lastOfferingAt=0;
-  double beforePopulation=p.relativeAbundance,beforeGrace=g.graceReserve;long now=System.currentTimeMillis();DivineWorshipEngine.advance(s,30,now);
-  assertTrue(p.relativeAbundance<beforePopulation);assertTrue(g.graceReserve>beforeGrace);assertEquals(1,bond.totalOfferings);assertTrue(bond.cumulativePopulationCost>0);
+  double beforePopulation=p.relativeAbundance,beforeGrace=g.graceReserve,beforeBlessing=bond.blessingPower;long now=System.currentTimeMillis();DivineWorshipEngine.advance(s,30,now);
+  assertTrue(p.relativeAbundance<beforePopulation);assertTrue(g.graceReserve>beforeGrace);assertTrue(bond.blessingPower>beforeBlessing);assertEquals(1,bond.totalOfferings);assertTrue(bond.cumulativePopulationCost>0);
  }
 
  @Test public void divineStatePersistsAcrossSaveJson() throws Exception {
