@@ -3,7 +3,7 @@ package com.aicharacter.v3;
 import android.Manifest;import android.app.Activity;import android.app.AlertDialog;import android.content.Intent;import android.content.pm.PackageManager;import android.net.Uri;import android.os.Bundle;import android.provider.Settings;import android.util.Log;import android.view.WindowInsets;import android.view.WindowInsetsController;import android.widget.EditText;import android.widget.Toast;import android.widget.TextView;import android.widget.ScrollView;import android.widget.FrameLayout;import android.graphics.Color;import java.io.File;
 
 public final class MainActivity extends Activity implements GameView.Host,GodSessionManager.Listener{
- private static final String TAG="VNF";private WorldRepository repository;private WorldState state;private GameView gameView;private FrameLayout gameRoot;private VoiceController voice;private String deferredProactiveSpeech="";private ProceduralAudioEngine audio;private AppUpdateManager.Update pendingUpdate;private File pendingUpdateApk;private GodContactScene godScene;private boolean updateCheckInFlight=false,updateDialogVisible=false,backgrounded=false,updateExternalFlow=false,permissionRequestIntroVisible=false,worldCatchupInFlight=false,startupAfterFirstFrameStarted=false;private long lastUpdateCheckAt=0L,startupStartedAt=0L;private static final long UPDATE_RESUME_GUARD_MS=15000L;
+ private static final String TAG="VNF";private WorldRepository repository;private WorldState state;private GameView gameView;private FrameLayout gameRoot;private VoiceController voice;private String deferredProactiveSpeech="";private ProceduralAudioEngine audio;private AppUpdateManager.Update pendingUpdate;private File pendingUpdateApk;private GodContactScene godScene;private boolean updateCheckInFlight=false,updateDialogVisible=false,backgrounded=false,updateExternalFlow=false,permissionRequestIntroVisible=false,worldCatchupInFlight=false,startupAfterFirstFrameStarted=false;private int worldRefreshRetryCount=0;private long lastUpdateCheckAt=0L,startupStartedAt=0L;private static final long UPDATE_RESUME_GUARD_MS=15000L;
  @Override protected void onCreate(Bundle b){
   super.onCreate(b);WorldRuntimePresence.setForeground(true);startupStartedAt=android.os.SystemClock.elapsedRealtime();showStartupScreen();try{hideSystemUi();}catch(Throwable ignored){}
   final android.content.Context app=getApplicationContext();
@@ -32,7 +32,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   long visibleMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
   Log.i(TAG,"STARTUP_FIRST_WORLD_FRAME ms="+visibleMs+" persistentWorldReady=true");
   try{GodSessionManager.addListener(this);}catch(Throwable e){Log.w(TAG,"God listener deferred startup failed",e);}
-  gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L);
+  if(!isDebugVisualCapture())gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L);
   if(!isDebugVisualCapture()){
    gameView.postDelayed(this::initializeDeferredAudio,120L);
    gameView.postDelayed(this::initializeDeferredVoice,220L);
@@ -64,10 +64,10 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
      worldCatchupInFlight=false;
      if(isFinishing()||isDestroyed()||state==null)return;
      boolean untouched=state.lastSavedAt<=expectedSavedAt&&state.lastSimulatedAt<=expectedSimulatedAt;
-     if(untouched){state=live;if(gameView!=null)gameView.replaceState(live,true);}
-     Log.i(TAG,"RESUME_WORLD_REFRESH ready="+untouched);
+     if(untouched){worldRefreshRetryCount=0;state=live;if(gameView!=null)gameView.replaceState(live,true);Log.i(TAG,"RESUME_WORLD_REFRESH ready=true");}
+     else{Log.i(TAG,"RESUME_WORLD_REFRESH conflict=true retry="+worldRefreshRetryCount);if(worldRefreshRetryCount<3&&gameView!=null){worldRefreshRetryCount++;gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),120L);}else worldRefreshRetryCount=0;}
     });
-   }catch(Throwable e){Log.e(TAG,"Persistent world refresh failed",e);runOnUiThread(()->worldCatchupInFlight=false);}
+   }catch(Throwable e){Log.e(TAG,"Persistent world refresh failed",e);runOnUiThread(()->{worldCatchupInFlight=false;worldRefreshRetryCount=0;});}
   },"VNF-World-Refresh").start();
  }
  private boolean worldReadyForInteraction(){return state!=null&&gameView!=null;}
