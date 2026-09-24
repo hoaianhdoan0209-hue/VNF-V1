@@ -10,10 +10,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   new Thread(()->{
    try{
     WorldRepository r=new WorldRepository(app);
-    WorldState preview=r.loadOrCreate();
-    long now=System.currentTimeMillis();
-    WorldContinuityEngine.advanceForPlayerOpen(preview,now);
-    r.save(preview);
+    WorldState preview=r.loadPreviewOrCreate();
     applyDebugVisualCapture(preview);
     runOnUiThread(()->showWorldPreview(r,preview));
    }catch(Throwable e){runOnUiThread(()->showStartupFailure(e));}
@@ -35,6 +32,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   long visibleMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
   Log.i(TAG,"STARTUP_FIRST_WORLD_FRAME ms="+visibleMs+" persistentWorldReady=true");
   try{GodSessionManager.addListener(this);}catch(Throwable e){Log.w(TAG,"God listener deferred startup failed",e);}
+  gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L);
   if(!isDebugVisualCapture()){
    gameView.postDelayed(this::initializeDeferredAudio,120L);
    gameView.postDelayed(this::initializeDeferredVoice,220L);
