@@ -206,7 +206,9 @@ public final class HaruIllustratedRenderer {
   else if(genuinelyDown)c.drawArc(faceX-8,mouthY-1,faceX+8,mouthY+7,202,136,false,p);
   else c.drawLine(faceX-6,mouthY,faceX+6,mouthY,p);
   p.setStyle(Paint.Style.FILL);
-  p.setColor(withAlpha(Color.rgb(104,70,65),Math.min(alpha,80)));c.drawArc(x-24,y-35,x+19,y-3,205,92,false,p);\n  // cheek life\n  p.setColor(withAlpha(Color.rgb(210,126,124),Math.min(alpha,44)));c.drawOval(x-25,y+8,x-13,y+14,p);c.drawOval(x+13,y+8,x+25,y+14,p);
+  p.setColor(withAlpha(Color.rgb(104,70,65),Math.min(alpha,80)));c.drawArc(x-24,y-35,x+19,y-3,205,92,false,p);
+  // cheek life
+  p.setColor(withAlpha(Color.rgb(210,126,124),Math.min(alpha,44)));c.drawOval(x-25,y+8,x-13,y+14,p);c.drawOval(x+13,y+8,x+25,y+14,p);
   c.restore();
  }
 
