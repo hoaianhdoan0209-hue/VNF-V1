@@ -45,6 +45,7 @@ public final class HaruAutonomyEngine {private static final long DECISION_INTERV
   long anchor=s.planState.lastReconsideredAt;
   if(anchor>0&&now-anchor<DECISION_INTERVAL_MS)return;
   if("PAUSED".equals(s.planState.status)){s.planState.lastReconsideredAt=now;if(PlanExecutor.resume(s,now))return;}
+  if("ACTIVE".equals(s.planState.status)&&!s.girlTravel.active&&PlanExecutor.recoverInterruptedActivePlan(s,now))return;
   if(s.planState.inTerminalTransition(now))return;
   if(s.planState.terminal())PlanOutcomeReviewEngine.reviewIfReady(s,now);
   PlanIntegrityChecker.check(s,now);
