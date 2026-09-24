@@ -23,6 +23,7 @@ public final class HaruMotionStyleEngine {
    if("APPROACH".equals(mode)){x+=dir*1.7f;r+=dir*.42f;y+=(float)Math.sin(anim*.85f)*.35f;reason="soft voluntary social approach";}
    else if("GUARDED".equals(mode)){x-=dir*1.8f;r-=dir*.55f;y+=1.1f;settle=.22f;reason="guarded social spacing";}
   }
+  MicroInteractionDirector.Cue micro=MicroInteractionDirector.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));if(micro.active&&s.catState!=null){float dir=Math.signum(s.catState.x-s.haruX);x+=dir*(float)(.7+micro.intensity*.8);r+=dir*(float)(.35+micro.intensity*.45);y+=(float)(1.0+micro.intensity*.8);settle=Math.max(settle,(float)(.22+micro.intensity*.16));reason="warm cat micro interaction";}
   if(v.state==GirlAnimationController.State.THINK){y+=(float)Math.sin(anim*.52f)*.55f;r+=(float)Math.sin(anim*.31f)*.22f;settle=.18f;breath=.92f;reason="quiet reflective motion";}
   else if(v.state==GirlAnimationController.State.SIT){y+=(float)Math.sin(anim*.62f)*.45f;settle=.32f;breath=.82f;reason="settled resting motion";}
   else if(v.state==GirlAnimationController.State.REACT){breath=1.14f;}
