@@ -20,14 +20,14 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
  private void showWorldPreview(WorldRepository r,WorldState preview){
   try{
    repository=r;state=preview;worldCatchupInFlight=true;
-   voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});
-   if(!isDebugVisualCapture()){audio=new ProceduralAudioEngine();audio.resume();}
    gameView=new GameView(this,state,this,false);
    if(BuildConfig.DEBUG){gameView.setDebugBiome(getIntent().getStringExtra("vnf_debug_biome"));gameView.setDebugHaruPose(getIntent().getStringExtra("vnf_debug_pose"));scheduleDebugVisualCapture();}
    gameRoot=new FrameLayout(this);gameRoot.addView(gameView,new FrameLayout.LayoutParams(-1,-1));setContentView(gameRoot);
-   GodSessionManager.addListener(this);GodSessionManager.warmup(getApplicationContext());
    long visibleMs=Math.max(0,android.os.SystemClock.elapsedRealtime()-startupStartedAt);
    Log.i(TAG,"STARTUP_WORLD_VISIBLE ms="+visibleMs+" catchup=pending");
+   voice=new VoiceController(this,new VoiceController.Listener(){public void onRecognized(String t){respondToVoice(t);}public void onStatus(String t){Toast.makeText(MainActivity.this,t,Toast.LENGTH_SHORT).show();}});
+   if(!isDebugVisualCapture()){audio=new ProceduralAudioEngine();audio.resume();}
+   GodSessionManager.addListener(this);GodSessionManager.warmup(getApplicationContext());
    new Thread(()->completeCausalStartup(r),"VNF-World-Catchup").start();
   }catch(Throwable e){showStartupFailure(e);}
  }
