@@ -62,7 +62,7 @@ public final class FastStartupRegressionTest {
 
  @Test public void deepSleepFallbackIsStrictlyBounded()throws Exception{
   String offline=read(appRoot().resolve("src/main/java/com/aicharacter/v3/OfflineLifeEngine.java"));
-  assertTrue(offline.contains("MAX_RECONSTRUCTION_STEPS=48"));
+  assertTrue(offline.contains("MAX_RECONSTRUCTION_STEPS=16"));
   assertTrue(offline.contains("minSliceMs=Math.max(60000L"));
   assertTrue(offline.contains("Math.max(requestedStep,minSliceMs)"));
   assertTrue(offline.contains("boundedSteps="));
