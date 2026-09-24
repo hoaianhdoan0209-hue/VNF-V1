@@ -3,9 +3,16 @@ package com.aicharacter.v3;
 public final class PhysicalLifeStepEngine{private PhysicalLifeStepEngine(){}
  public static void advanceOffline(WorldState s,double seconds,long now,boolean advanceGirlTravel,boolean advanceCatTravel){
   if(s==null||seconds<=0)return;
-  double bodyStep=Math.min(60.0,seconds);
-  BiomechanicsStepEngine.advance(s,bodyStep,now);
-  if(!BodyRhythmEngine.isSleeping(s)&&BodyRhythmEngine.shouldCollapse(s)){BodyRhythmEngine.collapse(s,now);advanceGirlTravel=false;}
+  boolean airborne=(s.girlPhysics!=null&&!s.girlPhysics.grounded)||(s.catPhysics!=null&&!s.catPhysics.grounded);
+  if(airborne){advance(s,seconds,now,advanceGirlTravel,advanceCatTravel);return;}
+  int bodySteps=Math.max(1,Math.min(16,(int)Math.ceil(seconds/60.0)));
+  double bodyDt=seconds/bodySteps;
+  long start=Math.max(0L,now-(long)(seconds*1000.0));
+  for(int i=1;i<=bodySteps;i++){
+   long subNow=Math.min(now,start+(long)(bodyDt*i*1000.0));
+   BiomechanicsStepEngine.advance(s,bodyDt,subNow);
+   if(!BodyRhythmEngine.isSleeping(s)&&BodyRhythmEngine.shouldCollapse(s)){BodyRhythmEngine.collapse(s,subNow);advanceGirlTravel=false;break;}
+  }
   if(advanceGirlTravel&&s.girlTravel!=null&&s.girlTravel.active)TravelEngine.advanceOfflineSeconds(s,s.girlTravel,seconds,now);
   if(advanceCatTravel&&s.catTravel!=null&&s.catTravel.active)TravelEngine.advanceOfflineSeconds(s,s.catTravel,seconds,now);
  }
