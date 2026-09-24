@@ -67,6 +67,31 @@ public final class FastStartupRegressionTest {
   assertTrue(main.contains("gameView.setSimulationReady(false)"));
  }
 
+ @Test public void heavyweightStartupWorkWaitsForFirstRenderedWorldFrame()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  int preview=main.indexOf("private void showWorldPreview");
+  int first=main.indexOf("public void onFirstWorldFrame()",preview);
+  int catchup=main.indexOf("private void completeCausalStartup",first);
+  assertTrue(preview>=0&&first>preview&&catchup>first);
+  String previewBody=main.substring(preview,first);
+  assertFalse(previewBody.contains("new VoiceController"));
+  assertFalse(previewBody.contains("new ProceduralAudioEngine"));
+  assertFalse(previewBody.contains("GodSessionManager.warmup"));
+  assertFalse(previewBody.contains("maybeCheckAppUpdate(true)"));
+  assertFalse(previewBody.contains("VNF-World-Catchup"));
+  String firstBody=main.substring(first,catchup);
+  assertTrue(firstBody.contains("STARTUP_FIRST_WORLD_FRAME"));
+  assertTrue(firstBody.contains("new VoiceController"));
+  assertTrue(firstBody.contains("new ProceduralAudioEngine"));
+  assertTrue(firstBody.contains("maybeCheckAppUpdate(true)"));
+  assertTrue(firstBody.contains("GodSessionManager.warmup"));
+  assertTrue(firstBody.contains("VNF-World-Catchup"));
+  assertTrue(view.contains("void onFirstWorldFrame()"));
+  assertTrue(view.contains("firstWorldFrameReported"));
+  assertTrue(view.contains("host.onFirstWorldFrame()"));
+ }
+
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
   assertTrue(gradle.contains("versionCode 119"));
