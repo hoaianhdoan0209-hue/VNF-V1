@@ -66,6 +66,15 @@ workflows:
               "https://api.github.com/repos/$CM_REPO_SLUG/statuses/$CM_COMMIT" \
               -d '{"state":"pending","context":"vnf/codemagic-release","description":"Codemagic stable signing started"}' || true
           fi
+      - name: Release-ready marker matches version
+        script: |
+          set -eu
+          MARKER="$CM_BUILD_DIR/.vnf-release-ready"
+          test -s "$MARKER"
+          EXPECTED_VERSION="$(tr -d '[:space:]' < "$MARKER")"
+          ACTUAL_VERSION="$(sed -n "s/.*versionName[[:space:]]*\'\\([^\']*\\)\'.*/\\1/p" "$CM_BUILD_DIR/app/build.gradle" | head -n 1)"
+          test -n "$EXPECTED_VERSION"
+          test "$EXPECTED_VERSION" = "$ACTUAL_VERSION"
       - name: Verify stable signing identity
         script: |
           set -eu
