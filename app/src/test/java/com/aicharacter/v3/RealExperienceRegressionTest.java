@@ -217,6 +217,15 @@ public final class RealExperienceRegressionTest {
   assertNotNull(s.world.areaAt(s.haruX));
  }
 
+ @Test public void visualQaFreezesSimulationAndIllustratedHaruKeepsReadablePresence()throws Exception{
+  String view=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/HaruVisualRenderer.java"));
+  assertTrue(view.contains("BuildConfig.DEBUG&&!debugAreaKey.isEmpty()"));
+  assertTrue(view.contains("historicalReconcilePending=false"));
+  assertTrue(renderer.contains("ILLUSTRATED_SCALE=1.17f"));
+  assertTrue(renderer.contains("c.scale(ILLUSTRATED_SCALE,ILLUSTRATED_SCALE,x,bodyGround)"));
+ }
+
  private static WorldState state(long now){
   WorldState s=WorldState.fresh();s.createdAt=now-3600000;s.lastOpenedAt=now;s.lastSimulatedAt=now;s.lastSavedAt=now;s.world=world();
   s.haruX=315;s.catX=340;s.catState.x=340;s.catState.areaId="home_shelter";s.catState.awake=true;s.catState.attachedToEntity="";s.catState.carryKnownByGirl=false;
