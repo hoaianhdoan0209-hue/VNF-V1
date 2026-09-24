@@ -28,8 +28,9 @@ public final class WorldRepository{
   if(state==null)state=tryLoad(backupFile);
   if(state==null)state=tryLoad(tmpFile);
   if(state==null)return loadOrCreate();
-  StateInvariantChecker.normalize(state,System.currentTimeMillis());
+  long now=System.currentTimeMillis();StateInvariantChecker.normalize(state,now);
   attachDefinition(state);
+  StateInvariantChecker.normalizeSpatialState(state,now);
   return state;
  }
 
