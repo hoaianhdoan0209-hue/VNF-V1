@@ -26,5 +26,5 @@ public final class VoiceController implements TextToSpeech.OnInitListener {
     public void speak(String text){if(enabled&&tts!=null)tts.speak(text,TextToSpeech.QUEUE_FLUSH,null,"vnf_haru");}
     public void speakProactive(String text){if(text==null||text.trim().isEmpty()||tts==null)return;if(!ttsReady){pendingProactive=text.trim();return;}tts.speak(text,TextToSpeech.QUEUE_ADD,null,"vnf_haru_proactive_"+System.nanoTime());}
     public void destroy(){pendingProactive="";ttsReady=false;if(recognizer!=null)recognizer.destroy(); if(tts!=null)tts.shutdown();}
-    @Override public void onInit(int status){if(status==TextToSpeech.SUCCESS){tts.setLanguage(new Locale("vi","VN"));ttsReady=true;if(!pendingProactive.isEmpty()){String p=pendingProactive;pendingProactive="";speakProactive(p);}}}
+    @Override public void onInit(int status){if(status!=TextToSpeech.SUCCESS||tts==null)return;int lang=tts.setLanguage(new Locale("vi","VN"));if(lang==TextToSpeech.LANG_MISSING_DATA||lang==TextToSpeech.LANG_NOT_SUPPORTED){lang=tts.setLanguage(Locale.getDefault());}ttsReady=lang!=TextToSpeech.LANG_MISSING_DATA&&lang!=TextToSpeech.LANG_NOT_SUPPORTED;if(ttsReady&&!pendingProactive.isEmpty()){String p=pendingProactive;pendingProactive="";speakProactive(p);}}
 }
