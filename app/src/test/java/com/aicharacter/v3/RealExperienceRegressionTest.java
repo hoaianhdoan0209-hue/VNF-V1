@@ -86,6 +86,26 @@ public final class RealExperienceRegressionTest {
   assertEquals(IntentParser.SpeechAct.INVITATION,invitation.act);assertFalse(invitation.isControlAttempt());
  }
 
+ @Test public void walkInvitationCannotDirectlyOverwriteHaruLifePlan(){
+  WorldState s=state(T0);s.currentIntention="observe_lake";s.haruActivity="watching the lake";
+  s.relationship.trust=100;s.relationship.comfort=100;s.relationship.attachment=100;s.body.energy=95;s.body.pain=0;
+  String beforePlan=s.planState.planId;
+  HaruMind.Response r=HaruMind.respond(s,"đi dạo cùng mình nhé?");
+  assertFalse(r.controlAttempt);
+  assertEquals("observe_lake",s.currentIntention);
+  assertEquals("watching the lake",s.haruActivity);
+  assertEquals(beforePlan,s.planState.planId);
+  assertFalse(s.girlTravel.active);
+ }
+
+ @Test public void proactiveTtsHasLocaleFallbackInsteadOfFalseReady()throws Exception{
+  String voice=read(appRoot().resolve("src/main/java/com/aicharacter/v3/VoiceController.java"));
+  assertTrue(voice.contains("TextToSpeech.LANG_MISSING_DATA"));
+  assertTrue(voice.contains("TextToSpeech.LANG_NOT_SUPPORTED"));
+  assertTrue(voice.contains("Locale.getDefault()"));
+  assertTrue(voice.contains("ttsReady=lang!="));
+ }
+
  @Test public void firstMicTapCanEnableVoiceWithoutHiddenDoubleTapRequirement()throws Exception{
   String voice=read(appRoot().resolve("src/main/java/com/aicharacter/v3/VoiceController.java"));
   int listen=voice.indexOf("public void listen()");
