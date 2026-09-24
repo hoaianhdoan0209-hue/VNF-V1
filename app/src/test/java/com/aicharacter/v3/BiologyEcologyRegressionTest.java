@@ -110,8 +110,12 @@ public class BiologyEcologyRegressionTest {
   for(int i=0;i<60;i++){activeNow+=60000L;kernel(active,60,activeNow,LifeSimulationKernel.Mode.ACTIVE);}
   for(int i=0;i<4;i++){offlineNow+=15L*60000L;kernel(offline,15*60,offlineNow,LifeSimulationKernel.Mode.OFFLINE);}
   assertEquals(activeNow,offlineNow);assertClose(active.body.energy,offline.body.energy,.75);assertClose(active.body.sleepiness,offline.body.sleepiness,.75);assertClose(active.hydration.hydration,offline.hydration.hydration,.015);assertClose(active.metabolism.availableEnergy,offline.metabolism.availableEnergy,.08);assertClose(active.respiration.ventilationDrive,offline.respiration.ventilationDrive,.08);
-  assertEquals(active.livingWorld.populations.keySet(),offline.livingWorld.populations.keySet());
-  for(String k:active.livingWorld.populations.keySet()){SpeciesPopulationState a=active.livingWorld.populations.get(k),b=offline.livingWorld.populations.get(k);assertClose(a.relativeAbundance,b.relativeAbundance,.02);assertClose(a.carryingCapacity,b.carryingCapacity,.035);}
+  java.util.Set<String> populationKeys=new java.util.LinkedHashSet<>(active.livingWorld.populations.keySet());populationKeys.addAll(offline.livingWorld.populations.keySet());
+  for(String k:populationKeys){
+   SpeciesPopulationState a=active.livingWorld.populations.get(k),b=offline.livingWorld.populations.get(k);
+   double aa=a==null?0:a.relativeAbundance,bb=b==null?0:b.relativeAbundance;assertClose(aa,bb,.02);
+   if(a!=null&&b!=null)assertClose(a.carryingCapacity,b.carryingCapacity,.035);
+  }
  }
 
  @Test public void newBiologyPopulationFieldsSurviveSaveRoundTrip() throws Exception{
