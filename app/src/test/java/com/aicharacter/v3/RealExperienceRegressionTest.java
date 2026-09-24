@@ -226,6 +226,34 @@ public final class RealExperienceRegressionTest {
   assertTrue(renderer.contains("c.scale(ILLUSTRATED_SCALE,ILLUSTRATED_SCALE,x,bodyGround)"));
  }
 
+ @Test public void healthyHaruProducesVisibleAutonomousActivityWithinThreeMinutes(){
+  WorldState s=state(T0);
+  s.haruX=315f;s.catState.x=s.catX=315f;
+  s.catState.attachedToEntity="";
+  s.catState.carryKnownByGirl=false;
+  s.relationship.trust=55;s.relationship.comfort=55;s.relationship.attachment=45;
+  s.body.energy=96;s.body.sleepiness=4;s.body.pain=0;s.body.health=100;
+  s.digestive.stomachFood=.82;s.digestive.nutrientReserve=.88;
+  s.hydration.hydration=.94;s.hydration.bladderFill=.05;
+  s.emotion.curiosity=.96;s.mood.arousal=.28;s.mood.pleasantness=.62;
+  s.currentIntention="";s.haruActivity="standing quietly";
+  s.planState=new PlanState();s.girlTravel=new TravelState();
+  float startX=s.haruX,maxTravel=0f;int terminalTransitions=0;String lastStatus=s.planState.status;
+  long now=T0;
+  for(int i=0;i<180;i++){
+   now+=1000L;
+   LifeSimulationKernel.beginSlice(s,1.0,now,LifeSimulationKernel.Mode.ACTIVE);
+   HaruAutonomyEngine.tickDecision(s,now);
+   LifeSimulationKernel.endSlice(s,1.0,now,true,false,LifeSimulationKernel.Mode.ACTIVE);
+   maxTravel=Math.max(maxTravel,Math.abs(s.haruX-startX));
+   if(!lastStatus.equals(s.planState.status)&&s.planState.terminal())terminalTransitions++;
+   lastStatus=s.planState.status;
+  }
+  boolean visible=maxTravel>=40f||terminalTransitions>0||s.girlTravel.active;
+  assertTrue("three minutes of healthy autonomous play must produce visible physical or action progress",visible);
+  assertFalse("Haru must not remain a permanently idle placeholder","standing quietly".equals(s.haruActivity)&&s.currentIntention.isEmpty());
+ }
+
  private static WorldState state(long now){
   WorldState s=WorldState.fresh();s.createdAt=now-3600000;s.lastOpenedAt=now;s.lastSimulatedAt=now;s.lastSavedAt=now;s.world=world();
   s.haruX=315;s.catX=340;s.catState.x=340;s.catState.areaId="home_shelter";s.catState.awake=true;s.catState.attachedToEntity="";s.catState.carryKnownByGirl=false;
