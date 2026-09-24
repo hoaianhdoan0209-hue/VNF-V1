@@ -36,6 +36,7 @@ public final class LifeSimulationKernel {
   HaruConceptEngine.observe(s,now);
   HaruAbstractConceptEngine.observe(s,now);
   BodyPerceptionEngine.observe(s,now);
+  HaruProactiveSpeechEngine.advance(s,now,mode);
  }
 
  public static void syncClock(WorldState s,long timestamp){
