@@ -79,12 +79,20 @@ public final class HaruVisualRenderer{
   RectF dst=new RectF(left,top,left+fw*sc,top+fh*sc);
   if(closeT>.02f)drawCloseSubjectLight(c,p,s,dst,closeT,phase);
   if(divinePresence>.01f)drawDivineSubjectLight(c,p,s,dst,divinePresence,closeT,phase);
+  int bodyAlpha=(int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness));
+  String area="";if(s.world!=null){WorldArea wa=s.world.areaAt(s.haruX);if(wa!=null)area=wa.id==null?"":wa.id;}
+  if(useIllustratedRenderer()){
+   c.save();
+   c.translate(postureX,postureY);
+   c.rotate(rotation,x,bodyGround);
+   if(v.flipX)c.scale(-1f,1f,x,bodyGround);
+   try{HaruIllustratedRenderer.draw(c,p,s,v,x,bodyGround,anim,bodyAlpha,closeT,divinePresence,phase,area);c.restore();return;}
+   catch(Throwable ignored){c.restore();p.setShader(null);p.setColorFilter(null);p.setAlpha(255);}
+  }
   c.save();
   c.translate(postureX,postureY);
   c.rotate(rotation,x,bodyGround);
   if(v.flipX)c.scale(-1f,1f,x,bodyGround);
-  int bodyAlpha=(int)Math.max(190,Math.min(255,190+65*s.environment.ambientBrightness));
-  String area="";if(s.world!=null){WorldArea wa=s.world.areaAt(s.haruX);if(wa!=null)area=wa.id==null?"":wa.id;}
   if(closeT>.02f){int separator="NIGHT".equals(phase)?Color.rgb(21,29,42):Color.rgb(38,42,38);float oo=.75f+1.25f*closeT;p.setColorFilter(new PorterDuffColorFilter(separator,PorterDuff.Mode.SRC_IN));p.setAlpha((int)(18+34*closeT));c.drawBitmap(sheet,src,new RectF(dst.left-oo,dst.top,dst.right-oo,dst.bottom),p);c.drawBitmap(sheet,src,new RectF(dst.left+oo,dst.top,dst.right+oo,dst.bottom),p);c.drawBitmap(sheet,src,new RectF(dst.left,dst.top-oo,dst.right,dst.bottom-oo),p);c.drawBitmap(sheet,src,new RectF(dst.left,dst.top+oo,dst.right,dst.bottom+oo),p);p.setColorFilter(null);p.setAlpha(255);}
 
   int rimColor;if("NIGHT".equals(phase))rimColor=Color.rgb(152,188,232);else if("EVENING".equals(phase))rimColor=Color.rgb(255,166,105);else if("MORNING".equals(phase))rimColor=Color.rgb(255,214,158);else if("home_shelter".equals(area))rimColor=Color.rgb(235,216,172);else if("garden_path".equals(area))rimColor=Color.rgb(226,232,184);else if("quiet_grove".equals(area))rimColor=Color.rgb(184,211,168);else rimColor=Color.rgb(188,218,225);
@@ -144,7 +152,7 @@ public final class HaruVisualRenderer{
   p.setStyle(Paint.Style.FILL);p.setShader(new RadialGradient(cx,cy,r,Color.argb(alpha,Color.red(color),Color.green(color),Color.blue(color)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.save();c.scale(.72f,1f,cx,cy);c.drawCircle(cx,cy,r,p);c.restore();p.setShader(null);
  }
 
- static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
+ private static boolean useIllustratedRenderer(){return true;}\n  static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
   if(frames<=1)return 0;
   if(v.isWalk()&&s.bodyRig!=null){
    int f=(int)Math.floor(s.bodyRig.stridePhase*frames);
