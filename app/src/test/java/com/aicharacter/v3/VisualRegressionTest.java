@@ -263,7 +263,7 @@ public final class VisualRegressionTest{
   assertTrue(gift.contains("consumerToken"));
   assertTrue(kernel.contains("DivineFollowerEngine.observe"));
   assertTrue(kernel.contains("DivineGiftContract.tick"));
-  assertTrue(context.contains("never privileges a species name"));
+  assertTrue(context.contains("never privilege a species name"));
   assertTrue(context.contains("never guarantees a gift"));
  }
 
