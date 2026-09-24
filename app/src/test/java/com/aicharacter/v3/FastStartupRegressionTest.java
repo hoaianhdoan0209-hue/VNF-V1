@@ -26,7 +26,7 @@ public final class FastStartupRegressionTest {
   String onCreateBody=main.substring(onCreate,catchupMethod);
   assertFalse("cold start must not run offline reconstruction before first world",onCreateBody.contains("OfflineLifeEngine.reconstruct"));
   assertTrue(main.substring(catchupMethod).contains("OfflineLifeEngine.reconstruct(live,now)"));
-  assertTrue(main.contains("new GameView(this,state,this,false)"));
+  assertTrue(main.contains("WorldState preview=r.loadPreviewOrCreate()"));\n  assertTrue(main.contains("new GameView(this,state,this,false)"));
   assertTrue(main.contains("gameView.replaceState(live,true)"));
   assertTrue(main.contains("STARTUP_WORLD_VISIBLE"));
   assertTrue(main.contains("STARTUP_CAUSAL_READY"));
@@ -39,6 +39,20 @@ public final class FastStartupRegressionTest {
   assertTrue(view.contains("public void replaceState(WorldState next,boolean ready)"));
  }
 
+
+
+ @Test public void previewLoaderDoesNotPerformFullRecoveryBeforeFirstFrame()throws Exception{
+  String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
+  int preview=repo.indexOf("loadPreviewOrCreate()");
+  int full=repo.indexOf("loadOrCreate()",preview);
+  assertTrue(preview>=0&&full>preview);
+  String body=repo.substring(preview,full);
+  assertTrue(body.contains("tryLoad(saveFile)"));
+  assertTrue(body.contains("tryLoad(backupFile)"));
+  assertTrue(body.contains("tryLoad(tmpFile)"));
+  assertFalse(body.contains("promotePending"));
+  assertFalse(body.contains("repairOrReport"));
+ }
 
  @Test public void resumeDoesNotReconstructOnUiThread()throws Exception{
   String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
