@@ -76,7 +76,7 @@ public final class RealExperienceRegressionTest {
   String tail=trace.substring(marker+"boundedSteps=".length());
   int slash=tail.indexOf('/');
   int steps=Integer.parseInt(tail.substring(0,slash).trim());
-  assertTrue("deep-sleep fallback must remain bounded",steps<=56);
+  assertTrue("deep-sleep fallback must remain bounded",steps<=20);
  }
 
  @Test public void sameAreaObjectObservationCreatesVisiblePhysicalApproach(){
@@ -100,6 +100,19 @@ public final class RealExperienceRegressionTest {
   assertEquals("LOCAL",s.girlTravel.travelMode);
   assertTrue(Math.abs(s.girlTravel.segmentEndX-before)>56f);
   assertTrue(p.lastAction.contains("different viewpoint"));
+ }
+
+ @Test public void offlineTravelFastForwardStillArrivesAndResolvesPlan(){
+  WorldState s=state(T0);s.haruX=315f;
+  PlanState p=new PlanState();p.planId="offline_observe";p.status="ACTIVE";p.intentionId="observe_lake";p.destination="bench_lake_01";p.plannedAction="OBSERVE";p.createdAt=T0;p.lastProgressAt=T0;
+  s.planState=p;s.currentIntention=p.intentionId;s.girlTravel=new TravelState();
+  assertTrue(TravelEngine.start(s,s.girlTravel,"girl","lakeside",p.planId,T0));
+  assertTrue(s.girlTravel.active);
+  TravelEngine.advanceOfflineSeconds(s,s.girlTravel,3600,T0+3600000L);
+  assertTrue("offline travel must physically progress",s.haruX>315f);
+  assertTrue("arrival may start a local viewing approach or resolve the action",s.girlTravel.active||s.planState.terminal());
+  if(s.girlTravel.active)TravelEngine.advanceOfflineSeconds(s,s.girlTravel,3600,T0+7200000L);
+  assertTrue("plan must eventually reach an action outcome",s.planState.terminal());
  }
 
  @Test public void proactiveBubbleAndTtsCannotLoseCueDuringDeferredStartup()throws Exception{
