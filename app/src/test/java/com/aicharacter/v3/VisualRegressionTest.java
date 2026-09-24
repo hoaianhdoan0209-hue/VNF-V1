@@ -152,6 +152,28 @@ public final class VisualRegressionTest{
   assertFalse(world.contains("MomentDirector"));
  }
 
+ @Test public void proceduralAudioRendererStaysOutsideSimulationPersistence()throws Exception{
+  Path app=appRoot();
+  String game=read(app.resolve("src/main/java/com/aicharacter/v3/GameView.java"));
+  String main=read(app.resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  String audio=read(app.resolve("src/main/java/com/aicharacter/v3/ProceduralAudioEngine.java"));
+  String emitter=read(app.resolve("src/main/java/com/aicharacter/v3/AudioSceneEmitter.java"));
+  String world=read(app.resolve("src/main/java/com/aicharacter/v3/WorldState.java"));
+  assertTrue(game.contains("onAudioScene"));
+  assertTrue(game.contains("onSoundEvent"));
+  assertTrue(game.contains("dispatchAudio"));
+  assertTrue(main.contains("audio.resume()"));
+  assertTrue(main.contains("audio.pause()"));
+  assertTrue(main.contains("audio.destroy()"));
+  assertTrue(audio.contains("AudioTrack"));
+  assertTrue(audio.contains("social_reunion"));
+  assertTrue(audio.contains("divine_presence_pulse"));
+  assertTrue(emitter.contains("BiologyVisualOutput.from"));
+  assertFalse(world.contains("ProceduralAudioEngine"));
+  assertFalse(world.contains("AudioSceneFrame"));
+  assertFalse(world.contains("SoundEvent"));
+ }
+
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
   String renderer=read(appRoot().resolve("src/main/java/com/aicharacter/v3/GameView.java"));
   int from=renderer.indexOf("private void drawTimeTint");
