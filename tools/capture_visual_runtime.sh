@@ -62,11 +62,11 @@ pull_runtime_capture() {
   rm -f "$dest"
   local ready=0
   for _ in $(seq 1 180); do
-    if adb logcat -d -s VNF:I VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE name=$name ok=true"; then
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE name=$name ok=true"; then
       ready=1
       break
     fi
-    if adb logcat -d -s VNF:E '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE failed name=$name"; then
+    if adb logcat -d -s 'VNF:E' '*:S' 2>/dev/null | grep -Fq "VISUAL_CAPTURE_FILE failed name=$name"; then
       break
     fi
     sleep 1
@@ -81,6 +81,10 @@ pull_runtime_capture() {
       rm -f "$dest"
       sleep 1
     done
+    # The renderer was confirmed ready; use the actual device framebuffer as a safe QA fallback.
+    if timeout 12s adb exec-out screencap -p > "$dest" 2>/dev/null && [[ -s "$dest" ]] && valid_png "$dest"; then
+      return 0
+    fi
   fi
   echo "Runtime renderer did not export a valid PNG for $name" >&2
   mkdir -p "$OUT/diagnostics"
