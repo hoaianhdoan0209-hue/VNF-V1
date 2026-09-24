@@ -98,7 +98,7 @@ public final class FastStartupRegressionTest {
  }
  @Test public void hotfixUsesNewUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
-  assertTrue(gradle.contains("versionCode 119"));
-  assertTrue(gradle.contains("versionName '1.0.2'"));
+  assertTrue(gradle.contains("versionCode 120"));
+  assertTrue(gradle.contains("versionName '1.0.3'"));
  }
 }
