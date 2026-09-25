@@ -43,6 +43,7 @@ public final class WildlifeTraitRenderer {
   drawSense(c,p,species.senseMode,x,bodyY,w,h,anim,alert,light);
   drawDefense(c,p,species.defense,x,bodyY,w,h,anim,alert,dark,light);
   c.restore();
+  PixelReactionFxRenderer.drawWildlifeAlert(c,p,x,bodyY-h*.58f,alert,anim,light);
 
   p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);p.setStrokeWidth(1f);p.setAntiAlias(false);
   return true;
