@@ -8,7 +8,7 @@ import java.util.*;
  * from Haru's curiosity, memory coverage, world semantics and reachability.
  */
 public final class HaruVisibleAgencyEngine {
- private static final double MIN_CURIOSITY=.46;
+ private static final double MIN_CURIOSITY=.46;\n private static final long VISIBLE_AGENCY_WATCHDOG_MS=42000L;
  private HaruVisibleAgencyEngine(){}
 
  public static LifeDecision adjustChoice(WorldState s,LifeDecision selected,long now){
@@ -34,11 +34,11 @@ public final class HaruVisibleAgencyEngine {
     .reason("memory_novelty",memoryNovelty(s,best.id,now)*10)
     .reason("world_interest",semanticInterest(best))
     .reason("healthy_body",4)
-    .reason("visible_agency_recovery",3);
+    .reason("visible_agency_recovery",stalled?11:3);
   in.utility=d.reasons.values().stream().mapToDouble(Double::doubleValue).sum();
   WorldEventBus.publishId(s,now,"haru_visible_choice_"+Long.toHexString(now),
     "HARU_VISIBLE_AUTONOMY_CHOSEN",best.id,
-    "Haru independently chose a reachable place to investigate after a low-pressure idle choice.");
+    "Haru independently chose a reachable place/viewpoint to investigate instead of remaining visibly idle.");
   return d;
  }
 
@@ -61,6 +61,22 @@ public final class HaruVisibleAgencyEngine {
   if(o!=null)return Math.abs(HaruVisionEngine.actualX(s,o)-s.haruX)>=80f;
   WorldArea a=s.world.area(in.targetId),here=s.world.areaAt(s.haruX);
   return a!=null&&(here==null||!a.id.equals(here.id));
+ }
+
+ static boolean needsVisibleAgencyRecovery(WorldState s,long now){
+  if(s==null||!healthyForExploration(s))return false;
+  if(s.girlTravel!=null&&s.girlTravel.active)return false;
+  if(s.planState!=null&&s.planState.active()&&now-s.planState.lastProgressAt<VISIBLE_AGENCY_WATCHDOG_MS)return false;
+  long latest=0;
+  if(s.worldHistory!=null)for(int i=s.worldHistory.size()-1;i>=0;i--){
+   WorldHistoryEntry e=s.worldHistory.get(i);if(e==null)continue;
+   if(now>=e.time&&now-e.time>VISIBLE_AGENCY_WATCHDOG_MS)break;
+   String t=e.type==null?"":e.type;
+   if("TRAVEL_STARTED".equals(t)||"TRAVEL_ARRIVED".equals(t)||"AREA_ENTERED".equals(t)||"HARU_GOAL_FORMED".equals(t)||"HARU_VISIBLE_AUTONOMY_CHOSEN".equals(t)){latest=Math.max(latest,e.time);break;}
+  }
+  if(latest>0&&now-latest<VISIBLE_AGENCY_WATCHDOG_MS)return false;
+  long anchor=s.intentionStartedAt>0?s.intentionStartedAt:(s.lastOpenedAt>0?s.lastOpenedAt:s.createdAt);
+  return anchor<=0||now-anchor>=VISIBLE_AGENCY_WATCHDOG_MS;
  }
 
  private static double areaScore(WorldState s,WorldArea a,long now){
