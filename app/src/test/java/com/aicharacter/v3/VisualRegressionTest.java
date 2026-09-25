@@ -120,8 +120,8 @@ public final class VisualRegressionTest{
   assertTrue(game.contains("drawCat(c,cam)"));
   assertTrue(game.contains("drawAttachedCat"));
   assertTrue(game.contains("CatVisualRenderer.draw"));
-  assertTrue(game.contains("HARU_POSE_BLEND_MS"));
-  assertTrue(game.contains("saveLayerAlpha"));
+  assertTrue(game.contains("PixelPoseTransitionPolicy.showPrevious"));
+  assertFalse(game.contains("HARU_POSE_BLEND_MS"));
   assertTrue(cat.contains("drawTail"));
   assertTrue(cat.contains("drawLegs"));
   assertTrue(cat.contains("catRig"));
