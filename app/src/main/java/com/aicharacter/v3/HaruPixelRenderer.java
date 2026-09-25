@@ -2,14 +2,18 @@ package com.aicharacter.v3;
 
 import android.graphics.*;
 
-/** Chunky block-pixel Haru sprite driven only by existing presentation state. */
+/**
+ * Chunky authored pixel Haru.
+ * Presentation only: pose comes from GirlAnimationController and never changes simulation state.
+ */
 public final class HaruPixelRenderer {
  private static final float PX=6f;
- private static final int HAIR=Color.rgb(53,42,43),HAIR_HI=Color.rgb(83,61,58);
- private static final int SKIN=Color.rgb(238,199,168),SKIN_SHADOW=Color.rgb(206,157,135);
- private static final int TOP=Color.rgb(228,218,201),TOP_SHADOW=Color.rgb(184,176,164);
- private static final int BOTTOM=Color.rgb(69,67,72),SHOE=Color.rgb(45,43,48);
- private static final int EYE=Color.rgb(52,43,44),ACCENT=Color.rgb(150,91,92);
+ private static final int OUT=Color.rgb(38,31,34);
+ private static final int HAIR=Color.rgb(58,42,43),HAIR_HI=Color.rgb(91,61,58);
+ private static final int SKIN=Color.rgb(239,198,164),SKIN_SHADOW=Color.rgb(205,151,130),BLUSH=Color.rgb(196,111,111);
+ private static final int TOP=Color.rgb(231,220,202),TOP_SHADE=Color.rgb(190,179,164),ACCENT=Color.rgb(142,82,86);
+ private static final int SKIRT=Color.rgb(72,67,76),SKIRT_HI=Color.rgb(98,91,102),SHOE=Color.rgb(43,39,45);
+ private static final int EYE=Color.rgb(47,39,42);
  private HaruPixelRenderer(){}
 
  public static void draw(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float anim,float divinePresence){
@@ -17,143 +21,171 @@ public final class HaruPixelRenderer {
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setFilterBitmap(false);p.setColorFilter(null);p.setAlpha(255);
   boolean left=v.flipX||v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.SEARCH_LEFT;
   int frame=((int)Math.floor(anim*Math.max(.1f,v.fps)))&3;
-  float bob=bob(v.state,frame),ground=bodyGround+bob;
-  c.save();if(left)c.scale(-1f,1f,x,ground);
-  if(v.state==GirlAnimationController.State.SLEEP)drawSleep(c,p,x,ground,frame,divinePresence);
-  else drawStanding(c,p,s,v,x,ground,frame,divinePresence);
+  float g=bodyGround+bob(v.state,frame);
+  c.save();if(left)c.scale(-1f,1f,x,g);
+  switch(v.state){
+   case SLEEP:drawSleep(c,p,x,g,frame,divinePresence);break;
+   case SIT:drawSit(c,p,x,g,frame,divinePresence);break;
+   case CROUCH:drawCrouch(c,p,x,g,frame,divinePresence);break;
+   default:drawStanding(c,p,s,v,x,g,frame,divinePresence);break;
+  }
   c.restore();
  }
 
- public static float spriteHeight(){return 47*PX;}
+ public static float spriteHeight(){return 43*PX;}
 
  private static void drawStanding(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float g,int frame,float divine){
-  float stepA=0,stepB=0,armA=0,armB=0,lean=0;
-  boolean moving=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
-  if(moving){
-   float[] phase={-1f,0f,1f,0f};stepA=phase[frame]*2*PX;stepB=-stepA;armA=-stepA*.72f;armB=-armA;
-  }else if(v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT){
-   armA=-3*PX;armB=2*PX;lean=PX;
-  }else if(v.state==GirlAnimationController.State.REACT){
-   armA=-3*PX;armB=-2*PX;lean=-PX;
-  }else if(v.state==GirlAnimationController.State.THINK){
-   armA=-5*PX;armB=PX;lean=PX*.5f;
+  boolean walk=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
+  boolean search=v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT;
+  float[] gait={-1.6f,-.45f,1.6f,.45f};
+  float step=walk?gait[frame]*PX:0,other=-step;
+  float lean=walk?1.0f*PX:search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
+  float headTop=g-42*PX;
+
+  // Hair silhouette: stepped chibi mass, with long side locks.
+  rect(c,p,OUT,x-8*PX+lean,headTop+2*PX,x+8*PX+lean,headTop+14*PX);
+  rect(c,p,OUT,x-7*PX+lean,headTop,x+5*PX+lean,headTop+3*PX);
+  rect(c,p,OUT,x-9*PX+lean,headTop+5*PX,x-5*PX+lean,g-23*PX);
+  rect(c,p,OUT,x+5*PX+lean,headTop+6*PX,x+9*PX+lean,g-24*PX);
+  rect(c,p,HAIR,x-7*PX+lean,headTop+2*PX,x+7*PX+lean,headTop+13*PX);
+  rect(c,p,HAIR,x-8*PX+lean,headTop+6*PX,x-5*PX+lean,g-24*PX);
+  rect(c,p,HAIR,x+5*PX+lean,headTop+7*PX,x+8*PX+lean,g-25*PX);
+  rect(c,p,HAIR_HI,x-5*PX+lean,headTop+2*PX,x-2*PX+lean,headTop+5*PX);
+
+  // Face with hair fringe.
+  rect(c,p,OUT,x-5*PX+lean,headTop+5*PX,x+5*PX+lean,headTop+15*PX);
+  rect(c,p,SKIN,x-4*PX+lean,headTop+6*PX,x+4*PX+lean,headTop+14*PX);
+  rect(c,p,HAIR,x-5*PX+lean,headTop+4*PX,x+5*PX+lean,headTop+7*PX);
+  rect(c,p,HAIR,x-4*PX+lean,headTop+6*PX,x-2*PX+lean,headTop+9*PX);
+  boolean blink=!walk&&frame==3;
+  if(blink){
+   rect(c,p,EYE,x-2*PX+lean,headTop+10*PX,x-1*PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+3*PX+lean,headTop+11*PX);
+  }else{
+   rect(c,p,EYE,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+3*PX+lean,headTop+11*PX);
   }
+  rect(c,p,BLUSH,x+3*PX+lean,headTop+12*PX,x+4*PX+lean,headTop+13*PX);
+  rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);
 
-  if(v.state==GirlAnimationController.State.SIT){drawSit(c,p,x,g,frame,divine);return;}
-  if(v.state==GirlAnimationController.State.CROUCH){drawCrouch(c,p,x,g,frame,divine);return;}
+  // Neck.
+  rect(c,p,OUT,x-2*PX,g-28*PX,x+2*PX,g-24*PX);
+  rect(c,p,SKIN,x-PX,g-28*PX,x+PX,g-24*PX);
 
-  float hipY=g-13*PX,torsoTop=g-27*PX,headTop=g-43*PX;
-  // Back hair mass.
-  rect(c,p,HAIR,x-6*PX+lean,headTop,x+6*PX+lean,g-24*PX);
-  rect(c,p,HAIR_HI,x-6*PX+lean,headTop+3*PX,x-4*PX+lean,g-30*PX);
-  rect(c,p,HAIR,x+5*PX+lean,headTop+5*PX,x+8*PX+lean,g-27*PX);
+  // Torso outline with shoulders and fitted waist.
+  rect(c,p,OUT,x-6*PX,g-25*PX,x+6*PX,g-13*PX);
+  rect(c,p,OUT,x-5*PX,g-27*PX,x+5*PX,g-12*PX);
+  rect(c,p,TOP,x-5*PX,g-25*PX,x+5*PX,g-14*PX);
+  rect(c,p,TOP_SHADE,x-5*PX,g-18*PX,x+5*PX,g-14*PX);
+  rect(c,p,TOP,x-4*PX,g-24*PX,x+4*PX,g-18*PX);
+  rect(c,p,ACCENT,x-PX,g-25*PX,x+PX,g-22*PX);
+  rect(c,p,ACCENT,x+PX,g-23*PX,x+4*PX,g-22*PX);
 
-  // Face.
-  rect(c,p,SKIN,x-4*PX+lean,headTop+5*PX,x+5*PX+lean,headTop+14*PX);
-  rect(c,p,SKIN_SHADOW,x+4*PX+lean,headTop+7*PX,x+5*PX+lean,headTop+13*PX);
-  rect(c,p,EYE,x+1*PX+lean,headTop+8*PX,x+2*PX+lean,headTop+9*PX);
-  rect(c,p,ACCENT,x+3*PX+lean,headTop+12*PX,x+4*PX+lean,headTop+13*PX);
-  // Fringe.
-  rect(c,p,HAIR,x-5*PX+lean,headTop+2*PX,x+5*PX+lean,headTop+6*PX);
-  rect(c,p,HAIR,x-4*PX+lean,headTop+5*PX,x-2*PX+lean,headTop+8*PX);
-  rect(c,p,HAIR_HI,x-2*PX+lean,headTop+3*PX,x+lean,headTop+5*PX);
+  float armFront=walk?-step*.55f:0,armBack=walk?step*.55f:0;
+  if(v.state==GirlAnimationController.State.REACT){armFront=-4*PX;armBack=-3*PX;}
+  if(v.state==GirlAnimationController.State.THINK){armFront=-5*PX;armBack=PX;}
+  if(search){armFront=-5*PX;armBack=2*PX;}
+  drawArm(c,p,x+5*PX,g-23*PX,armFront,true);
+  drawArm(c,p,x-5*PX,g-23*PX,armBack,false);
 
-  // Neck and top.
-  rect(c,p,SKIN,x-2*PX,headTop+14*PX,x+2*PX,torsoTop+2*PX);
-  rect(c,p,TOP,x-5*PX,torsoTop,x+5*PX,hipY);
-  rect(c,p,TOP_SHADOW,x-5*PX,torsoTop+8*PX,x+5*PX,hipY);
-  rect(c,p,TOP,x-4*PX,torsoTop+1*PX,x+4*PX,torsoTop+8*PX);
-  rect(c,p,ACCENT,x+4*PX,torsoTop+2*PX,x+5*PX,torsoTop+10*PX);
-
-  // Arms with state-driven swing/pose.
-  drawArm(c,p,x-5*PX,torsoTop+3*PX,armA,false);
-  drawArm(c,p,x+5*PX,torsoTop+3*PX,armB,true);
+  // State-specific readable silhouette.
   if(v.state==GirlAnimationController.State.THINK){
-   rect(c,p,SKIN,x+5*PX,g-32*PX,x+7*PX,g-27*PX);
-   rect(c,p,SKIN,x+4*PX,g-34*PX,x+6*PX,g-32*PX);
+   rect(c,p,OUT,x+5*PX,g-32*PX,x+8*PX,g-27*PX);rect(c,p,SKIN,x+6*PX,g-31*PX,x+7*PX,g-28*PX);
+  }else if(search){
+   rect(c,p,OUT,x+4*PX,g-34*PX,x+12*PX,g-30*PX);
+   rect(c,p,SKIN,x+5*PX,g-33*PX,x+11*PX,g-31*PX);
+  }else if(v.state==GirlAnimationController.State.REACT){
+   rect(c,p,OUT,x+6*PX,g-29*PX,x+9*PX,g-25*PX);
+   rect(c,p,SKIN,x+7*PX,g-28*PX,x+8*PX,g-26*PX);
   }
-  if(v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT){
-   rect(c,p,SKIN,x+5*PX,g-31*PX,x+10*PX,g-29*PX);
-   rect(c,p,SKIN,x+9*PX,g-32*PX,x+11*PX,g-28*PX);
-  }
 
-  // Skirt/shorts block.
-  rect(c,p,BOTTOM,x-5*PX,hipY,x+5*PX,g-10*PX);
-  rect(c,p,Color.rgb(88,84,91),x-4*PX,hipY,x+4*PX,hipY+2*PX);
+  // Skirt, visibly separated from top.
+  rect(c,p,OUT,x-6*PX,g-14*PX,x+6*PX,g-8*PX);
+  rect(c,p,SKIRT,x-5*PX,g-13*PX,x+5*PX,g-9*PX);
+  rect(c,p,SKIRT_HI,x-4*PX,g-13*PX,x+4*PX,g-12*PX);
+  rect(c,p,SKIRT,x-6*PX,g-10*PX,x+6*PX,g-8*PX);
 
-  // Legs.
-  drawLeg(c,p,x-3*PX,g-10*PX,g,stepA);
-  drawLeg(c,p,x+2*PX,g-10*PX,g,stepB);
+  // Legs and shoes. Walk always has a distinct stride even on neutral capture frames.
+  if(walk&&Math.abs(step)<PX)step=(frame<2?-1:1)*PX;
+  drawLeg(c,p,x-3*PX,g-8*PX,g,step);
+  drawLeg(c,p,x+2*PX,g-8*PX,g,other);
 
-  // Pixel movement accents.
-  if(moving&&frame!=1){p.setColor(Color.argb(74,218,209,190));c.drawRect(x-9*PX,g-PX,x-7*PX,g,p);}
+  // A tiny hair/clothing motion cue keeps idle visibly alive.
+  if(!walk&&frame==2){rect(c,p,HAIR_HI,x-8*PX+lean,g-29*PX,x-7*PX+lean,g-25*PX);}
+  if(walk){rect(c,p,Color.argb(70,223,213,190),x-10*PX,g-PX,x-8*PX,g,p);}
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
- private static void drawArm(Canvas c,Paint p,float x,float y,float swing,boolean front){
-  int sleeve=front?TOP:TOP_SHADOW;
-  float sx=x+swing*.18f,handY=y+9*PX+swing*.45f;
-  rect(c,p,sleeve,sx-PX,y,sx+2*PX,y+7*PX);
-  rect(c,p,SKIN,sx-PX, y+6*PX, sx+2*PX,handY+2*PX);
+ private static void drawArm(Canvas c,Paint p,float shoulderX,float y,float swing,boolean front){
+  int sleeve=front?TOP:TOP_SHADE;
+  float dir=shoulderX>=0?1:-1,sx=shoulderX+swing*.18f;
+  rect(c,p,OUT,sx-2*PX,y,sx+2*PX,y+10*PX);
+  rect(c,p,sleeve,sx-PX,y+PX,sx+PX,y+6*PX);
+  float handX=sx+swing*.45f;
+  rect(c,p,OUT,handX-1.5f*PX,y+6*PX,handX+1.5f*PX,y+10*PX);
+  rect(c,p,SKIN,handX-PX,y+7*PX,handX+PX,y+9*PX);
+  if(Math.abs(swing)>2*PX)rect(c,p,SKIN_SHADOW,handX-dir*PX,y+8*PX,handX,y+9*PX);
  }
 
  private static void drawLeg(Canvas c,Paint p,float x,float top,float ground,float step){
-  float knee=top+5*PX,footShift=step;
-  rect(c,p,SKIN_SHADOW,x-PX,top,x+2*PX,knee);
-  rect(c,p,SKIN,x-PX+footShift*.25f,knee,x+2*PX+footShift*.25f,ground-2*PX);
-  rect(c,p,SHOE,x-2*PX+footShift,ground-3*PX,x+3*PX+footShift,ground);
+  float shift=step,knee=top+4*PX;
+  rect(c,p,OUT,x-2*PX,top,x+2*PX,knee+PX);
+  rect(c,p,SKIN,x-PX,top+PX,x+PX,knee);
+  float shinX=x+shift*.30f;
+  rect(c,p,OUT,shinX-2*PX,knee,shinX+2*PX,ground-2*PX);
+  rect(c,p,SKIN,shinX-PX,knee,shinX+PX,ground-3*PX);
+  rect(c,p,OUT,shinX-2*PX+shift,ground-3*PX,shinX+4*PX+shift,ground);
+  rect(c,p,SHOE,shinX-PX+shift,ground-2*PX,shinX+3*PX+shift,ground-PX*.25f);
  }
 
  private static void drawSit(Canvas c,Paint p,float x,float g,int frame,float divine){
-  float y=g-5*PX+(frame==2?PX:0),headTop=y-38*PX;
-  rect(c,p,HAIR,x-7*PX,headTop,x+7*PX,y-20*PX);
-  rect(c,p,SKIN,x-4*PX,headTop+5*PX,x+5*PX,headTop+14*PX);
-  rect(c,p,EYE,x+1*PX,headTop+8*PX,x+2*PX,headTop+9*PX);
-  rect(c,p,HAIR,x-5*PX,headTop+2*PX,x+5*PX,headTop+6*PX);
-  rect(c,p,TOP,x-5*PX,y-23*PX,x+5*PX,y-11*PX);
-  rect(c,p,BOTTOM,x-5*PX,y-11*PX,x+5*PX,y-5*PX);
-  rect(c,p,SKIN,x+2*PX,y-7*PX,x+9*PX,y-4*PX);
-  rect(c,p,SKIN,x-2*PX,y-7*PX,x+5*PX,y-4*PX);
-  rect(c,p,SHOE,x+7*PX,y-5*PX,x+12*PX,y-2*PX);
-  rect(c,p,SHOE,x+2*PX,y-5*PX,x+7*PX,y-2*PX);
+  float y=g-(frame==2?PX:0),headTop=y-36*PX;
+  drawCompactHead(c,p,x,headTop);
+  rect(c,p,OUT,x-6*PX,y-22*PX,x+6*PX,y-9*PX);rect(c,p,TOP,x-5*PX,y-21*PX,x+5*PX,y-11*PX);
+  rect(c,p,ACCENT,x-PX,y-21*PX,x+PX,y-18*PX);
+  rect(c,p,OUT,x-6*PX,y-11*PX,x+7*PX,y-5*PX);rect(c,p,SKIRT,x-5*PX,y-10*PX,x+6*PX,y-6*PX);
+  rect(c,p,OUT,x-3*PX,y-7*PX,x+11*PX,y-3*PX);rect(c,p,SKIN,x-2*PX,y-6*PX,x+10*PX,y-4*PX);
+  rect(c,p,OUT,x+8*PX,y-4*PX,x+14*PX,y);rect(c,p,SHOE,x+9*PX,y-3*PX,x+13*PX,y-PX*.3f);
+  rect(c,p,OUT,x-4*PX,y-13*PX,x+2*PX,y-9*PX);rect(c,p,SKIN,x-3*PX,y-12*PX,x+PX,y-10*PX);
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
  private static void drawCrouch(Canvas c,Paint p,float x,float g,int frame,float divine){
-  float y=g+(frame==1?PX:0),headTop=y-34*PX;
-  rect(c,p,HAIR,x-7*PX,headTop,x+7*PX,y-18*PX);
-  rect(c,p,SKIN,x-4*PX,headTop+5*PX,x+5*PX,headTop+14*PX);
-  rect(c,p,EYE,x+1*PX,headTop+8*PX,x+2*PX,headTop+9*PX);
-  rect(c,p,HAIR,x-5*PX,headTop+2*PX,x+5*PX,headTop+6*PX);
-  rect(c,p,TOP,x-5*PX,y-20*PX,x+6*PX,y-9*PX);
-  rect(c,p,BOTTOM,x-4*PX,y-9*PX,x+5*PX,y-4*PX);
-  rect(c,p,SKIN,x+4*PX,y-12*PX,x+11*PX,y-9*PX);
-  rect(c,p,SKIN,x-2*PX,y-4*PX,x+2*PX,y-PX);
-  rect(c,p,SKIN,x+3*PX,y-4*PX,x+8*PX,y-PX);
-  rect(c,p,SHOE,x-3*PX,y-2*PX,x+2*PX,y);
-  rect(c,p,SHOE,x+6*PX,y-2*PX,x+11*PX,y);
+  float y=g+(frame==1?PX:0),headTop=y-33*PX;
+  drawCompactHead(c,p,x,headTop);
+  rect(c,p,OUT,x-7*PX,y-20*PX,x+7*PX,y-8*PX);rect(c,p,TOP,x-6*PX,y-19*PX,x+6*PX,y-10*PX);
+  rect(c,p,OUT,x-6*PX,y-10*PX,x+6*PX,y-5*PX);rect(c,p,SKIRT,x-5*PX,y-9*PX,x+5*PX,y-6*PX);
+  rect(c,p,OUT,x+4*PX,y-13*PX,x+12*PX,y-9*PX);rect(c,p,SKIN,x+5*PX,y-12*PX,x+11*PX,y-10*PX);
+  rect(c,p,OUT,x-4*PX,y-6*PX,x+3*PX,y);rect(c,p,SKIN,x-3*PX,y-5*PX,x+2*PX,y-2*PX);
+  rect(c,p,OUT,x+4*PX,y-6*PX,x+11*PX,y);rect(c,p,SHOE,x+6*PX,y-2*PX,x+11*PX,y,p);
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
  private static void drawSleep(Canvas c,Paint p,float x,float g,int frame,float divine){
-  float breath=(frame==1||frame==2)?PX:0,y=g-4*PX-breath;
-  rect(c,p,Color.argb(42,0,0,0),x-14*PX,g-PX,x+14*PX,g+PX);
-  rect(c,p,HAIR,x-13*PX,y-8*PX,x-3*PX,y+PX);
-  rect(c,p,SKIN,x-10*PX,y-6*PX,x-4*PX,y);
-  rect(c,p,HAIR,x-12*PX,y-9*PX,x-4*PX,y-6*PX);
-  rect(c,p,TOP,x-4*PX,y-7*PX,x+8*PX,y);
-  rect(c,p,BOTTOM,x+6*PX,y-6*PX,x+14*PX,y);
-  rect(c,p,SKIN,x+12*PX,y-3*PX,x+17*PX,y);
-  rect(c,p,SHOE,x+15*PX,y-3*PX,x+20*PX,y);
-  drawDivinePixels(c,p,x,y-10*PX,divine);
+  float breath=(frame==1||frame==2)?PX:0,y=g-3*PX-breath;
+  rect(c,p,Color.argb(45,0,0,0),x-16*PX,g-PX,x+18*PX,g+PX);
+  rect(c,p,OUT,x-14*PX,y-10*PX,x-2*PX,y+PX);rect(c,p,HAIR,x-13*PX,y-9*PX,x-3*PX,y);
+  rect(c,p,OUT,x-11*PX,y-7*PX,x-4*PX,y);rect(c,p,SKIN,x-10*PX,y-6*PX,x-5*PX,y-PX);
+  rect(c,p,EYE,x-8*PX,y-3*PX,x-6*PX,y-2*PX);
+  rect(c,p,OUT,x-3*PX,y-8*PX,x+9*PX,y+PX);rect(c,p,TOP,x-2*PX,y-7*PX,x+8*PX,y);
+  rect(c,p,OUT,x+7*PX,y-7*PX,x+16*PX,y);rect(c,p,SKIRT,x+8*PX,y-6*PX,x+15*PX,y-PX);
+  rect(c,p,OUT,x+14*PX,y-4*PX,x+21*PX,y);rect(c,p,SHOE,x+16*PX,y-3*PX,x+20*PX,y-PX*.3f);
+  drawDivinePixels(c,p,x,y-11*PX,divine);
+ }
+
+ private static void drawCompactHead(Canvas c,Paint p,float x,float top){
+  rect(c,p,OUT,x-8*PX,top+2*PX,x+8*PX,top+14*PX);rect(c,p,OUT,x-7*PX,top,x+5*PX,top+3*PX);
+  rect(c,p,HAIR,x-7*PX,top+2*PX,x+7*PX,top+13*PX);rect(c,p,HAIR_HI,x-5*PX,top+2*PX,x-2*PX,top+5*PX);
+  rect(c,p,OUT,x-5*PX,top+5*PX,x+5*PX,top+15*PX);rect(c,p,SKIN,x-4*PX,top+6*PX,x+4*PX,top+14*PX);
+  rect(c,p,HAIR,x-5*PX,top+4*PX,x+5*PX,top+7*PX);rect(c,p,EYE,x-2*PX,top+9*PX,x-PX,top+11*PX);rect(c,p,EYE,x+2*PX,top+9*PX,x+3*PX,top+11*PX);
+  rect(c,p,BLUSH,x+3*PX,top+12*PX,x+4*PX,top+13*PX);
  }
 
  private static void drawDivinePixels(Canvas c,Paint p,float x,float top,float divine){
   float d=Math.max(0,Math.min(1,divine));if(d<.04f)return;
-  int a=(int)(45+120*d);p.setColor(Color.argb(a,244,222,159));
-  c.drawRect(x-9*PX,top+2*PX,x-8*PX,top+3*PX,p);
-  c.drawRect(x+8*PX,top-2*PX,x+9*PX,top-PX,p);
-  if(d>.45f)c.drawRect(x+11*PX,top+8*PX,x+12*PX,top+9*PX,p);
+  p.setColor(Color.argb((int)(45+120*d),244,222,159));
+  c.drawRect(x-10*PX,top+3*PX,x-9*PX,top+4*PX,p);c.drawRect(x+9*PX,top-2*PX,x+10*PX,top-PX,p);
+  if(d>.45f)c.drawRect(x+12*PX,top+9*PX,x+13*PX,top+10*PX,p);
  }
 
  private static float bob(GirlAnimationController.State state,int frame){
