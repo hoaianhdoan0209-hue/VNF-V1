@@ -1,6 +1,6 @@
 package com.aicharacter.v3;
 /** Active autonomy evaluates at meaningful intervals, then executes a persistent plan instead of rerolling every frame. */
-public final class HaruAutonomyEngine {private static final long DECISION_INTERVAL_MS=PlanState.transitionHoldMs();private HaruAutonomyEngine(){}
+public final class HaruAutonomyEngine {private static final long IDLE_DECISION_INTERVAL_MS=3000L,NON_TRAVEL_PLAN_REVIEW_MS=6000L,TRAVEL_RECONSIDER_MS=PlanState.transitionHoldMs();private HaruAutonomyEngine(){}
  public static void tick(WorldState s,float dt){tick(s,dt,System.currentTimeMillis());}
  public static void tick(WorldState s,float dt,long now){if(s==null)return;advanceMindBody(s,dt,now);tickDecision(s,now);}
 
@@ -34,7 +34,7 @@ public final class HaruAutonomyEngine {private static final long DECISION_INTERV
   if(s.planState==null)s.planState=new PlanState();
   if(s.girlTravel!=null&&s.girlTravel.active){
    long travelAnchor=s.planState.lastReconsideredAt;
-   if(travelAnchor<=0||now-travelAnchor>=DECISION_INTERVAL_MS){
+   if(travelAnchor<=0||now-travelAnchor>=TRAVEL_RECONSIDER_MS){
     PlanIntegrityChecker.check(s,now);
     PlanReconsiderationEngine.Result travelDecision=PlanReconsiderationEngine.evaluate(s,now);
     s.planState.lastReconsideredAt=now;
@@ -43,7 +43,8 @@ public final class HaruAutonomyEngine {private static final long DECISION_INTERV
    return;
   }
   long anchor=s.planState.lastReconsideredAt;
-  if(anchor>0&&now-anchor<DECISION_INTERVAL_MS)return;
+  long interval=s.planState.active()?NON_TRAVEL_PLAN_REVIEW_MS:IDLE_DECISION_INTERVAL_MS;
+  if(anchor>0&&now-anchor<interval)return;
   if("PAUSED".equals(s.planState.status)){s.planState.lastReconsideredAt=now;if(PlanExecutor.resume(s,now))return;}
   if(s.planState.inTerminalTransition(now))return;
   if(s.planState.terminal())PlanOutcomeReviewEngine.reviewIfReady(s,now);
