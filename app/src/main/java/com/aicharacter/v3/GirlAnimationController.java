@@ -21,6 +21,8 @@ public final class GirlAnimationController{
   if(s.body.energy<22||s.body.sleepiness>78)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant"),socialLeft);
   MicroInteractionDirector.Cue micro=MicroInteractionDirector.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));if(micro.active)return social(v(State.CROUCH,"girl_crouch_right",12,1.65f,.50f,.94f,micro.kind==MicroInteractionDirector.Kind.CAT_RUB?"looking down during a real close cat rub":"quietly acknowledging the cat at her feet"),socialLeft);
   EmotionEpisodeState emotion=latestEmotion(s);if(emotion!=null&&emotion.intensity>=.30){String e=emotion.primaryEmotion==null?"":emotion.primaryEmotion;if("afraid".equals(e)||"angry".equals(e))return social(v(State.REACT,"girl_react_right",12,2.15f,.50f,.94f,"current "+e+" episode remains visibly active"),socialLeft);if("sad".equals(e)||"lonely".equals(e))return social(v(State.SIT,"girl_sit_right",12,1.35f,.50f,.94f,"current "+e+" episode softens posture"),socialLeft);if("curious".equals(e))return social(v(State.THINK,"girl_think_right",12,1.85f,.50f,.94f,"current curiosity episode keeps attention visibly engaged"),socialLeft);if("joyful".equals(e)||"relieved".equals(e))return social(v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"current "+e+" episode becomes a brief open reaction"),socialLeft);}
+  Visual continuous=continuousEmotionVisual(s,socialLeft);
+  if(continuous!=null)return continuous;
   HaruVisibleBehaviorBridge.Cue cue=HaruVisibleBehaviorBridge.observe(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));
   if(cue.mode==HaruVisibleBehaviorBridge.Mode.THINK)return social(v(State.THINK,"girl_think_right",12,1.9f,.50f,.94f,cue.reason),socialLeft);
   if(cue.mode==HaruVisibleBehaviorBridge.Mode.SETTLE)return social(v(State.SIT,"girl_sit_right",12,1.6f,.50f,.94f,cue.reason),socialLeft);
@@ -34,6 +36,19 @@ public final class GirlAnimationController{
   if(a.contains("sitting")||a.equals("resting")||a.contains("taking a quiet rest"))return social(v(State.SIT,"girl_sit_right",12,1.8f,.50f,.94f,"body still needs rest"),socialLeft);
   if(s.relationship!=null&&s.relationship.hurt+s.relationship.irritation>32)return social(v(State.IDLE,"girl_idle_right",12,1.55f,.50f,.94f,"relationship tension keeps her visually reserved"),socialLeft);
   return facingRight?v(State.IDLE,"girl_idle_right",12,2.0f,.50f,.94f,"between committed actions"):v(State.IDLE,"girl_idle_left",12,2.0f,.50f,.94f,"between committed actions");
+ }
+ private static Visual continuousEmotionVisual(WorldState s,boolean socialLeft){
+  if(s==null||s.emotion==null)return null;
+  double fear=s.emotion.fear,anger=s.emotion.anger,sad=s.emotion.sadness,lonely=s.emotion.loneliness,joy=s.emotion.joy,curiosity=s.emotion.curiosity;
+  if(Math.max(fear,anger)>=.52)return social(v(State.REACT,"girl_react_right",12,2.05f,.50f,.94f,fear>=anger?"live fear remains visible in posture":"live anger remains visible in posture"),socialLeft);
+  if(Math.max(sad,lonely)>=.48)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,sad>=lonely?"live sadness softens posture":"live loneliness closes posture"),socialLeft);
+  if(joy>=.58)return social(v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"live positive affect opens posture"),socialLeft);
+  String id=s.currentIntention==null?"":s.currentIntention;
+  boolean curiosityContext=id.contains("observe")||id.contains("explore")||id.contains("watch")||id.contains("study")||id.contains("compare");
+  ThoughtState t=lastThought(s);long now=Math.max(s.lastSimulatedAt,s.lastOpenedAt);
+  if(curiosity>=.56&&(curiosityContext||t!=null&&t.isCurrent(now,s.currentIntention)))
+   return social(v(State.THINK,"girl_think_right",12,1.90f,.50f,.94f,"live curiosity is visibly focused on current evidence"),socialLeft);
+  return null;
  }
  private static EmotionEpisodeState latestEmotion(WorldState s){if(s==null||s.emotionEpisodes==null)return null;long now=Math.max(s.lastSimulatedAt,s.lastOpenedAt);for(int i=s.emotionEpisodes.size()-1;i>=0;i--){EmotionEpisodeState e=s.emotionEpisodes.get(i);if(e==null||!"ACTIVE".equals(e.status)||e.intensity<.18)continue;if(e.updatedAt>0&&now>=e.updatedAt&&now-e.updatedAt>12L*60L*1000L)continue;return e;}return null;}
  private static Visual social(Visual x,boolean left){return left&&x!=null?x.flipped():x;}
