@@ -103,7 +103,7 @@ pull_runtime_capture() {
 install_apk
 adb shell pm clear "$PKG" >/dev/null 2>&1 || true
 rm -rf "$OUT"
-mkdir -p "$OUT/biomes" "$OUT/haru-poses"
+mkdir -p "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses"
 
 adb shell settings put secure immersive_mode_confirmations confirmed || true
 adb shell settings put global hide_error_dialogs 1 || true
@@ -112,8 +112,10 @@ adb shell run-as "$PKG" rm -rf "$APP_CAPTURE_DIR" >/dev/null 2>&1 || true
 
 APP_STARTED=0
 capture() {
-  local name="$1" biome="$2" pose="$3" target="$4"
+  local name="$1" biome="$2" pose="$3" target="$4" cat_pose="${5:-}"
   local file="$target/$name.png"
+  local cat_args=()
+  if [[ -n "$cat_pose" ]]; then cat_args=(--es vnf_debug_cat_pose "$cat_pose"); fi
 
   adb logcat -c || true
   adb shell settings put secure immersive_mode_confirmations confirmed || true
@@ -124,17 +126,19 @@ capture() {
     timeout 45s adb shell am start -W -S -n "$ACTIVITY" \
       --es vnf_debug_biome "$biome" \
       --es vnf_debug_pose "$pose" \
+      "${cat_args[@]}" \
       --es vnf_debug_capture_name "$name" >/dev/null
     APP_STARTED=1
   else
     timeout 30s adb shell am start -W --activity-single-top -n "$ACTIVITY" \
       --es vnf_debug_biome "$biome" \
       --es vnf_debug_pose "$pose" \
+      "${cat_args[@]}" \
       --es vnf_debug_capture_name "$name" >/dev/null
   fi
 
   pull_runtime_capture "$name" "$file"
-  echo "captured $name biome=$biome pose=$pose bytes=$(stat -c%s "$file")"
+  echo "captured $name biome=$biome pose=$pose cat=$cat_pose bytes=$(stat -c%s "$file")"
 }
 
 capture home home idle_right "$OUT/biomes"
@@ -144,6 +148,10 @@ capture grove grove idle_right "$OUT/biomes"
 
 for pose in idle_right idle_left walk_right walk_left sit crouch sleep think reaction search_right search_left; do
   capture "$pose" home "$pose" "$OUT/haru-poses"
+done
+
+for cat_pose in idle watch walk approach retreat rub settle sleep brace attached; do
+  capture "cat_$cat_pose" home idle_right "$OUT/cat-poses" "$cat_pose"
 done
 
 python - <<'PY'
@@ -157,8 +165,11 @@ poses=[root/"haru-poses"/f"{n}.png" for n in (
     "idle_right","idle_left","walk_right","walk_left","sit","crouch",
     "sleep","think","reaction","search_right","search_left"
 )]
+cats=[root/"cat-poses"/f"cat_{n}.png" for n in (
+    "idle","watch","walk","approach","retreat","rub","settle","sleep","brace","attached"
+)]
 
-for p in biomes+poses:
+for p in biomes+poses+cats:
     if not p.is_file() or p.stat().st_size <= 10000:
         raise SystemExit(f"invalid runtime capture: {p}")
     with Image.open(p) as im:
@@ -183,8 +194,13 @@ ph=[sha256(p.read_bytes()).hexdigest() for p in poses]
 if len(set(ph)) < 8:
     raise SystemExit(f"Haru runtime poses are not visually distinct enough: {len(set(ph))}/11 unique")
 
+ch=[sha256(p.read_bytes()).hexdigest() for p in cats]
+if len(set(ch)) < 7:
+    raise SystemExit(f"Cat runtime poses are not visually distinct enough: {len(set(ch))}/10 unique")
+
 print("runtime capture validation: 4 distinct biomes,",
-      f"{len(set(ph))}/11 distinct Haru pose frames")
+      f"{len(set(ph))}/11 distinct Haru pose frames,",
+      f"{len(set(ch))}/10 distinct cat pose frames")
 PY
 
-ls -lh "$OUT/biomes" "$OUT/haru-poses"
+ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses"
