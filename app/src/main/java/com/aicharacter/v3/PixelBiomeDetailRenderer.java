@@ -60,7 +60,7 @@ public final class PixelBiomeDetailRenderer {
  private static void drawGardenMid(Canvas c,Paint p,WorldState s,float cam,float anim){
   double wind=s.environment==null?0:Math.max(0,Math.min(1,s.environment.wind));
   for(int i=0;i<26;i++){
-   float base=sn(80+i*92-cam*.55f),y=sn(818+(i%4)*13),sway=sn((float)Math.sin(anim*(.8+wind*1.4)+i*.63)*(2+wind*5));
+   float base=sn(80+i*92-cam*.55f),y=sn(818+(i%4)*13),sway=sn((float)(Math.sin(anim*(.8+wind*1.4)+i*.63)*(2+wind*5)));
    p.setColor(Color.rgb(62+(i%3)*8,112+(i%4)*7,66));c.drawRect(base,y-22,base+3,y,p);
    p.setColor(petal(i));c.drawRect(base-4+sway,y-28,base+8+sway,y-22,p);c.drawRect(base+sway,y-32,base+4+sway,y-18,p);
   }
@@ -75,7 +75,7 @@ public final class PixelBiomeDetailRenderer {
  private static void drawLakesideMid(Canvas c,Paint p,WorldState s,float cam,float anim){
   double wind=s.environment==null?0:Math.max(0,Math.min(1,s.environment.wind));
   for(int i=0;i<22;i++){
-   float x=sn(110+i*108-cam*.68f),base=sn(842),h=24+(i%5)*7,sway=sn((float)Math.sin(anim*(.65+wind*1.4)+i*.41)*(2+wind*5));
+   float x=sn(110+i*108-cam*.68f),base=sn(842),h=24+(i%5)*7,sway=sn((float)(Math.sin(anim*(.65+wind*1.4)+i*.41)*(2+wind*5)));
    p.setColor(Color.rgb(56,91,65));c.drawRect(x,base-h,x+3,base,p);c.drawRect(x+sway+5,base-h*.78f,x+sway+8,base,p);
    p.setColor(Color.rgb(118,94,60));c.drawRect(x+sway-1,base-h-8,x+sway+4,base-h,p);
   }
