@@ -9,7 +9,7 @@ public final class PixelLightingRenderer {
  public static void drawCreatureContactShadow(Canvas c,Paint p,float x,float ground,float halfWidth,float lift,float activity){
   if(c==null||p==null)return;
   x=sn(x);ground=sn(ground);halfWidth=Math.max(8f,sn(halfWidth));lift=Math.max(0,lift);activity=Math.max(0,Math.min(1,activity));
-  float contact=Math.max(.34f,1f-lift/220f),half=sn(halfWidth*contact);
+  float contact=contactScaleForLift(lift),half=sn(halfWidth*contact);
   int outer=(int)(26+18*(1-activity)),inner=(int)(14+12*(1-activity));
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
   band(c,p,Color.argb(outer,5,10,10),x-half,ground-2,x+half,ground+3);
@@ -81,7 +81,7 @@ public final class PixelLightingRenderer {
   }
  }
 
- public static int bandCount(){return 4;}
+ public static int bandCount(){return 4;} public static int actorContactBandCount(){return 3;} static float contactScaleForLift(float lift){return Math.max(.34f,1f-Math.max(0,lift)/220f);}
  private static float sn(float v){return PixelArtRenderPolicy.snapLogical(v);}
  private static void band(Canvas c,Paint p,int color,float l,float t,float r,float b){
   p.setColor(color);c.drawRect(sn(l),sn(t),sn(r),sn(b),p);
