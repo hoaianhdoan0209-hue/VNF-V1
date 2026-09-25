@@ -26,7 +26,7 @@ public final class MicroInteractionDirector {
 
   double distance=Math.abs(s.haruX-s.catState.x);if(distance>92)return Cue.none();
   double familiarity=cl(s.catSocial.familiarity),comfort=cl(s.catSocial.comfort),wariness=cl(s.catSocial.wariness);
-  if(familiarity<.48||comfort<.50||wariness>.42)return Cue.none();
+  if(familiarity<.40||comfort<.42||wariness>.45)return Cue.none();
 
   WorldHistoryEntry event=recentWarmEvent(s,now);if(event==null)return Cue.none();
   double closeness=cl((92-distance)/52.0),trustLike=cl(familiarity*.46+comfort*.54-wariness*.38),intensity=cl(.40+closeness*.30+trustLike*.30);
