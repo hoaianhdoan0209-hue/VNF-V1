@@ -94,7 +94,7 @@ public final class RealExperienceRegressionTest {
  }
 
  @Test public void sameAreaObjectObservationCreatesVisiblePhysicalApproach(){
-  WorldState s=state(T0);s.haruX=1450f;
+  WorldState s=state(T0);s.haruX=1450f;s.reedling.x=1730f;s.reedling.areaId="lakeside";
   PlanState p=new PlanState();p.planId="observe_creature";p.status="ACTIVE";p.intentionId="watch_reedling";p.destination="reedling_01";p.plannedAction="OBSERVE";p.createdAt=T0;p.lastProgressAt=T0;
   s.planState=p;s.currentIntention=p.intentionId;s.girlTravel=new TravelState();
   assertTrue(TravelEngine.start(s,s.girlTravel,"girl","lakeside",p.planId,T0));
