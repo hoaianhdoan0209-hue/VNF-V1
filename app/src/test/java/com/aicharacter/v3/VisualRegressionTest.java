@@ -235,6 +235,7 @@ public final class VisualRegressionTest{
   assertFalse(tint.contains("light_evening"));
   assertFalse(tint.contains("light_night"));
   assertFalse(tint.contains("home_warm_light"));
-  assertTrue(tint.contains("new LinearGradient"));
+  assertTrue(tint.contains("PixelTimeGradeRenderer.draw"));
+  assertFalse(tint.contains("LinearGradient"));
  }
 }
