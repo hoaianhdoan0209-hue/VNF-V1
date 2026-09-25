@@ -132,7 +132,7 @@ public final class VisualV1DevTest {
         check(ui.contains("HudIconRenderer.CHAT")&&ui.contains("HudIconRenderer.MIC")&&(ui.contains("HudIconRenderer.GOD")||ui.contains("HudIconRenderer.drawGodButton")),"chat/mic/God are icon controls",ok,bad);
         check(ui.contains("MinimalHudLayout.forScreen"),"render and hit-test share the same responsive layout",ok,bad);
         String icon=read(root.resolve("app/src/main/java/com/aicharacter/v3/HudIconRenderer.java"));
-        check(icon.contains("pressed?176:104")&&icon.contains("c.translate(0,1.2f*d)"),"icon controls have a clear pressed state",ok,bad);
+        check(icon.contains("pressed?214:166")&&icon.contains("if(pressed)c.translate(0,2*d)")&&icon.contains("c.drawRect(b.l,b.t,b.r,b.b,p)"),"pixel icon controls have a clear pressed state",ok,bad);
     }
 
     private static String read(Path p)throws IOException{return new String(Files.readAllBytes(p),StandardCharsets.UTF_8);}
