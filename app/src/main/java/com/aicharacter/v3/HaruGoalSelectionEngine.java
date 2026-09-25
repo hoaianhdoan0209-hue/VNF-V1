@@ -7,6 +7,7 @@ public final class HaruGoalSelectionEngine {
   if(s==null)return;
   if(HaruAffordanceEngine.beginPlanIfCompelling(s,now))return;
   LifeDecision d=LifeDecisionEngine.choose(s,now);
+  d=HaruVisibleAgencyEngine.adjustChoice(s,d,now);
   OfflineLifeEngine.beginDecision(s,d,now);
  }
 }
