@@ -18,7 +18,7 @@ public final class GirlAnimationController{
   if(s.girlTravel.active){float bodyFactor=s.body.pain>20||s.body.energy<25?.72f:1f;float weatherFactor=(float)Math.max(.62,1-rain*.18-wind*.12-s.worldWetness*.08);float speed=(float)Math.max(2.2,Math.min(8.5,(3.4+s.girlTravel.lastSpeed/80.0)*bodyFactor*weatherFactor));String reason=rain>.18||wind>.35?"travel cadence responds to rain/wind and current body state":"travel expressed through current body state";return facingRight?v(State.WALK_RIGHT,"girl_walk_right",12,speed,.50f,.94f,reason):v(State.WALK_LEFT,"girl_walk_left",12,speed,.50f,.94f,reason);}
   if(rain>.60&&(wind>.42||(s.thermal!=null&&s.thermal.coldLoad>.48)))return social(v(State.REACT,"girl_react_right",12,1.7f,.50f,.94f,"heavy exposed weather visibly changes posture"),socialLeft);
   if(s.body.pain>20)return social(v(State.REACT,"girl_react_right",12,1.9f,.50f,.94f,"pain is visibly affecting movement"),socialLeft);
-  if(s.body.energy<22||s.body.sleepiness>78)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant"),socialLeft);
+  if(s.body.energy<34||s.body.sleepiness>64)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,"body pressure is visibly dominant"),socialLeft);
   MicroInteractionDirector.Cue micro=MicroInteractionDirector.derive(s,Math.max(s.lastSimulatedAt,s.lastOpenedAt));if(micro.active)return social(v(State.CROUCH,"girl_crouch_right",12,1.65f,.50f,.94f,micro.kind==MicroInteractionDirector.Kind.CAT_RUB?"looking down during a real close cat rub":"quietly acknowledging the cat at her feet"),socialLeft);
   EmotionEpisodeState emotion=latestEmotion(s);if(emotion!=null&&emotion.intensity>=.30){String e=emotion.primaryEmotion==null?"":emotion.primaryEmotion;if("afraid".equals(e)||"angry".equals(e))return social(v(State.REACT,"girl_react_right",12,2.15f,.50f,.94f,"current "+e+" episode remains visibly active"),socialLeft);if("sad".equals(e)||"lonely".equals(e))return social(v(State.SIT,"girl_sit_right",12,1.35f,.50f,.94f,"current "+e+" episode softens posture"),socialLeft);if("curious".equals(e))return social(v(State.THINK,"girl_think_right",12,1.85f,.50f,.94f,"current curiosity episode keeps attention visibly engaged"),socialLeft);if("joyful".equals(e)||"relieved".equals(e))return social(v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"current "+e+" episode becomes a brief open reaction"),socialLeft);}
   Visual continuous=continuousEmotionVisual(s,socialLeft);
@@ -40,13 +40,13 @@ public final class GirlAnimationController{
  private static Visual continuousEmotionVisual(WorldState s,boolean socialLeft){
   if(s==null||s.emotion==null)return null;
   double fear=s.emotion.fear,anger=s.emotion.anger,sad=s.emotion.sadness,lonely=s.emotion.loneliness,joy=s.emotion.joy,curiosity=s.emotion.curiosity;
-  if(Math.max(fear,anger)>=.52)return social(v(State.REACT,"girl_react_right",12,2.05f,.50f,.94f,fear>=anger?"live fear remains visible in posture":"live anger remains visible in posture"),socialLeft);
-  if(Math.max(sad,lonely)>=.48)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,sad>=lonely?"live sadness softens posture":"live loneliness closes posture"),socialLeft);
-  if(joy>=.58)return social(v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"live positive affect opens posture"),socialLeft);
+  if(Math.max(fear,anger)>=.34)return social(v(State.REACT,"girl_react_right",12,2.05f,.50f,.94f,fear>=anger?"live fear remains visible in posture":"live anger remains visible in posture"),socialLeft);
+  if(Math.max(sad,lonely)>=.34)return social(v(State.SIT,"girl_sit_right",12,1.45f,.50f,.94f,sad>=lonely?"live sadness softens posture":"live loneliness closes posture"),socialLeft);
+  if(joy>=.42)return social(v(State.REACT,"girl_react_right",12,1.85f,.50f,.94f,"live positive affect opens posture"),socialLeft);
   String id=s.currentIntention==null?"":s.currentIntention;
   boolean curiosityContext=id.contains("observe")||id.contains("explore")||id.contains("watch")||id.contains("study")||id.contains("compare");
   ThoughtState t=lastThought(s);long now=Math.max(s.lastSimulatedAt,s.lastOpenedAt);
-  if(curiosity>=.56&&(curiosityContext||t!=null&&t.isCurrent(now,s.currentIntention)))
+  if(curiosity>=.40&&(curiosityContext||t!=null&&t.isCurrent(now,s.currentIntention)||s.currentIntention==null||s.currentIntention.isEmpty()))
    return social(v(State.THINK,"girl_think_right",12,1.90f,.50f,.94f,"live curiosity is visibly focused on current evidence"),socialLeft);
   return null;
  }
