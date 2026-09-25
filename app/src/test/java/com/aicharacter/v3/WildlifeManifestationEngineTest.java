@@ -40,6 +40,23 @@ public final class WildlifeManifestationEngineTest {
   assertTrue(s.haruSpeech.pendingText.contains("sinh vật"));
  }
 
+ @Test public void unfamiliarVisibleWildlifeCanBecomeAHaruOwnedGoal(){
+  WorldState s=state();
+  String species=SpeciesEvolutionCatalog.all().get(11).key;
+  seed(s,species,.70,.82);
+  WildlifeManifestationEngine.sync(s,T0);
+  String id=WildlifeManifestationEngine.objectId("lakeside",species);
+  WorldObject o=s.world.object(id);assertNotNull(o);
+  o.x=455f;CreatureLifeState life=s.livingWorld.creature(id);life.x=455f;life.areaId="lakeside";life.lastUpdatedAt=T0;
+
+  HaruAffordanceEngine.observeQuestions(s,T0+5);
+  assertTrue(s.characterGod.openQuestions.values().stream().anyMatch(q->id.equals(q.aboutObjectId)));
+  assertTrue(HaruAffordanceEngine.beginPlanIfCompelling(s,T0+10));
+  assertEquals("WORLD_AFFORDANCE",s.planState.origin);
+  assertEquals(id,s.planState.destination);
+  assertEquals("affordance_inquiry",s.currentIntention);
+ }
+
  @Test public void representativeLifeStateSurvivesDefinitionRehydration()throws Exception{
   WorldState s=state();
   String species=SpeciesEvolutionCatalog.all().get(10).key;
