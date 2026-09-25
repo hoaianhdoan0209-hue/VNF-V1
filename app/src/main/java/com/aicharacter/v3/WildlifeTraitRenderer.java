@@ -44,6 +44,8 @@ public final class WildlifeTraitRenderer {
   drawDefense(c,p,species.defense,x,bodyY,w,h,anim,alert,dark,light);
   c.restore();
   PixelReactionFxRenderer.drawWildlifeAlert(c,p,x,bodyY-h*.58f,alert,anim,light);
+  float occlusion=Math.max(0f,1f-liftPx/18f);
+  if(occlusion>.05f)PixelFootOcclusionRenderer.draw(c,p,PixelFootOcclusionRenderer.visualArea(o.areaId),x,ground,anim+.21f,occlusion*.52f);
 
   p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);p.setStrokeWidth(1f);p.setAntiAlias(false);
   return true;
