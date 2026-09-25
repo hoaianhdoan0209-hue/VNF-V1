@@ -14,6 +14,7 @@ public final class ProceduralAudioEngine {
  private static final String TAG="VNF-Audio";
  private static final int SAMPLE_RATE=22050,BLOCK_FRAMES=512;
  private static final double TWO_PI=Math.PI*2.0;
+ static final double AMBIENCE_GAIN=1.55,FOOTSTEP_GAIN=1.85,BREATH_GAIN=1.70,PURR_GAIN=1.95,MASTER_GAIN=.86;
  private final ConcurrentLinkedQueue<SoundEvent> cueQueue=new ConcurrentLinkedQueue<>();
  private volatile AudioSceneFrame frame=AudioSceneFrame.quiet();
  private volatile boolean active=false,destroyed=false;
@@ -88,6 +89,8 @@ public final class ProceduralAudioEngine {
    else if(f.areaId.contains("home"))ambient+=windLp*.0025;
    if("NIGHT".equals(f.dayPhase))ambient+=Math.sin(wrap(waterPhase*.061))*0.0018;
 
+   ambient*=AMBIENCE_GAIN;
+
    double divine=0;
    if(f.divinePresence>.001){
     divine=(Math.sin(divinePhase)*.010+Math.sin(divinePhase*2.003)*.005+Math.sin(divinePhase*7.11)*.0018)*f.divinePresence;
@@ -97,11 +100,11 @@ public final class ProceduralAudioEngine {
    double breathHz=.18+.24*Math.max(f.haruBreathing,f.haruStress);
    breathPhase=wrap(breathPhase+TWO_PI*breathHz/SAMPLE_RATE);
    double breathEnv=Math.max(0,Math.sin(breathPhase));
-   breath=(windLp*.018+noise*.002)*breathEnv*f.haruBreathing*(.45+.55*f.haruStress);
+   breath=(windLp*.018+noise*.002)*breathEnv*f.haruBreathing*(.45+.55*f.haruStress)*BREATH_GAIN;
 
-   double haruFoot=stepSample(true,f.haruWalking,f.haruSpeed,noise,f.haruSurface);
-   double catFoot=stepSample(false,f.catMoving,f.catSpeed,noise,f.catSurface);
-   double purr=0;if(f.catPurr>.001){purrPhase=wrap(purrPhase+TWO_PI*48.5/SAMPLE_RATE);purrPhase2=wrap(purrPhase2+TWO_PI*97.0/SAMPLE_RATE);double trem=.76+.24*Math.sin(waterPhase*.37);purr=(Math.sin(purrPhase)*.0075+Math.sin(purrPhase2)*.0035+windLp*.003)*f.catPurr*trem;}
+   double haruFoot=stepSample(true,f.haruWalking,f.haruSpeed,noise,f.haruSurface)*FOOTSTEP_GAIN;
+   double catFoot=stepSample(false,f.catMoving,f.catSpeed,noise,f.catSurface)*FOOTSTEP_GAIN;
+   double purr=0;if(f.catPurr>.001){purrPhase=wrap(purrPhase+TWO_PI*48.5/SAMPLE_RATE);purrPhase2=wrap(purrPhase2+TWO_PI*97.0/SAMPLE_RATE);double trem=.76+.24*Math.sin(waterPhase*.37);purr=(Math.sin(purrPhase)*.0075+Math.sin(purrPhase2)*.0035+windLp*.003)*f.catPurr*trem*PURR_GAIN;}
 
    double left=ambient+divine+breath+haruFoot+catFoot+purr,right=left;
    if(cueVoice!=null){
@@ -109,7 +112,7 @@ public final class ProceduralAudioEngine {
     left+=cs.left;right+=cs.right;
     if(cueVoice.done())cueVoice=null;
    }
-   double master=.72,leftSafe=softClip(left*master),rightSafe=softClip(right*master);
+   double leftSafe=softClip(left*MASTER_GAIN),rightSafe=softClip(right*MASTER_GAIN);
    out[i*2]=(short)Math.round(leftSafe*32767.0);
    out[i*2+1]=(short)Math.round(rightSafe*32767.0);
   }
