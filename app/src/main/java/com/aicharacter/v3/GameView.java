@@ -195,7 +195,24 @@ public final class GameView extends View{
   PixelTimeGradeRenderer.draw(c,p,state,area,vp.accent,2400f,1080f,anim);
   drawNightBiomeLights(c,area);
   drawDivineScreenGrade(c,visualDivinePresence);
- } private void drawDivineScreenGrade(Canvas c,float strength){if(strength<=.005f)return;float s=Math.max(0f,Math.min(1f,strength)),cx=viewportWorldW*.5f,pulse=(float)(.5+.5*Math.sin(anim*.31f));p.setStyle(Paint.Style.FILL);p.setAntiAlias(true);p.setShader(new RadialGradient(cx,410,540+40*pulse,new int[]{Color.argb((int)(10*s),246,232,195),Color.argb((int)(5*s),175,211,208),Color.TRANSPARENT},new float[]{0f,.44f,1f},Shader.TileMode.CLAMP));c.drawCircle(cx,410,590,p);p.setShader(null);p.setShader(new LinearGradient(cx,0,cx,900,Color.argb((int)(5*s),224,234,222),Color.TRANSPARENT,Shader.TileMode.CLAMP));Path beam=new Path();beam.moveTo(cx-34,0);beam.lineTo(cx+34,0);beam.lineTo(cx+145,900);beam.lineTo(cx-145,900);beam.close();c.drawPath(beam,p);p.setShader(null);p.setAntiAlias(false);} private void drawProactiveSpeech(Canvas c){
+ } private void drawDivineScreenGrade(Canvas c,float strength){
+  if(strength<=.005f)return;
+  float s=Math.max(0f,Math.min(1f,strength)),cx=PixelArtRenderPolicy.snapLogical(viewportWorldW*.5f);
+  float pulse=(float)(.5+.5*Math.sin(anim*.31f));
+  p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
+  for(int i=5;i>=0;i--){
+   float w=PixelArtRenderPolicy.snapLogical(90+i*72+20*pulse*i),h=PixelArtRenderPolicy.snapLogical(42+i*48);
+   int a=Math.max(1,(int)((3+i)*s));
+   p.setColor(Color.argb(a,246,232,195));
+   c.drawRect(cx-w,410-h,cx+w,410+h,p);
+  }
+  for(int i=0;i<9;i++){
+   float half=PixelArtRenderPolicy.snapLogical(24+i*13);
+   float y0=i*100f,y1=Math.min(900f,y0+74f);
+   p.setColor(Color.argb(Math.max(1,(int)((7-i*.45f)*s)),224,234,222));
+   c.drawRect(cx-half,y0,cx+half,y1,p);
+  }
+ } private void drawProactiveSpeech(Canvas c){
   long now=System.currentTimeMillis();if(haruSpeechText==null||haruSpeechText.isEmpty()||now>=haruSpeechUntil)return;
   float w=getWidth(),h=getHeight(),pad=16*density,maxW=Math.min(w*.72f,720*density),x=(w-maxW)*.5f;
   text.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.BOLD));text.setAntiAlias(false);text.setSubpixelText(false);text.setTextSize(15*density);text.setTextAlign(Paint.Align.LEFT);
