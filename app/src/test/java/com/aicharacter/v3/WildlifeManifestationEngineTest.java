@@ -21,6 +21,23 @@ public final class WildlifeManifestationEngineTest {
   assertEquals(visible,s.world.objects.stream().filter(WildlifeManifestationEngine::isDynamic).count());
  }
 
+ @Test public void manifestedWildlifeCarriesDistinctSpeciesTraits(){
+  WorldState s=state();
+  SpeciesEvolutionCatalog.Species air=SpeciesEvolutionCatalog.all().get(5);
+  SpeciesEvolutionCatalog.Species ground=SpeciesEvolutionCatalog.all().get(6);
+  assertNotEquals(air.locomotion,ground.locomotion);
+  seed(s,air.key,.76,.84);seed(s,ground.key,.72,.82);
+
+  assertEquals(2,WildlifeManifestationEngine.sync(s,T0));
+  WorldObject a=s.world.object(WildlifeManifestationEngine.objectId("lakeside",air.key));
+  WorldObject g=s.world.object(WildlifeManifestationEngine.objectId("lakeside",ground.key));
+  assertNotNull(a);assertNotNull(g);
+  assertTrue(a.tags.contains("move_"+air.locomotion.replaceAll("[^A-Za-z0-9]+","_").toLowerCase(java.util.Locale.ROOT)));
+  assertTrue(g.tags.contains("move_"+ground.locomotion.replaceAll("[^A-Za-z0-9]+","_").toLowerCase(java.util.Locale.ROOT)));
+  CreatureLifeState al=s.livingWorld.creature(a.id),gl=s.livingWorld.creature(g.id);
+  assertNotEquals("species locomotion must affect live movement drive",al.locomotionDrive,gl.locomotionDrive,1e-9);
+ }
+
  @Test public void lowAbundanceSpeciesStayPopulationOnly(){
   WorldState s=state();
   String species=SpeciesEvolutionCatalog.all().get(8).key;
