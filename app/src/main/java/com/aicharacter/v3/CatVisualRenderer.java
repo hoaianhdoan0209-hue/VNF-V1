@@ -13,6 +13,7 @@ public final class CatVisualRenderer {
 
  public static void draw(Canvas c,Paint p,WorldState s,CatAnimationController.Visual v,float x,float ground,float anim,float cameraZoom,float divinePresence){
   if(c==null||p==null||s==null||v==null||v.state==CatAnimationController.State.ATTACHED)return;
+  if(CatPixelSpriteRenderer.draw(c,p,s,v,x,ground,anim,cameraZoom,divinePresence))return;
   float close=Math.max(0,Math.min(1,(cameraZoom-1f)/.56f)),scale=1.05f+close*.08f;
   double gp=s.catRig==null?0:s.catRig.gaitPhase;float phase=(float)(gp*Math.PI*2),bob=v.moving()?(float)Math.sin(phase*2)*1.3f:idleBreath(s,anim);
   float bodyY=ground-38*scale+bob;
@@ -29,6 +30,7 @@ public final class CatVisualRenderer {
 
  public static void drawAttached(Canvas c,Paint p,WorldState s,CatAnimationController.Visual v,float haruX,float haruGround,float anim,float cameraZoom,float divinePresence){
   if(v==null||v.state!=CatAnimationController.State.ATTACHED)return;
+  if(CatPixelSpriteRenderer.drawAttached(c,p,s,v,haruX,haruGround,anim,cameraZoom,divinePresence))return;
   float close=Math.max(0,Math.min(1,(cameraZoom-1f)/.56f)),sc=.86f+close*.10f;
   float x=haruX+41f,y=haruGround-HaruVisualRenderer.authoredFrameHeight()*HaruVisualRenderer.fixedBodyScale()*.57f+(float)Math.sin(anim*.72f)*1.1f;
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setColorFilter(null);p.setAlpha(255);
