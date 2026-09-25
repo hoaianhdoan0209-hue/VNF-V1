@@ -18,6 +18,7 @@ public final class HaruPixelRenderer {
 
  public static void draw(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float anim,float divinePresence){
   if(c==null||p==null||v==null)return;
+  x=PixelArtRenderPolicy.snapLogical(x);bodyGround=PixelArtRenderPolicy.snapLogical(bodyGround);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setFilterBitmap(false);p.setColorFilter(null);p.setAlpha(255);
   boolean left=v.flipX||v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.SEARCH_LEFT;
   int frame=((int)Math.floor(anim*Math.max(.1f,v.fps)))&7;
