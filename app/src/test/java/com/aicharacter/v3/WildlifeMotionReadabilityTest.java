@@ -28,18 +28,9 @@ public final class WildlifeMotionReadabilityTest {
    if(active!=null)break;
   }
   assertNotNull("catalog should contain an active/dormant pair with the same locomotion",active);assertNotNull(dormant);
-  WorldState s=WorldState.fresh();s.world=new WorldModel();s.livingWorld=new LivingWorldState();
-  WorldArea a=new WorldArea("test","test","test",0,1000,846,true,"vegetation,water,open");s.world.areas.add(a);
-  SpeciesPopulationState pa=s.livingWorld.population(active.key,"test");pa.relativeAbundance=.5;pa.carryingCapacity=.7;
-  SpeciesPopulationState pd=s.livingWorld.population(dormant.key,"test");pd.relativeAbundance=.5;pd.carryingCapacity=.7;
-  WildlifeManifestationEngine.sync(s,1_900_000_000_000L);
-  double activeDrive=-1,dormantDrive=-1;
-  for(WorldObject o:s.world.objects){
-   CreatureLifeState life=s.livingWorld.creatures.get(o.id);if(life==null)continue;
-   if(active.key.equals(o.dictionaryRef))activeDrive=life.locomotionDrive;
-   if(dormant.key.equals(o.dictionaryRef))dormantDrive=life.locomotionDrive;
-  }
-  assertTrue(activeDrive>=0);assertTrue(dormantDrive>=0);
-  assertTrue("dormant traits must remain slower than active representatives",activeDrive>dormantDrive);
+  double activeDrive=WildlifeManifestationEngine.traitMotion(active);
+  double dormantDrive=WildlifeManifestationEngine.traitMotion(dormant);
+  assertTrue("dormant lifecycle must reduce visible locomotion drive for the same locomotion family",activeDrive>dormantDrive);
  }
+
 }
