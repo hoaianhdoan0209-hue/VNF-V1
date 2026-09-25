@@ -5,7 +5,7 @@ package com.aicharacter.v3;
  * Sources must already exist in simulation state/history; this engine never invents world facts.
  */
 public final class HaruProactiveSpeechEngine {
- private static final long MIN_GAP_MS=45000L,EVENT_WINDOW_MS=14000L,INTENTION_WINDOW_MS=9000L,THOUGHT_WINDOW_MS=180000L;
+ private static final long MIN_GAP_MS=30000L,EVENT_WINDOW_MS=16000L,INTENTION_WINDOW_MS=12000L,THOUGHT_WINDOW_MS=180000L;
  public static final class Cue{
   public final String text,expression,sourceId;public final long createdAt;
   Cue(String t,String e,String s,long at){text=t==null?"":t;expression=e==null?"":e;sourceId=s==null?"":s;createdAt=Math.max(0,at);}
@@ -45,6 +45,7 @@ public final class HaruProactiveSpeechEngine {
    if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("APPROACH"))return new Candidate("Nó vừa tự lại gần mình.","ánh mắt dịu xuống một chút",e.eventId);
    if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("RETREAT"))return new Candidate("Nó muốn có thêm khoảng cách. Mình sẽ để nó yên một chút.","lùi sự chú ý lại, không ép gần hơn",e.eventId);
    if("PLAN_POST_OUTCOME_REVIEWED".equals(t)&&summary.contains("STATUS=FAILED"))return new Candidate("Cách vừa rồi không ổn. Mình phải nghĩ lại.","im một nhịp rồi suy nghĩ",e.eventId);
+   if("HARU_VISIBLE_AUTONOMY_STARTED".equals(t))return new Candidate("Mình không muốn cứ đứng yên mãi. Mình đi nhìn quanh một chút.","tự chọn một hướng rồi bắt đầu hành động",e.eventId);
    if("ECOLOGY_VISIBLE_MANIFESTATION".equals(t))return new Candidate("Ở đây có một sinh vật mình chưa từng để ý thấy trước đó. Mình muốn nhìn kỹ hơn.","ánh mắt chuyển sang một chuyển động lạ trong môi trường",e.eventId);
    if("VISIBLE_UNEXPLAINED_ECOLOGY_PULSE".equals(t))return new Candidate("Nhịp sống của chúng vừa đổi rất đột ngột… Mình chưa biết vì sao.","chăm chú nhìn lại sinh vật trước mặt, chưa vội gán nguyên nhân",e.eventId);
    if(t.contains("CAUSAL_EXPERIMENT_RESOLVED")||t.contains("PREDICTION_RESOLVED"))return new Candidate("Mình vừa hiểu thêm được một chút về chuyện đó.","ánh mắt tập trung như vừa nối được một ý",e.eventId);
@@ -55,6 +56,8 @@ public final class HaruProactiveSpeechEngine {
  private static Candidate intentionCandidate(WorldState s,long now){
   if(s.currentIntention==null||s.currentIntention.isEmpty()||s.intentionStartedAt<=0||now<s.intentionStartedAt||now-s.intentionStartedAt>INTENTION_WINDOW_MS)return null;
   String id=s.currentIntention,src="intention:"+id+":"+s.intentionStartedAt;
+  if("inspect_nearby".equals(id))return new Candidate("Mình vừa để ý thấy một thứ ở gần đây. Mình muốn lại xem kỹ hơn.","ánh mắt khóa vào một chi tiết trong thế giới rồi tự đổi hướng",src);
+  if("ambient_explore".equals(id))return new Candidate("Mình muốn đi xem quanh đây một chút, có thể có gì đó đã thay đổi.","tự nhìn sang khu vực bên cạnh rồi bắt đầu bước đi",src);
   if("find_cat".equals(id))return new Candidate("Mình đi tìm nó một chút.","nhìn về phía những nơi con mèo có thể đã đi qua",src);
   if("observe_lake".equals(id))return new Candidate("Mình muốn ra nhìn mặt hồ một lúc.","ánh mắt hướng về phía hồ",src);
   if("explore_garden".equals(id))return new Candidate("Mình muốn đi dọc lối cỏ xem có gì thay đổi.","chú ý đến khu vườn",src);
