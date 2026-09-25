@@ -147,10 +147,10 @@ public final class FastStartupRegressionTest {
   assertTrue(main.contains("if(!isDebugVisualCapture())gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L)"));
  }
 
- @Test public void v104UsesNewUpdaterVersion()throws Exception{
+ @Test public void v105UsesNextUpdaterVersion()throws Exception{
   String gradle=read(appRoot().resolve("build.gradle"));
-  assertTrue(gradle.contains("versionCode 121"));
-  assertTrue(gradle.contains("versionName '1.0.4'"));
+  assertTrue(gradle.contains("versionCode 122"));
+  assertTrue(gradle.contains("versionName '1.0.5'"));
   assertTrue(gradle.contains("androidx.work:work-runtime:2.10.0"));
  }
 }
