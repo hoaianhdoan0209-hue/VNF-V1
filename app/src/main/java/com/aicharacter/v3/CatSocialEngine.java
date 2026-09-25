@@ -6,8 +6,8 @@ package com.aicharacter.v3;
  */
 public final class CatSocialEngine {
  private static final double PERCEPTION_RANGE=420.0;
- private static final long PLAYER_OVERRIDE_MS=6500L,RESPONSE_COOLDOWN_MS=9000L,LEARNING_INTERVAL_MS=8000L;
- private static final double APPROACH_AFFINITY=.39,SETTLE_COMFORT=.46,SETTLE_FAMILIARITY=.40,CALM_FAMILIARITY_GAIN=.022,CALM_COMFORT_GAIN=.026;
+ private static final long PLAYER_OVERRIDE_MS=4500L,RESPONSE_COOLDOWN_MS=7000L,LEARNING_INTERVAL_MS=6000L;
+ private static final double APPROACH_AFFINITY=.30,SETTLE_COMFORT=.40,SETTLE_FAMILIARITY=.34,CALM_FAMILIARITY_GAIN=.030,CALM_COMFORT_GAIN=.034;
  private CatSocialEngine(){}
 
  public static boolean tick(WorldState s,long now){
@@ -27,7 +27,7 @@ public final class CatSocialEngine {
   cs.attention=follow(cs.attention,Math.max(.28,cs.curiosity*.62+cs.familiarity*.30),.35);cs.gazeTarget="girl";
   if(cat.energy<15||cat.sleepiness>94||nervousLoad(s)>.78){cs.mode="STAY";cs.reason="body/balance state outweighs optional social movement";return false;}
 
-  double affinity=cl(cs.familiarity*.43+cs.comfort*.40+cs.curiosity*.17),guard=cl(cs.wariness*.68+o.approachPressure*.58+nervousLoad(s)*.34);
+  double affinity=cl(cs.familiarity*.40+cs.comfort*.36+cs.curiosity*.24),guard=cl(cs.wariness*.68+o.approachPressure*.58+nervousLoad(s)*.34);
   if(guard>.56&&o.distance<205){
    float target=retreatTarget(s,o,guard);if(Float.isFinite(target)&&Math.abs(target-cat.x)>20)return startMove(s,now,"RETREAT",target,"Haru approached within the cat's current comfort boundary",o);
    cs.mode="STAY";cs.reason="wary but no safer bounded local retreat is available";return false;
