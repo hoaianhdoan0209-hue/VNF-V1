@@ -6,6 +6,17 @@ import android.graphics.*;
 public final class PixelLightingRenderer {
  private PixelLightingRenderer(){}
 
+ public static void drawCreatureContactShadow(Canvas c,Paint p,float x,float ground,float halfWidth,float lift,float activity){
+  if(c==null||p==null)return;
+  x=sn(x);ground=sn(ground);halfWidth=Math.max(8f,sn(halfWidth));lift=Math.max(0,lift);activity=Math.max(0,Math.min(1,activity));
+  float contact=Math.max(.34f,1f-lift/220f),half=sn(halfWidth*contact);
+  int outer=(int)(26+18*(1-activity)),inner=(int)(14+12*(1-activity));
+  p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);
+  band(c,p,Color.argb(outer,5,10,10),x-half,ground-2,x+half,ground+3);
+  band(c,p,Color.argb(inner,18,25,23),x-half*.66f,ground-3,x+half*.66f,ground+1);
+  if(lift<8f)band(c,p,Color.argb(10,77,91,74),x-half*.42f,ground-4,x+half*.42f,ground-2);
+ }
+
  public static void drawActorGrounding(Canvas c,Paint p,int accent,float x,float ground,float lift){
   if(c==null||p==null)return;
   x=sn(x);ground=sn(ground);lift=Math.max(0,lift);
