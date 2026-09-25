@@ -17,7 +17,7 @@ public final class CreaturePhysicsEngine{
   float left=area.left+margin,right=area.right-margin;
   if(right<=left){left=area.left;right=area.right;}
 
-  long bucket=Math.max(0L,now/30000L);
+  long bucket=Math.max(0L,now/waypointIntervalMs(o));
   double unit=unitHash(o.id,bucket);
   float target=(float)(left+(right-left)*(.12+.76*unit));
   float dxPx=target-c.x;
@@ -27,7 +27,7 @@ public final class CreaturePhysicsEngine{
   double moisture=EcologyEngine.localMoisture(s,area);
   double slope=Math.abs(GroundGeometry.slope(s,c.x));
   double traction=flyer?1.0:clamp(.88-moisture*.16-slope*.42,.30,.96);
-  double speciesSpeed=isRipple(o)?(.10+.24*c.locomotionDrive):isRoot(o)?(.07+.18*c.locomotionDrive):isHearth(o)?(.09+.20*c.locomotionDrive):(.18+.42*c.locomotionDrive);
+  double speciesSpeed=locomotionSpeedMps(o,c.locomotionDrive);
   if("withdraw".equals(c.activity))speciesSpeed*=1.45;
   else if("rest".equals(c.activity))speciesSpeed*=.12;
   else if("forage".equals(c.activity))speciesSpeed*=.72;
@@ -75,16 +75,53 @@ public final class CreaturePhysicsEngine{
   return (float)GroundGeometry.heightPx(s,c.x);
  }
 
- public static boolean isFlyer(WorldObject o){return o!=null&&(o.id.startsWith("driftwing")||o.id.startsWith("hearthmote")||has(o.tags,"glide")||has(o.tags,"wing"));}
- private static boolean isRipple(WorldObject o){return o.id.startsWith("ripplekin");}
- private static boolean isRoot(WorldObject o){return o.id.startsWith("root_husher");}
- private static boolean isHearth(WorldObject o){return o.id.startsWith("hearthmote")||o.id.startsWith("hushcrawler");}
+ public static boolean isFlyer(WorldObject o){
+  if(o==null)return false;
+  String locomotion=locomotion(o);
+  if("air-drift".equals(locomotion)||"membrane-flight".equals(locomotion))return true;
+  return o.id.startsWith("driftwing")||o.id.startsWith("hearthmote")||has(o.tags,"glide")||has(o.tags,"wing");
+ }
+ static double locomotionSpeedMps(WorldObject o,double drive){
+  drive=clamp(drive,0,1);String locomotion=locomotion(o);
+  if("four-point walk".equals(locomotion))return .16+.34*drive;
+  if("six-beat scuttle".equals(locomotion))return .20+.44*drive;
+  if("short-hop".equals(locomotion))return .17+.40*drive;
+  if("air-drift".equals(locomotion))return .12+.34*drive;
+  if("membrane-flight".equals(locomotion))return .23+.50*drive;
+  if("water-pulse".equals(locomotion))return .11+.28*drive;
+  if("surface-skate".equals(locomotion))return .21+.46*drive;
+  if("burrow-wave".equals(locomotion))return .08+.24*drive;
+  if("climb-coil".equals(locomotion))return .09+.27*drive;
+  if("root-step".equals(locomotion))return .07+.18*drive;
+  if("fin-undulate".equals(locomotion))return .13+.32*drive;
+  if("ground-glide".equals(locomotion))return .14+.32*drive;
+  return .18+.42*drive;
+ }
+ private static long waypointIntervalMs(WorldObject o){
+  String locomotion=locomotion(o);
+  if("six-beat scuttle".equals(locomotion))return 12000L;
+  if("short-hop".equals(locomotion))return 14000L;
+  if("surface-skate".equals(locomotion))return 16000L;
+  if("water-pulse".equals(locomotion))return 20000L;
+  if("membrane-flight".equals(locomotion))return 22000L;
+  if("fin-undulate".equals(locomotion))return 24000L;
+  if("air-drift".equals(locomotion))return 45000L;
+  if("climb-coil".equals(locomotion))return 48000L;
+  if("burrow-wave".equals(locomotion))return 60000L;
+  if("root-step".equals(locomotion))return 65000L;
+  return 30000L;
+ }
+ private static String locomotion(WorldObject o){
+  if(o==null)return"";
+  SpeciesEvolutionCatalog.Species species=SpeciesEvolutionCatalog.get(o.dictionaryRef);
+  return species==null||species.locomotion==null?"":species.locomotion;
+ }
 
  private static void advanceVerticalFlight(WorldState s,WorldObject o,CreatureLifeState c,WorldArea area,double seconds,long now){
   double wind=s.environment==null?0:s.environment.wind;
   double vitality=c.body==null?.7:c.body.vitalReserve;
   double strain=c.body==null?0:c.body.strain;
-  double base=1.10+(Math.abs(o.id.hashCode())%7)*.06;
+  String locomotion=locomotion(o);double base=("air-drift".equals(locomotion)?.86:"membrane-flight".equals(locomotion)?1.34:1.10)+(Math.abs(o.id.hashCode())%7)*.06;
   double current=.18*Math.sin(now/4200.0+(o.id.hashCode()&31))+.12*wind;
   double target=Math.max(.42,base+current-.38*strain);
   double liftSupport=clamp(.91+.11*vitality+.10*c.locomotionDrive+.05*wind,.72,1.10);
