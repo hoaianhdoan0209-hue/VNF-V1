@@ -8,7 +8,8 @@ import java.util.*;
  * from Haru's curiosity, memory coverage, world semantics and reachability.
  */
 public final class HaruVisibleAgencyEngine {
- private static final double MIN_CURIOSITY=.46;\n private static final long VISIBLE_AGENCY_WATCHDOG_MS=42000L;
+ private static final double MIN_CURIOSITY=.46;
+ private static final long VISIBLE_AGENCY_WATCHDOG_MS=42000L;
  private HaruVisibleAgencyEngine(){}
 
  public static LifeDecision adjustChoice(WorldState s,LifeDecision selected,long now){
