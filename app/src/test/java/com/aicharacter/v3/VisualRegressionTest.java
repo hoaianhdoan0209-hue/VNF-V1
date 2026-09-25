@@ -223,7 +223,8 @@ public final class VisualRegressionTest{
   assertTrue(main.contains("setPositiveButton(\"Cho phép\""));
   assertFalse(main.contains("postDelayed(this::requestCoreRuntimePermissions"));
   assertTrue(world.contains("HaruProactiveSpeechState haruSpeech"));
-  assertTrue(world.contains("j.put(\\\"haruSpeech\\\",haruSpeech.toJson())"));\n   assertTrue(world.contains("HaruProactiveSpeechState.fromJson"));
+  assertTrue(world.contains("j.put(\\\"haruSpeech\\\",haruSpeech.toJson())"));
+  assertTrue(world.contains("HaruProactiveSpeechState.fromJson"));
  }
 
  @Test public void legacyFullFrameLightRastersNeverOverlayWorld()throws Exception{
