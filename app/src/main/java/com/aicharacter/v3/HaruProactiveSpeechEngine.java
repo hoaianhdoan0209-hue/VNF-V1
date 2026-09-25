@@ -45,6 +45,7 @@ public final class HaruProactiveSpeechEngine {
    if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("APPROACH"))return new Candidate("Nó vừa tự lại gần mình.","ánh mắt dịu xuống một chút",e.eventId);
    if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("RETREAT"))return new Candidate("Nó muốn có thêm khoảng cách. Mình sẽ để nó yên một chút.","lùi sự chú ý lại, không ép gần hơn",e.eventId);
    if("PLAN_POST_OUTCOME_REVIEWED".equals(t)&&summary.contains("STATUS=FAILED"))return new Candidate("Cách vừa rồi không ổn. Mình phải nghĩ lại.","im một nhịp rồi suy nghĩ",e.eventId);
+   if("ECOLOGY_VISIBLE_MANIFESTATION".equals(t))return new Candidate("Ở đây có một sinh vật mình chưa từng để ý thấy trước đó. Mình muốn nhìn kỹ hơn.","ánh mắt chuyển sang một chuyển động lạ trong môi trường",e.eventId);
    if(t.contains("CAUSAL_EXPERIMENT_RESOLVED")||t.contains("PREDICTION_RESOLVED"))return new Candidate("Mình vừa hiểu thêm được một chút về chuyện đó.","ánh mắt tập trung như vừa nối được một ý",e.eventId);
   }
   return null;
