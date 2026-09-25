@@ -56,17 +56,19 @@ public final class CatPixelSpriteRenderer {
  }
 
  private static void drawStanding(Canvas c,Paint p,WorldState s,CatAnimationController.Visual v,float x,float g,int frame,float divine){
-  boolean moving=v.moving();float[] stride={-2,-1,0,1,2,1,0,-1};
-  float step=moving?stride[frame]*PX:0,bob=moving?((frame&1)==1?-PX:0):0;
+  boolean moving=v.moving();
+  float step=moving?PixelMotionCadence.stride(frame)*PX:0,bob=moving?PixelMotionCadence.lift(frame)*PX:0;
   if(v.state==CatAnimationController.State.RUB)bob=((frame==2||frame==3)?-PX:0);
   float bodyY=g-9*PX+bob;
   float crouch=v.state==CatAnimationController.State.RETREAT?2*PX:v.state==CatAnimationController.State.APPROACH?PX:0;
   bodyY+=crouch;
-  float headX=x+8*PX+(v.state==CatAnimationController.State.RUB?(frame<4?2*PX:PX):0);
+  float secondary=moving?PixelMotionCadence.secondary(frame)*PX:0;
+  float headX=x+8*PX+secondary*.22f+(v.state==CatAnimationController.State.RUB?(frame<4?2*PX:PX):0);
   float headY=bodyY-4*PX+(v.state==CatAnimationController.State.RETREAT?PX:0);
 
-  tail(c,p,x-8*PX,bodyY,frame,v.state,(float)v.attention);
-  body(c,p,x,bodyY,17*PX,8*PX);
+  tail(c,p,x-8*PX-secondary*.12f,bodyY,frame,v.state,(float)v.attention);
+  float compression=moving?PixelMotionCadence.compression(frame):0;
+  body(c,p,x,bodyY,(17f+compression*.75f)*PX,(8f-compression*.45f)*PX);
   // coat patches make the sprite readable even at small size
   rect(c,p,ORANGE,x-6*PX,bodyY-3*PX,x-1*PX,bodyY+PX);
   rect(c,p,DARK,x+2*PX,bodyY-3*PX,x+6*PX,bodyY+2*PX);
