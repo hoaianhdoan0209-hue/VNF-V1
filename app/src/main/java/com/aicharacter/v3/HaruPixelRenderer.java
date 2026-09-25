@@ -112,7 +112,7 @@ public final class HaruPixelRenderer {
 
   // A tiny hair/clothing motion cue keeps idle visibly alive.
   if(!walk&&frame==2){rect(c,p,HAIR_HI,x-8*PX+lean,g-29*PX,x-7*PX+lean,g-25*PX);}
-  if(walk){rect(c,p,Color.argb(70,223,213,190),x-10*PX,g-PX,x-8*PX,g,p);}
+  if(walk){rect(c,p,Color.argb(70,223,213,190),x-10*PX,g-PX,x-8*PX,g);}
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
@@ -157,7 +157,7 @@ public final class HaruPixelRenderer {
   rect(c,p,OUT,x-6*PX,y-10*PX,x+6*PX,y-5*PX);rect(c,p,SKIRT,x-5*PX,y-9*PX,x+5*PX,y-6*PX);
   rect(c,p,OUT,x+4*PX,y-13*PX,x+12*PX,y-9*PX);rect(c,p,SKIN,x+5*PX,y-12*PX,x+11*PX,y-10*PX);
   rect(c,p,OUT,x-4*PX,y-6*PX,x+3*PX,y);rect(c,p,SKIN,x-3*PX,y-5*PX,x+2*PX,y-2*PX);
-  rect(c,p,OUT,x+4*PX,y-6*PX,x+11*PX,y);rect(c,p,SHOE,x+6*PX,y-2*PX,x+11*PX,y,p);
+  rect(c,p,OUT,x+4*PX,y-6*PX,x+11*PX,y);rect(c,p,SHOE,x+6*PX,y-2*PX,x+11*PX,y);
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
