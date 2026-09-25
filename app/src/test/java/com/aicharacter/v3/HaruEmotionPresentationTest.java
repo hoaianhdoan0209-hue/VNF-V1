@@ -36,7 +36,7 @@ public final class HaruEmotionPresentationTest {
   s.world.areas.add(home);s.haruX=315;s.catX=420;s.catState.x=420;s.catState.areaId="home_shelter";
   s.environment.weather="CLEAR";s.environment.weatherIntensity=0;s.environment.wind=0;
   s.haruActivity="standing quietly";s.currentIntention="";
-  s.girlTravel=new TravelState();s.girlPhysics=new GirlPhysicsState();s.catSearch=new CatSearchState();
+  s.girlTravel=new TravelState();s.girlPhysics=PhysicsBodyState.fromJson(null,50);s.catSearch=new GirlCatSearchEngine.SearchState();
   s.body.energy=90;s.body.sleepiness=10;s.body.pain=0;
   s.relationship.hurt=0;s.relationship.irritation=0;
   return s;
