@@ -11,6 +11,7 @@ on:
       - release/v1.0.4
       - release/v1.0.5
       - work/v1.0.5
+      - work/v1.0.6
       - team/haru-intelligence-v1
   workflow_dispatch:
 
