@@ -226,6 +226,38 @@ public final class RealExperienceRegressionTest {
   assertTrue(renderer.contains("c.scale(ILLUSTRATED_SCALE,ILLUSTRATED_SCALE,x,bodyGround)"));
  }
 
+ @Test public void healthyHaruShowsVisibleSelfChosenActivityWithinTenSeconds(){
+  WorldState s=state(T0);
+  s.haruX=315f;s.catState.x=s.catX=340f;s.catState.attachedToEntity="";s.catState.carryKnownByGirl=false;
+  s.body.energy=96;s.body.sleepiness=4;s.body.pain=0;s.body.health=100;
+  s.digestive.stomachFood=.82;s.digestive.nutrientReserve=.88;s.hydration.hydration=.94;s.hydration.bladderFill=.05;
+  s.emotion.curiosity=.96;s.currentIntention="";s.haruActivity="standing quietly";
+  s.planState=new PlanState();s.girlTravel=new TravelState();s.lastHaruPhysicalMoveAt=0;
+  float before=s.haruX,maxMove=0f;boolean sawDeliberation=false,sawVisiblePlan=false;
+  long now=T0;
+  for(int i=0;i<10;i++){
+   now+=1000L;
+   LifeSimulationKernel.beginSlice(s,1.0,now,LifeSimulationKernel.Mode.ACTIVE);
+   HaruAutonomyEngine.tickDecision(s,now);
+   GirlAnimationController.Visual v=GirlAnimationController.select(s);
+   if(v.state==GirlAnimationController.State.THINK||v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT)sawDeliberation=true;
+   if("VISIBLE_AUTONOMY".equals(s.planState.origin)||s.girlTravel.active)sawVisiblePlan=true;
+   LifeSimulationKernel.endSlice(s,1.0,now,true,false,LifeSimulationKernel.Mode.ACTIVE);
+   maxMove=Math.max(maxMove,Math.abs(s.haruX-before));
+  }
+  assertTrue("startup should visibly express Haru deliberating instead of a dead idle pose",sawDeliberation);
+  assertTrue("healthy Haru should choose a visible world action within ten seconds",sawVisiblePlan);
+  assertTrue("the visible choice must become physical movement, not only a text intention",maxMove>2f||s.girlTravel.active);
+  assertFalse("Haru must not remain a standing placeholder","standing quietly".equals(s.haruActivity)&&s.currentIntention.isEmpty());
+ }
+
+ @Test public void urgentBodyNeedsBypassStartupVisibleChoiceReservation(){
+  WorldState s=state(T0);s.planState=new PlanState();s.girlTravel=new TravelState();s.lastHaruPhysicalMoveAt=0;
+  s.hydration.hydration=.18;s.body.energy=90;s.body.sleepiness=5;s.body.pain=0;s.body.health=100;
+  assertFalse("thirst must outrank the startup deliberation window",HaruVisibleAutonomyEngine.reserveStartupVisibleChoice(s,T0+1000L));
+  assertTrue("visible-idle watchdog should stay short enough for phone testing",HaruVisibleAutonomyEngine.MAX_HEALTHY_STILL_MS<=7000L);
+ }
+
  @Test public void healthyHaruProducesVisibleAutonomousActivityWithinThreeMinutes(){
   WorldState s=state(T0);
   s.haruX=315f;s.catState.x=s.catX=315f;
