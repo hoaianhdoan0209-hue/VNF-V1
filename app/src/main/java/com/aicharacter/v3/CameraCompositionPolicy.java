@@ -9,9 +9,9 @@ public final class CameraCompositionPolicy {
   float emotional=presentedZoom(emotion==null?1f:emotion.zoom);
   if(moment==null||!moment.active)return emotional;
   float semantic=presentedZoom(moment.minZoom);
-  // Retreat can widen the shot, but the all-pixel presentation never drops
-  // back to the distant pre-pixel framing.
-  if(moment.kind==MomentDirector.Kind.SOCIAL_RETREAT)return clamp(Math.min(emotional,semantic),1.08f,1.65f);
+  // Retreat is intentionally allowed to widen below the normal pixel baseline.
+  // Keep the authored semantic zoom here instead of remapping it toward BASE_PIXEL_ZOOM.
+  if(moment.kind==MomentDirector.Kind.SOCIAL_RETREAT){float retreat=clamp(moment.minZoom,1.05f,1.65f);return clamp(Math.min(emotional,retreat),1.05f,1.65f);}
   return clamp(Math.max(emotional,semantic),BASE_PIXEL_ZOOM,1.65f);
  }
 
