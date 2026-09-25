@@ -61,6 +61,7 @@ public final class DivineWorshipEngine {
   p.mortalityPressure=unit(p.mortalityPressure-b.blessingPower*.006*blessingDays);
   god.graceReserve=unit(god.graceReserve-b.blessingPower*.0025*blessingDays);
   b.lastBlessedAt=now;god.lastBlessingAt=now;p.clamp();
+  applyVisibleBlessing(s,b,blessingDays);
 
   if(canOffer(b,p,now)){
    double cost=Math.min(.012,Math.max(.0025,p.relativeAbundance*.015));
@@ -68,7 +69,36 @@ public final class DivineWorshipEngine {
    b.cumulativePopulationCost=Math.max(0,b.cumulativePopulationCost+cost);b.totalOfferings++;b.lastOfferingAt=now;
    god.totalOfferings++;god.lastOfferingAt=now;god.graceReserve=unit(god.graceReserve+cost*5.0+b.devotion*.006);b.blessingPower=unit(b.blessingPower+cost*2.5+b.devotion*.004);
    WorldEventBus.publishId(s,now,"divine_offering_"+god.id+"_"+b.speciesKey+"_"+Long.toHexString(now),"DIVINE_OFFERING_MADE",b.speciesKey,"Một phần quần thể Tín đồ "+b.speciesKey+" tự dâng hiến; population cost="+round(cost)+", quyền năng dự trữ Thần Con và blessing của chính Tín đồ tăng nhưng không miễn phí.");
+   publishObservableOfferingEffect(s,b,cost,now);
   }
+ }
+
+ private static void applyVisibleBlessing(WorldState s,WorshipBondState b,double days){
+  if(s==null||s.world==null||s.livingWorld==null||b==null||days<=0)return;
+  double pulse=unit(b.blessingPower)*Math.min(1,days);
+  if(pulse<=0)return;
+  for(WorldObject o:s.world.objects){
+   if(o==null||!o.enabled||!"creature".equals(o.type)||!b.areaId.equals(HaruVisionEngine.actualAreaId(s,o))||!b.speciesKey.equals(FantasyEcologyDictionary.keyForObject(o)))continue;
+   CreatureLifeState life=s.livingWorld.creatures.get(o.id);if(life==null)continue;
+   if(life.body==null)life.body=new OrganismBodyState();if(life.cycle==null)life.cycle=new OrganismCycleState();
+   life.body.vitalReserve=unit(life.body.vitalReserve+pulse*.032);
+   life.body.surfaceIntegrity=unit(life.body.surfaceIntegrity+pulse*.018);
+   life.body.strain=unit(life.body.strain-pulse*.026);
+   life.cycle.recoveryDrive=unit(life.cycle.recoveryDrive+pulse*.024);
+  }
+ }
+
+ private static void publishObservableOfferingEffect(WorldState s,WorshipBondState b,double cost,long now){
+  if(s==null||s.world==null||b==null)return;
+  WorldArea haru=s.world.areaAt(s.haruX);if(haru==null||!b.areaId.equals(haru.id))return;
+  WorldObject visible=null;
+  for(WorldObject o:s.world.objects){
+   if(o==null||!o.enabled||!"creature".equals(o.type))continue;
+   if(!b.areaId.equals(HaruVisionEngine.actualAreaId(s,o))||!b.speciesKey.equals(FantasyEcologyDictionary.keyForObject(o)))continue;
+   visible=o;break;
+  }
+  if(visible==null)return;
+  WorldEventBus.publishId(s,now,"visible_ecology_pulse_"+visible.id+"_"+Long.toHexString(now),"VISIBLE_UNEXPLAINED_ECOLOGY_PULSE",visible.id,"area="+b.areaId+" species="+b.speciesKey+" recovery_shift="+round(b.blessingPower)+" population_shift="+round(cost));
  }
 
  private static boolean canOffer(WorshipBondState b,SpeciesPopulationState p,long now){
