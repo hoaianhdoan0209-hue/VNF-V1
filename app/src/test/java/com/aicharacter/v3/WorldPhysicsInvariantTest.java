@@ -36,6 +36,32 @@ public final class WorldPhysicsInvariantTest {
   return s;
  }
 
+ @Test public void catalogLocomotionChangesWildlifePhysics(){
+  WorldState s=flat();
+  SpeciesEvolutionCatalog.Species drifting=SpeciesEvolutionCatalog.all().get(5);
+  SpeciesEvolutionCatalog.Species grounded=SpeciesEvolutionCatalog.all().get(6);
+  assertEquals("air-drift",drifting.locomotion);
+  assertEquals("ground-glide",grounded.locomotion);
+
+  WorldObject air=new WorldObject("air_test","creature","field","","",420,846,34,26,"creature");
+  WorldObject ground=new WorldObject("ground_test","creature","field","","",520,846,34,26,"creature");
+  air.dictionaryRef=drifting.key;ground.dictionaryRef=grounded.key;
+  s.world.objects.add(air);s.world.objects.add(ground);
+
+  CreatureLifeState ac=new CreatureLifeState();ac.areaId="field";ac.x=air.x;ac.activity="drift";ac.locomotionDrive=.70;
+  CreatureLifeState gc=new CreatureLifeState();gc.areaId="field";gc.x=ground.x;gc.activity="drift";gc.locomotionDrive=.70;
+  assertTrue(CreaturePhysicsEngine.isFlyer(air));
+  assertFalse(CreaturePhysicsEngine.isFlyer(ground));
+  assertNotEquals(CreaturePhysicsEngine.locomotionSpeedMps(air,.70),CreaturePhysicsEngine.locomotionSpeedMps(ground,.70),1e-9);
+
+  CreaturePhysicsEngine.advanceLocal(s,air,ac,.02,T0+1000);
+  CreaturePhysicsEngine.advanceLocal(s,ground,gc,.02,T0+1000);
+  assertTrue("air-drift species should acquire real vertical separation",ac.verticalOffsetM>0);
+  assertFalse(ac.grounded);
+  assertEquals(0,gc.verticalOffsetM,1e-12);
+  assertTrue(gc.grounded);
+ }
+
  @Test public void unsupportedFallUsesGravity(){
   WorldState s=flat();
   WholeBodyPhysicsEngine.loseGroundSupport(s,"girl",1.0,0,T0);
