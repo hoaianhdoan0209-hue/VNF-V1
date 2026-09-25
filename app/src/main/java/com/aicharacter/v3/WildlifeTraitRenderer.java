@@ -155,16 +155,16 @@ public final class WildlifeTraitRenderer {
   }
  }
 
- private static float motionOffset(SpeciesEvolutionCatalog.Species s,CreatureLifeState life,float anim){
-  String loc=s.locomotion==null?"":s.locomotion;float drive=(float)Math.max(0,Math.min(1,life.locomotionDrive)),raw;
+ static float motionOffset(SpeciesEvolutionCatalog.Species s,CreatureLifeState life,float anim){
+  String loc=s.locomotion==null?"":s.locomotion;float drive=(float)Math.max(0,Math.min(1,life.locomotionDrive)),moving=(float)Math.min(1,Math.abs(life.velocityXMps)/.24),raw;
   if("short-hop".equals(loc))raw=-(float)Math.abs(Math.sin(anim*(2.4+drive*2.8)))*(3+7*drive);
-  else if("six-beat scuttle".equals(loc))raw=(float)Math.sin(anim*(5.0+drive*5))*1.6f;
-  else if("surface-skate".equals(loc))raw=(float)Math.sin(anim*(2.6+drive*2))*1.2f;
+  else if("six-beat scuttle".equals(loc))raw=(float)Math.sin(anim*(5.0+drive*5))*(2.2f+2.0f*moving);
+  else if("surface-skate".equals(loc))raw=(float)Math.sin(anim*(2.6+drive*2))*(1.8f+1.7f*moving);
   else if("air-drift".equals(loc))raw=(float)Math.sin(anim*(.72+drive*.8))*4.5f;
   else if("membrane-flight".equals(loc))raw=(float)Math.sin(anim*(1.6+drive*1.7))*3.0f;
-  else if("burrow-wave".equals(loc))raw=(float)Math.sin(anim*(1.5+drive))*1.0f;
-  else if("root-step".equals(loc))raw=(float)Math.sin(anim*(.65+drive*.5))*.7f;
-  else raw=(float)Math.sin(anim*(.9+drive*1.4))*1.5f;
+  else if("burrow-wave".equals(loc))raw=(float)Math.sin(anim*(1.5+drive))*(1.4f+1.5f*moving);
+  else if("root-step".equals(loc))raw=(float)Math.sin(anim*(.65+drive*.5))*(1.0f+1.2f*moving);
+  else raw=(float)Math.sin(anim*(.9+drive*1.4))*(1.8f+1.6f*moving);
   return PixelArtRenderPolicy.snapLogical(raw);
  }
 
