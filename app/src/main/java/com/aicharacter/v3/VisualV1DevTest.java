@@ -109,8 +109,8 @@ public final class VisualV1DevTest {
               "drawTimeTint forbids legacy full-frame light rasters",ok,bad);
         check(!game.contains("assets.get(\\\"light_evening\\\"")&&!game.contains("assets.get(\\\"light_night\\\"")&&!game.contains("assets.get(\\\"home_warm_light\\\""),
               "legacy full-frame light rasters are absent from the render pipeline",ok,bad);
-        check(tint.contains("LinearGradient")&&tint.contains("drawRect(0,0,2400,1080"),
-              "time-of-day compositing remains procedural gradient/tint",ok,bad);
+        check(tint.contains("PixelTimeGradeRenderer.draw")&&!tint.contains("LinearGradient"),
+              "time-of-day compositing uses banded pixel grade",ok,bad);
     }
 
     private static void checkMobileHud(Path root,List<String>ok,List<String>bad)throws Exception{
