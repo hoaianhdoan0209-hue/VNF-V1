@@ -7,6 +7,7 @@ package com.aicharacter.v3;
 public final class CatSocialEngine {
  private static final double PERCEPTION_RANGE=420.0;
  private static final long PLAYER_OVERRIDE_MS=6500L,RESPONSE_COOLDOWN_MS=9000L,LEARNING_INTERVAL_MS=8000L;
+ private static final double APPROACH_AFFINITY=.39,SETTLE_COMFORT=.46,SETTLE_FAMILIARITY=.40,CALM_FAMILIARITY_GAIN=.022,CALM_COMFORT_GAIN=.026;
  private CatSocialEngine(){}
 
  public static boolean tick(WorldState s,long now){
@@ -33,10 +34,10 @@ public final class CatSocialEngine {
   }
   if(cs.lastResponseAt>0&&now>=cs.lastResponseAt&&now-cs.lastResponseAt<RESPONSE_COOLDOWN_MS){cs.mode="WATCH";cs.reason="watching Haru during social response cooldown";return false;}
   double tired=Math.max(cat.sleepiness/100.0,(100-cat.energy)/100.0);
-  if(cs.comfort>.56&&cs.familiarity>.48&&guard<.42&&tired>.38&&o.distance>=55&&o.distance<=145){
+  if(cs.comfort>SETTLE_COMFORT&&cs.familiarity>SETTLE_FAMILIARITY&&guard<.42&&tired>.38&&o.distance>=55&&o.distance<=145){
    cs.mode="SETTLE_NEAR";cs.reason="familiar calm proximity and tiredness make staying nearby comfortable";cs.settles++;cs.lastResponseAt=now;WorldEventBus.publishId(s,now,"cat_social_settle_"+Long.toHexString(now),"CAT_SOCIAL_SETTLE_NEAR","cat","Cat chose to settle near Haru without attaching or being controlled.");return false;
   }
-  if(affinity>.48&&guard<.46&&o.distance>125){
+  if(affinity>APPROACH_AFFINITY&&guard<.46&&o.distance>125){
    float target=approachTarget(s,o,affinity);if(Float.isFinite(target)&&Math.abs(target-cat.x)>18)return startMove(s,now,"APPROACH",target,"familiarity/comfort/curiosity support a voluntary closer distance",o);
   }
   cs.mode=affinity>.34?"WATCH":"STAY";cs.reason=affinity>.34?"curiosity keeps attention on Haru without requiring movement":"current cat state does not favor changing distance";cs.lastResponseAt=now;return false;
@@ -71,7 +72,7 @@ public final class CatSocialEngine {
   if(intrusion>0||pressure>.52){double shock=Math.max(intrusion,pressure);cs.wariness=cl(cs.wariness+.045+.055*shock);cs.comfort=cl(cs.comfort-.025-.025*shock);cs.lastCalmExposure=0;cs.lastLearningAt=now;return;}
   if(cs.lastLearningAt>0&&now>=cs.lastLearningAt&&now-cs.lastLearningAt<LEARNING_INTERVAL_MS)return;cs.lastLearningAt=now;
   boolean calm=o.distance>=65&&o.distance<=230&&pressure<.24&&nervousLoad(s)<.42;
-  if(calm){cs.calmEncounters++;cs.lastCalmExposure=cl(.45+(1-cs.wariness)*.40);cs.familiarity=cl(cs.familiarity+.014*(1-cs.wariness));cs.comfort=cl(cs.comfort+.018*(.65+cs.familiarity*.35));cs.wariness=cl(cs.wariness-.012*(.5+cs.comfort*.5));}
+  if(calm){cs.calmEncounters++;cs.lastCalmExposure=cl(.45+(1-cs.wariness)*.40);cs.familiarity=cl(cs.familiarity+CALM_FAMILIARITY_GAIN*(1-cs.wariness));cs.comfort=cl(cs.comfort+CALM_COMFORT_GAIN*(.65+cs.familiarity*.35));cs.wariness=cl(cs.wariness-.014*(.5+cs.comfort*.5));}
  }
 
  private static boolean startMove(WorldState s,long now,String mode,float target,String reason,Observation o){
