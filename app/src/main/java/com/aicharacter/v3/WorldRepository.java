@@ -208,6 +208,7 @@ public final class WorldRepository{
  private void attachDefinition(WorldState state){
   state.world=WorldDefinitionLoader.load(context);
   state.runtime.mergeDefinition(state.world);
+  WildlifeManifestationEngine.sync(state,Math.max(state.lastSimulatedAt,state.lastOpenedAt));
  }
 
  private static void copy(File from,File to)throws IOException{
