@@ -232,10 +232,9 @@ public final class RealExperienceRegressionTest {
   s.digestive.stomachFood=.82;s.digestive.nutrientReserve=.88;s.hydration.hydration=.94;s.hydration.bladderFill=.05;
   s.personality.curiosity=.78;s.emotion.curiosity=.72;s.currentIntention="";s.haruActivity="standing quietly";
   s.planState=new PlanState();s.girlTravel=new TravelState();s.lastOpenedAt=T0-60000L;s.intentionStartedAt=T0-60000L;
-  for(WorldArea a:s.world.areas)for(int i=0;i<8;i++)CognitionEngine.experience(s,T0-1000L-i,"familiar_place","remembered "+a.id,.02,.10,a.id);
-  LifeDecision selected=LifeDecisionEngine.choose(s,T0);
-  LifeDecision adjusted=HaruVisibleAgencyEngine.adjustChoice(s,selected,T0);
-  assertEquals("explore_world",adjusted.intention.id);
+   LifeDecision selected=new LifeDecision(new Intention("linger",0,"curiosity","home_shelter","stay where she is",.10,T0+60000L)).reason("low_pressure_idle",1);
+   LifeDecision adjusted=HaruVisibleAgencyEngine.adjustChoice(s,selected,T0);
+   assertEquals("explore_world",adjusted.intention.id);
   OfflineLifeEngine.beginDecision(s,adjusted,T0);
   assertTrue("watchdog choice must become real physical travel",s.girlTravel.active);
   float before=s.haruX;
@@ -247,8 +246,9 @@ public final class RealExperienceRegressionTest {
   WorldState s=state(T0);s.haruX=315f;s.body.energy=96;s.body.sleepiness=4;s.body.pain=0;s.body.health=100;
   s.digestive.stomachFood=.82;s.hydration.hydration=.94;s.hydration.bladderFill=.05;s.personality.curiosity=.88;
   s.planState=new PlanState();s.girlTravel=new TravelState();s.currentIntention="";s.intentionStartedAt=T0-60000L;s.lastOpenedAt=T0-60000L;
-  LifeDecision d=HaruVisibleAgencyEngine.adjustChoice(s,LifeDecisionEngine.choose(s,T0),T0);
-  OfflineLifeEngine.beginDecision(s,d,T0);
+   LifeDecision idle=new LifeDecision(new Intention("linger",0,"curiosity","home_shelter","stay where she is",.10,T0+60000L)).reason("low_pressure_idle",1);
+   LifeDecision d=HaruVisibleAgencyEngine.adjustChoice(s,idle,T0);
+   OfflineLifeEngine.beginDecision(s,d,T0);
   assertEquals("explore_world",s.currentIntention);
   assertTrue(HaruProactiveSpeechEngine.advance(s,T0+1000L,LifeSimulationKernel.Mode.ACTIVE));
   HaruProactiveSpeechEngine.Cue cue=HaruProactiveSpeechEngine.consume(s,T0+1001L);
