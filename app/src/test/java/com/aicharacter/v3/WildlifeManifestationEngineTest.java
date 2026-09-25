@@ -38,6 +38,17 @@ public final class WildlifeManifestationEngineTest {
   assertNotEquals("species locomotion must affect live movement drive",al.locomotionDrive,gl.locomotionDrive,1e-9);
  }
 
+ @Test public void manifestedSpeciesExposeDifferentVisualPhenotypes(){
+  SpeciesEvolutionCatalog.Species a=SpeciesEvolutionCatalog.all().get(5);
+  SpeciesEvolutionCatalog.Species b=SpeciesEvolutionCatalog.all().get(6);
+  WorldObject ao=new WorldObject("eco_a","creature","lakeside","","",200,846,34,26,"creature");ao.dictionaryRef=a.key;
+  WorldObject bo=new WorldObject("eco_b","creature","lakeside","","",260,846,34,26,"creature");bo.dictionaryRef=b.key;
+  assertNotEquals(a.bodyPlan,b.bodyPlan);
+  assertNotEquals(WildlifeTraitRenderer.visualSignature(ao),WildlifeTraitRenderer.visualSignature(bo));
+  assertTrue(WildlifeTraitRenderer.visualSignature(ao).contains(a.bodyPlan));
+  assertTrue(WildlifeTraitRenderer.visualSignature(bo).contains(b.bodyPlan));
+ }
+
  @Test public void lowAbundanceSpeciesStayPopulationOnly(){
   WorldState s=state();
   String species=SpeciesEvolutionCatalog.all().get(8).key;
