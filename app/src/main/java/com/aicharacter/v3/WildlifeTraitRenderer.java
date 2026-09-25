@@ -33,9 +33,9 @@ public final class WildlifeTraitRenderer {
   int dark=Color.rgb(Math.max(0,rgb[0]-40),Math.max(0,rgb[1]-40),Math.max(0,rgb[2]-40));
 
   p.setShader(null);p.setAntiAlias(false);p.setDither(false);p.setStrokeCap(Paint.Cap.SQUARE);p.setStrokeJoin(Paint.Join.MITER);
-  p.setStyle(Paint.Style.FILL);float shadowScale=CreaturePhysicsEngine.isFlyer(o)?.72f:1f,shadowHalf=PixelArtRenderPolicy.snapLogical(w*.52f*shadowScale);
-  p.setColor(Color.argb(34,0,0,0));c.drawRect(PixelArtRenderPolicy.snapLogical(x-shadowHalf),ground-3,PixelArtRenderPolicy.snapLogical(x+shadowHalf),ground+3,p);
-  p.setColor(Color.argb(18,20,27,25));c.drawRect(PixelArtRenderPolicy.snapLogical(x-shadowHalf*.66f),ground-2,PixelArtRenderPolicy.snapLogical(x+shadowHalf*.66f),ground+2,p);
+  float shadowScale=CreaturePhysicsEngine.isFlyer(o)?.72f:1f;
+  float liftPx=(float)WorldUnits.mToPx(Math.max(0,life.verticalOffsetM));
+  PixelLightingRenderer.drawCreatureContactShadow(c,p,x,ground,w*.52f*shadowScale,liftPx,(float)Math.max(0,Math.min(1,life.locomotionDrive)));
 
   c.save();
   if(life.heading<0)c.scale(-1,1,x,bodyY);
