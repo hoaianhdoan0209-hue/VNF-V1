@@ -20,7 +20,7 @@ public final class CatPixelSpriteRenderer {
   x=PixelArtRenderPolicy.snapLogical(x);ground=PixelArtRenderPolicy.snapLogical(ground);
   int frame=frameIndex(s,v,anim);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setFilterBitmap(false);p.setColorFilter(null);p.setAlpha(255);
-  drawShadow(c,p,x,ground,v);
+  PixelLightingRenderer.drawCreatureContactShadow(c,p,x,ground,v.state==CatAnimationController.State.SLEEP?36f:v.state==CatAnimationController.State.SETTLE?30f:33f,0f,v.moving()?1f:.2f);
   c.save();c.scale(v.facingRight?1f:-1f,1f,x,ground);
   switch(v.state){
    case SLEEP:drawSleep(c,p,x,ground,frame,divinePresence);break;
@@ -189,10 +189,5 @@ public final class CatPixelSpriteRenderer {
   rect(c,p,CREAM,x-7*PX,g-1.5f*PX,x-4*PX,g-.3f*PX);rect(c,p,CREAM,x+5*PX,g-1.5f*PX,x+8*PX,g-.3f*PX);
  }
 
- private static void drawShadow(Canvas c,Paint p,float x,float g,CatAnimationController.Visual v){
-  float w=v.state==CatAnimationController.State.SLEEP?12*PX:v.state==CatAnimationController.State.SETTLE?10*PX:11*PX;
-  rect(c,p,Color.argb(v.moving()?34:44,0,0,0),x-w,g-PX,x+w,g+PX);
-  rect(c,p,Color.argb(18,20,27,25),x-w*.65f,g-PX*.5f,x+w*.65f,g+PX*.5f);
- }
  private static void rect(Canvas c,Paint p,int color,float l,float t,float r,float b){p.setColor(color);c.drawRect(l,t,r,b,p);}
 }
