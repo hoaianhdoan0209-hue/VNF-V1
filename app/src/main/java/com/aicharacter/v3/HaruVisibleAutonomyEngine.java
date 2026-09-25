@@ -7,7 +7,7 @@ package com.aicharacter.v3;
  * sleep, urgent body needs, active plans, search, social spacing or unsafe states.
  */
 public final class HaruVisibleAutonomyEngine {
- public static final long MAX_HEALTHY_STILL_MS=28000L;
+ public static final long MAX_HEALTHY_STILL_MS=6000L,STARTUP_VISIBLE_RESERVE_MS=6000L;
  private static final float MIN_LOCAL_MOVE_PX=82f,MAX_LOCAL_TARGET_PX=620f;
  private HaruVisibleAutonomyEngine(){}
 
@@ -23,6 +23,19 @@ public final class HaruVisibleAutonomyEngine {
  }
 
  public static boolean eligible(WorldState s,long now){
+  if(!safeForVisibleChoice(s,now))return false;
+  long anchor=s.lastHaruPhysicalMoveAt>0?s.lastHaruPhysicalMoveAt:Math.max(s.lastOpenedAt,s.createdAt);
+  return anchor>0&&now>=anchor&&now-anchor>=MAX_HEALTHY_STILL_MS;
+ }
+
+ public static boolean reserveStartupVisibleChoice(WorldState s,long now){
+  if(!safeForVisibleChoice(s,now))return false;
+  long opened=s.lastOpenedAt>0?s.lastOpenedAt:s.createdAt;
+  if(opened<=0||now<opened||now-opened>=STARTUP_VISIBLE_RESERVE_MS)return false;
+  return s.lastHaruPhysicalMoveAt<=0||s.lastHaruPhysicalMoveAt<opened;
+ }
+
+ private static boolean safeForVisibleChoice(WorldState s,long now){
   if(s==null||s.world==null||s.body==null||s.girlTravel==null)return false;
   if(BodyRhythmEngine.isSleeping(s)||s.girlTravel.active)return false;
   if(s.planState!=null&&s.planState.active())return false;
@@ -30,9 +43,7 @@ public final class HaruVisibleAutonomyEngine {
   if(s.body.energy<54||s.body.sleepiness>62||s.body.pain>20||s.body.health<78)return false;
   if(DigestionHydrationEngine.hunger(s)>.62||DigestionHydrationEngine.thirst(s)>.56||DigestionHydrationEngine.bladderUrgency(s)>.62)return false;
   WorldArea here=s.world.areaAt(s.haruX);
-  if(here!=null&&s.environment!=null&&"RAIN".equals(s.environment.weather)&&s.environment.weatherIntensity>.72&&WorldSemantics.exposure(here)>.55)return false;
-  long anchor=s.lastHaruPhysicalMoveAt>0?s.lastHaruPhysicalMoveAt:Math.max(s.lastOpenedAt,s.createdAt);
-  return anchor>0&&now>=anchor&&now-anchor>=MAX_HEALTHY_STILL_MS;
+  return here==null||s.environment==null||!"RAIN".equals(s.environment.weather)||s.environment.weatherIntensity<=.72||WorldSemantics.exposure(here)<=.55;
  }
 
  private static WorldObject bestLocalTarget(WorldState s,WorldArea here){
