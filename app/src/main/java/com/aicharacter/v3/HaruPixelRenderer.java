@@ -39,9 +39,9 @@ public final class HaruPixelRenderer {
   boolean walk=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
   boolean search=v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT;
   boolean react=v.state==GirlAnimationController.State.REACT,think=v.state==GirlAnimationController.State.THINK;
-  float[] gait={-1.8f,-1.0f,-.35f,.55f,1.8f,1.0f,.35f,-.55f};
-  float step=walk?gait[frame]*PX:0,other=-step;
-  float lean=walk?1.0f*PX:search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
+  float step=walk?PixelMotionCadence.stride(frame)*PX:0,other=-step;
+  float secondary=walk?PixelMotionCadence.secondary(frame)*PX:0;
+  float lean=walk?(1.0f*PX+secondary*.10f):search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
   float headTop=g-42*PX;
 
   // Hair silhouette: stepped chibi mass, with long side locks.
@@ -50,8 +50,8 @@ public final class HaruPixelRenderer {
   rect(c,p,OUT,x-9*PX+lean,headTop+5*PX,x-5*PX+lean,g-23*PX);
   rect(c,p,OUT,x+5*PX+lean,headTop+6*PX,x+9*PX+lean,g-24*PX);
   rect(c,p,HAIR,x-7*PX+lean,headTop+2*PX,x+7*PX+lean,headTop+13*PX);
-  rect(c,p,HAIR,x-8*PX+lean,headTop+6*PX,x-5*PX+lean,g-24*PX);
-  rect(c,p,HAIR,x+5*PX+lean,headTop+7*PX,x+8*PX+lean,g-25*PX);
+  rect(c,p,HAIR,x-8*PX+lean-secondary*.20f,headTop+6*PX,x-5*PX+lean-secondary*.20f,g-24*PX);
+  rect(c,p,HAIR,x+5*PX+lean-secondary*.12f,headTop+7*PX,x+8*PX+lean-secondary*.12f,g-25*PX);
   rect(c,p,HAIR_HI,x-5*PX+lean,headTop+2*PX,x-2*PX+lean,headTop+5*PX);
 
   // Face with hair fringe.
@@ -115,10 +115,11 @@ public final class HaruPixelRenderer {
   }
 
   // Skirt, visibly separated from top.
-  rect(c,p,OUT,x-6*PX,g-14*PX,x+6*PX,g-8*PX);
-  rect(c,p,SKIRT,x-5*PX,g-13*PX,x+5*PX,g-9*PX);
-  rect(c,p,SKIRT_HI,x-4*PX,g-13*PX,x+4*PX,g-12*PX);
-  rect(c,p,SKIRT,x-6*PX,g-10*PX,x+6*PX,g-8*PX);
+  float skirtShift=walk?-secondary*.24f:0;
+  rect(c,p,OUT,x-6*PX+skirtShift,g-14*PX,x+6*PX+skirtShift,g-8*PX);
+  rect(c,p,SKIRT,x-5*PX+skirtShift,g-13*PX,x+5*PX+skirtShift,g-9*PX);
+  rect(c,p,SKIRT_HI,x-4*PX+skirtShift,g-13*PX,x+4*PX+skirtShift,g-12*PX);
+  rect(c,p,SKIRT,x-6*PX+skirtShift,g-10*PX,x+6*PX+skirtShift,g-8*PX);
 
   // Legs and shoes. Walk always has a distinct stride even on neutral capture frames.
   if(walk&&Math.abs(step)<PX)step=(frame<2?-1:1)*PX;
@@ -127,7 +128,7 @@ public final class HaruPixelRenderer {
 
   // A tiny hair/clothing motion cue keeps idle visibly alive.
   if(!walk&&(frame==2||frame==5)){rect(c,p,HAIR_HI,x-8*PX+lean,g-29*PX,x-7*PX+lean,g-25*PX);}
-  if(walk){rect(c,p,Color.argb(70,223,213,190),x-10*PX,g-PX,x-8*PX,g);}
+  if(walk&&PixelMotionCadence.contact(frame)){float dustDir=step<0?-1:1;rect(c,p,Color.argb(70,223,213,190),x+dustDir*8*PX,g-PX,x+dustDir*10*PX,g);}
   drawDivinePixels(c,p,x,headTop,divine);
  }
 
@@ -204,7 +205,7 @@ public final class HaruPixelRenderer {
  }
 
  private static float bob(GirlAnimationController.State state,int frame){
-  if(state==GirlAnimationController.State.WALK_LEFT||state==GirlAnimationController.State.WALK_RIGHT)return(frame==1||frame==2||frame==5||frame==6)?-PX:0;
+  if(state==GirlAnimationController.State.WALK_LEFT||state==GirlAnimationController.State.WALK_RIGHT)return PixelMotionCadence.lift(frame)*PX;
   if(state==GirlAnimationController.State.REACT)return(frame==1||frame==5)?-PX:0;
   if(state==GirlAnimationController.State.SEARCH_LEFT||state==GirlAnimationController.State.SEARCH_RIGHT)return(frame==2||frame==6)?-PX:0;
   return 0;
