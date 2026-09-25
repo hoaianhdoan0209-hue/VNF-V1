@@ -33,9 +33,9 @@ public final class WildlifeTraitRenderer {
   int dark=Color.rgb(Math.max(0,rgb[0]-40),Math.max(0,rgb[1]-40),Math.max(0,rgb[2]-40));
 
   p.setShader(null);p.setAntiAlias(false);p.setDither(false);p.setStrokeCap(Paint.Cap.SQUARE);p.setStrokeJoin(Paint.Join.MITER);
-  p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(34,0,0,0));
-  float shadowScale=CreaturePhysicsEngine.isFlyer(o)?.72f:1f;
-  c.drawOval(x-w*.52f*shadowScale,ground-5,x+w*.52f*shadowScale,ground+5,p);
+  p.setStyle(Paint.Style.FILL);float shadowScale=CreaturePhysicsEngine.isFlyer(o)?.72f:1f,shadowHalf=PixelArtRenderPolicy.snapLogical(w*.52f*shadowScale);
+  p.setColor(Color.argb(34,0,0,0));c.drawRect(PixelArtRenderPolicy.snapLogical(x-shadowHalf),ground-3,PixelArtRenderPolicy.snapLogical(x+shadowHalf),ground+3,p);
+  p.setColor(Color.argb(18,20,27,25));c.drawRect(PixelArtRenderPolicy.snapLogical(x-shadowHalf*.66f),ground-2,PixelArtRenderPolicy.snapLogical(x+shadowHalf*.66f),ground+2,p);
 
   c.save();
   if(life.heading<0)c.scale(-1,1,x,bodyY);
@@ -54,6 +54,7 @@ public final class WildlifeTraitRenderer {
  }
 
  private static void drawBodyPlan(Canvas c,Paint p,String body,float x,float y,float w,float h,float anim,float rhythm,int base,int light,int dark){
+  if(PixelWildlifeMorphologyRenderer.drawBody(c,p,body,x,y,w,h,anim,rhythm,base,light,dark))return;
   p.setStyle(Paint.Style.FILL);p.setColor(base);
   if("ribbon-frond".equals(body)){
    Path q=new Path();q.moveTo(x-w*.55f,y-h*.22f);q.cubicTo(x-w*.18f,y-h*1.05f,x+w*.10f,y+h*.10f,x+w*.60f,y-h*.62f);q.cubicTo(x+w*.28f,y-h*.12f,x-w*.08f,y-h*.78f,x-w*.55f,y-h*.22f);q.close();c.drawPath(q,p);
@@ -112,6 +113,7 @@ public final class WildlifeTraitRenderer {
  }
 
  private static void drawSense(Canvas c,Paint p,String sense,float x,float y,float w,float h,float anim,float alert,int light){
+  if(PixelWildlifeMorphologyRenderer.drawSense(c,p,sense,x,y,w,h,anim,alert,light))return;
   p.setColor(light);p.setStyle(Paint.Style.FILL);
   float front=x+w*.31f,eyeY=y-h*.46f;
   if("lumen-gradient".equals(sense)||"polarized-glow".equals(sense)){
@@ -132,7 +134,7 @@ public final class WildlifeTraitRenderer {
  }
 
  private static void drawDefense(Canvas c,Paint p,String defense,float x,float y,float w,float h,float anim,float alert,int dark,int light){
-  if(defense==null)return;
+  if(defense==null)return;if(PixelWildlifeMorphologyRenderer.drawDefense(c,p,defense,x,y,w,h,anim,alert,dark,light))return;
   if("warning shimmer".equals(defense)||"group flare".equals(defense)){
    int alpha=(int)(42+70*(.5+.5*Math.sin(anim*2.4)));p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2.5f);p.setColor(Color.argb(alpha,220,238,196));c.drawOval(x-w*.55f,y-h*.92f,x+w*.55f,y+h*.04f,p);
   }else if("root-anchor".equals(defense)||"rapid burrow".equals(defense)){
