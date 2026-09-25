@@ -40,6 +40,19 @@ public final class WildlifeManifestationEngineTest {
   assertTrue(s.haruSpeech.pendingText.contains("sinh vật"));
  }
 
+ @Test public void movingCreatureInteractionTracksLiveLifePosition(){
+  WorldState s=state();
+  String species=SpeciesEvolutionCatalog.all().get(12).key;
+  seed(s,species,.69,.80);
+  WildlifeManifestationEngine.sync(s,T0);
+  String id=WildlifeManifestationEngine.objectId("lakeside",species);
+  WorldObject o=s.world.object(id);assertNotNull(o);
+  float stale=o.interactionX;
+  CreatureLifeState life=s.livingWorld.creature(id);life.x=735f;life.areaId="lakeside";life.lastUpdatedAt=T0;
+  assertNotEquals(stale,life.x,.01f);
+  assertEquals("interaction must follow the creature, not its spawn point",life.x,PhysicalInteraction.reachableTargetX(s,o,"girl",s.haruX),.01f);
+ }
+
  @Test public void unfamiliarVisibleWildlifeCanBecomeAHaruOwnedGoal(){
   WorldState s=state();
   String species=SpeciesEvolutionCatalog.all().get(11).key;
