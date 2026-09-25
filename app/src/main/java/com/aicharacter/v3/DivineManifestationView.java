@@ -10,31 +10,47 @@ import android.view.View;
  */
 public final class DivineManifestationView extends View {
  public enum Phase { CONNECTING, PRESENT, THINKING, SPEAKING, WARNING, OBSERVING, APPLYING, DEGRADED, DISAPPEARING }
- private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+ private final Paint p=new Paint();private final Paint pixelBlit=new Paint();private Bitmap pixelFrame;private Canvas pixelCanvas;
  private Phase phase=Phase.CONNECTING;private long phaseAt=System.currentTimeMillis();
 
- public DivineManifestationView(Context c){super(c);setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
+ public DivineManifestationView(Context c){super(c);p.setAntiAlias(false);p.setDither(false);pixelBlit.setAntiAlias(false);pixelBlit.setFilterBitmap(false);pixelBlit.setDither(false);setLayerType(View.LAYER_TYPE_SOFTWARE,null);}
  public Phase phase(){return phase;}
  public void setPhase(Phase next){if(next==null)next=Phase.DEGRADED;if(phase!=next){phase=next;phaseAt=System.currentTimeMillis();}invalidate();}
 
  @Override protected void onDraw(Canvas c){
-  super.onDraw(c);long now=System.currentTimeMillis();float t=(now-phaseAt)/1000f,d=getResources().getDisplayMetrics().density,cx=getWidth()*.5f,cy=getHeight()*.405f;
+  super.onDraw(c);Canvas frame=beginPixelFrame(c);long now=System.currentTimeMillis();float t=(now-phaseAt)/1000f,d=getResources().getDisplayMetrics().density,cx=getWidth()*.5f,cy=getHeight()*.405f;
   float pulse=(float)(.5+.5*Math.sin(now/610.0)),breath=(float)(.5+.5*Math.sin(now/1180.0)),strength=strength();
   if(phase==Phase.DISAPPEARING)strength=Math.max(0f,1f-t/.60f);
   Palette pal=palette();
-  drawAtmosphericField(c,cx,cy,d,pulse,breath,strength,pal);
-  drawDepthVeil(c,cx,cy,d,t,pulse,breath,strength,pal);
-  drawLightColumn(c,cx,cy,d,breath,strength,pal);
-  drawFloorEcho(c,cx,cy,d,t,pulse,strength,pal);
-  drawRays(c,cx,cy,d,t,strength,pal);
-  drawHaloLattice(c,cx,cy,d,t,pulse,strength,pal);
-  drawOrbitBands(c,cx,cy,d,t,pulse,strength,pal);
-  drawPresenceCore(c,cx,cy,d,t,pulse,breath,strength,pal);
-  drawSigil(c,cx,cy,d,t,pulse,strength,pal);
-  drawConstellationThreads(c,cx,cy,d,t,pulse,strength,pal);
-  drawMotes(c,cx,cy,d,t,breath,strength,pal);
-  drawPhaseAccent(c,cx,cy,d,t,pulse,strength,pal);
+  drawAtmosphericField(frame,cx,cy,d,pulse,breath,strength,pal);
+  drawDepthVeil(frame,cx,cy,d,t,pulse,breath,strength,pal);
+  drawLightColumn(frame,cx,cy,d,breath,strength,pal);
+  drawFloorEcho(frame,cx,cy,d,t,pulse,strength,pal);
+  drawRays(frame,cx,cy,d,t,strength,pal);
+  drawHaloLattice(frame,cx,cy,d,t,pulse,strength,pal);
+  drawOrbitBands(frame,cx,cy,d,t,pulse,strength,pal);
+  drawPresenceCore(frame,cx,cy,d,t,pulse,breath,strength,pal);
+  drawSigil(frame,cx,cy,d,t,pulse,strength,pal);
+  drawConstellationThreads(frame,cx,cy,d,t,pulse,strength,pal);
+  drawMotes(frame,cx,cy,d,t,breath,strength,pal);
+  drawPhaseAccent(frame,cx,cy,d,t,pulse,strength,pal);presentPixelFrame(c,frame);
   if((phase!=Phase.DISAPPEARING&&phase!=Phase.DEGRADED)||(phase==Phase.DISAPPEARING&&strength>0))postInvalidateDelayed(33);
+ }
+
+ private Canvas beginPixelFrame(Canvas screen){
+  int w=getWidth(),h=getHeight();if(w<=0||h<=0)return screen;
+  try{
+   int iw=PixelArtRenderPolicy.internalWidth(w),ih=PixelArtRenderPolicy.internalHeight(h);
+   if(pixelFrame==null||pixelFrame.getWidth()!=iw||pixelFrame.getHeight()!=ih){
+    if(pixelFrame!=null&&!pixelFrame.isRecycled())pixelFrame.recycle();
+    pixelFrame=Bitmap.createBitmap(iw,ih,Bitmap.Config.ARGB_8888);pixelCanvas=new Canvas(pixelFrame);
+   }
+   pixelFrame.eraseColor(Color.TRANSPARENT);pixelCanvas.save();float s=PixelArtRenderPolicy.logicalToRasterScale();pixelCanvas.scale(s,s);return pixelCanvas;
+  }catch(Throwable ignored){pixelCanvas=null;return screen;}
+ }
+ private void presentPixelFrame(Canvas screen,Canvas frame){
+  if(frame==screen||pixelCanvas==null||pixelFrame==null)return;
+  try{pixelCanvas.restore();screen.drawBitmap(pixelFrame,null,new Rect(0,0,getWidth(),getHeight()),pixelBlit);}catch(Throwable ignored){}
  }
 
  private float strength(){switch(phase){case DEGRADED:return .30f;case CONNECTING:return .60f;case WARNING:return 1f;case APPLYING:return .98f;case OBSERVING:return .92f;case THINKING:return .94f;case SPEAKING:return .96f;default:return .90f;}}
