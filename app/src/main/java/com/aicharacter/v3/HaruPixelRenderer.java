@@ -38,6 +38,7 @@ public final class HaruPixelRenderer {
  private static void drawStanding(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float g,int frame,float divine){
   boolean walk=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
   boolean search=v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT;
+  boolean react=v.state==GirlAnimationController.State.REACT,think=v.state==GirlAnimationController.State.THINK;
   float[] gait={-1.8f,-1.0f,-.35f,.55f,1.8f,1.0f,.35f,-.55f};
   float step=walk?gait[frame]*PX:0,other=-step;
   float lean=walk?1.0f*PX:search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
@@ -58,16 +59,29 @@ public final class HaruPixelRenderer {
   rect(c,p,SKIN,x-4*PX+lean,headTop+6*PX,x+4*PX+lean,headTop+14*PX);
   rect(c,p,HAIR,x-5*PX+lean,headTop+4*PX,x+5*PX+lean,headTop+7*PX);
   rect(c,p,HAIR,x-4*PX+lean,headTop+6*PX,x-2*PX+lean,headTop+9*PX);
-  boolean blink=!walk&&(frame==6||frame==7);
-  if(blink){
-   rect(c,p,EYE,x-2*PX+lean,headTop+10*PX,x-1*PX+lean,headTop+11*PX);
+  boolean blink=!walk&&!search&&!react&&!think&&(frame==6||frame==7);
+  if(react){
+   rect(c,p,EYE,x-3*PX+lean,headTop+9*PX,x-PX+lean,headTop+12*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+12*PX);
+   rect(c,p,SKIN,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+10*PX);
+   rect(c,p,SKIN,x+3*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+10*PX);
+  }else if(search){
+   rect(c,p,EYE,x-PX+lean,headTop+9*PX,x+lean,headTop+11*PX);
+   rect(c,p,EYE,x+3*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+11*PX);
+  }else if(think){
+   rect(c,p,EYE,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+4*PX+lean,headTop+11*PX);
+  }else if(blink){
+   rect(c,p,EYE,x-2*PX+lean,headTop+10*PX,x-PX+lean,headTop+11*PX);
    rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+3*PX+lean,headTop+11*PX);
   }else{
    rect(c,p,EYE,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+11*PX);
    rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+3*PX+lean,headTop+11*PX);
   }
   rect(c,p,BLUSH,x+3*PX+lean,headTop+12*PX,x+4*PX+lean,headTop+13*PX);
-  rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);
+  if(react)rect(c,p,ACCENT,x+lean,headTop+13*PX,x+2*PX+lean,headTop+15*PX);
+  else if(think)rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+2*PX+lean,headTop+14*PX);
+  else rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);
 
   // Neck.
   rect(c,p,OUT,x-2*PX,g-28*PX,x+2*PX,g-24*PX);
