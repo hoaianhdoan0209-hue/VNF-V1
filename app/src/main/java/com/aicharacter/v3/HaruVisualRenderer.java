@@ -13,6 +13,17 @@ public final class HaruVisualRenderer{
 
  public static void drawReflection(Canvas c,Paint p,AssetManifest assets,WorldState s,GirlAnimationController.Visual v,float x,float bodyGround,float contactGround,float anim,float strength,boolean water){
   if(strength<=.01f)return;
+  if(usePixelRenderer()){
+   float squash=water?.66f:.54f,wobble=water?(float)Math.sin(anim*.82f)*3.2f:(float)Math.sin(anim*.37f)*1.1f;
+   RectF bounds=new RectF(x-170,contactGround-1,x+170,1080);
+   int layer=c.saveLayerAlpha(bounds,(int)Math.max(8,Math.min(74,(water?58:36)*strength)));
+   c.clipRect(bounds);c.translate(wobble,0);c.scale(1f,-squash,x,contactGround);
+   HaruPixelRenderer.draw(c,p,s,v,x,bodyGround,anim,0f);
+   c.restoreToCount(layer);
+   p.setStyle(Paint.Style.FILL);int bands=water?7:4;
+   for(int i=0;i<bands;i++){float y=contactGround+10+i*(water?17f:13f),phaseWave=(float)Math.sin(anim*(.65f+i*.03f)+i*.9f),ww=(water?52:38)+(i%3)*18f;p.setColor(Color.argb((int)Math.max(3,(water?15:8)*strength),water?184:145,water?211:162,water?211:153));c.drawRoundRect(x-ww+phaseWave*9,y,x+ww+phaseWave*9,y+(water?2.2f:1.5f),1,1,p);}
+   return;
+  }
   if(useIllustratedRenderer()){
    float squash=water?.66f:.54f,wobble=water?(float)Math.sin(anim*.82f)*3.2f:(float)Math.sin(anim*.37f)*1.1f;
    String phase=s.environment==null?"DAY":s.environment.dayPhase(s.worldMinutes),area="";
@@ -64,6 +75,8 @@ public final class HaruVisualRenderer{
   drawLayeredContactShadow(c,p,x,contactGround,shadowW,shadowDx,shadowAlpha,closeT);
   p.setColor(Color.argb(Math.max(8,shadowAlpha/3),18,26,24));
   c.drawOval(x-shadowW*.72f+shadowDx*.75f,contactGround-4,x+shadowW*.72f+shadowDx*.75f,contactGround+7,p);
+
+  if(usePixelRenderer()){HaruPixelRenderer.draw(c,p,s,v,x,bodyGround,anim,divinePresence);return;}
 
   Bitmap sheet=assets.get(v.asset);
   if(sheet==null)sheet=assets.get("girl_idle_right");
@@ -164,7 +177,7 @@ public final class HaruVisualRenderer{
   p.setStyle(Paint.Style.FILL);p.setShader(new RadialGradient(cx,cy,r,Color.argb(alpha,Color.red(color),Color.green(color),Color.blue(color)),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.save();c.scale(.72f,1f,cx,cy);c.drawCircle(cx,cy,r,p);c.restore();p.setShader(null);
  }
 
- private static boolean useIllustratedRenderer(){return true;}
+ private static boolean usePixelRenderer(){return true;} private static boolean useIllustratedRenderer(){return false;}
  static int frameIndex(WorldState s,GirlAnimationController.Visual v,float anim,int frames){
   if(frames<=1)return 0;
   if(v.isWalk()&&s.bodyRig!=null){
