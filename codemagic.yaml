@@ -15,6 +15,13 @@ workflows:
           test -f "$CM_BUILD_DIR/settings.gradle"
           test -f "$CM_BUILD_DIR/build.gradle"
           test -f "$CM_BUILD_DIR/app/build.gradle"
+      - name: Generate packaged pixel biome assets
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          python3 -m venv .venv-visual
+          .venv-visual/bin/python -m pip install --disable-pip-version-check pillow==11.3.0
+          .venv-visual/bin/python tools/generate_visual_biomes.py "$CM_BUILD_DIR"
       - name: Set Android SDK location
         script: |
           set -e
@@ -83,6 +90,13 @@ workflows:
           : "${CM_KEY_ALIAS:?Codemagic signing identity vnf-release did not provide CM_KEY_ALIAS}"
           : "${CM_KEY_PASSWORD:?Codemagic signing identity vnf-release did not provide CM_KEY_PASSWORD}"
           test -s "$CM_KEYSTORE_PATH"
+      - name: Generate packaged pixel biome assets
+        script: |
+          set -e
+          cd "$CM_BUILD_DIR"
+          python3 -m venv .venv-visual
+          .venv-visual/bin/python -m pip install --disable-pip-version-check pillow==11.3.0
+          .venv-visual/bin/python tools/generate_visual_biomes.py "$CM_BUILD_DIR"
       - name: Set Android SDK location
         script: |
           set -e
