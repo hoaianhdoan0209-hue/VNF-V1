@@ -8,7 +8,9 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=2400,1080
-REV="authored-pixel-biome-v10-commercial-grid-2026-09"\nPIX_W,PIX_H=1200,540\nPIX_COLORS={"sky":64,"distant":72,"mid":96,"ground":88,"foreground":80}
+REV="authored-pixel-biome-v10-commercial-grid-2026-09"
+PIX_W,PIX_H=1200,540
+PIX_COLORS={"sky":64,"distant":72,"mid":96,"ground":88,"foreground":80}
 C={
  "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
  "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
