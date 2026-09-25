@@ -7,7 +7,7 @@ import android.graphics.*;
  * Presentation only: pose comes from GirlAnimationController and never changes simulation state.
  */
 public final class HaruPixelRenderer {
- private static final float PX=6f;
+ private static final float PX=4f;
  private static final int OUT=Color.rgb(38,31,34);
  private static final int HAIR=Color.rgb(58,42,43),HAIR_HI=Color.rgb(91,61,58);
  private static final int SKIN=Color.rgb(239,198,164),SKIN_SHADOW=Color.rgb(205,151,130),BLUSH=Color.rgb(196,111,111);
@@ -20,7 +20,7 @@ public final class HaruPixelRenderer {
   if(c==null||p==null||v==null)return;
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setFilterBitmap(false);p.setColorFilter(null);p.setAlpha(255);
   boolean left=v.flipX||v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.SEARCH_LEFT;
-  int frame=((int)Math.floor(anim*Math.max(.1f,v.fps)))&3;
+  int frame=((int)Math.floor(anim*Math.max(.1f,v.fps)))&7;
   float g=bodyGround+bob(v.state,frame);
   c.save();if(left)c.scale(-1f,1f,x,g);
   switch(v.state){
@@ -37,7 +37,7 @@ public final class HaruPixelRenderer {
  private static void drawStanding(Canvas c,Paint p,WorldState s,GirlAnimationController.Visual v,float x,float g,int frame,float divine){
   boolean walk=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
   boolean search=v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT;
-  float[] gait={-1.6f,-.45f,1.6f,.45f};
+  float[] gait={-1.8f,-1.0f,-.35f,.55f,1.8f,1.0f,.35f,-.55f};
   float step=walk?gait[frame]*PX:0,other=-step;
   float lean=walk?1.0f*PX:search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
   float headTop=g-42*PX;
@@ -57,7 +57,7 @@ public final class HaruPixelRenderer {
   rect(c,p,SKIN,x-4*PX+lean,headTop+6*PX,x+4*PX+lean,headTop+14*PX);
   rect(c,p,HAIR,x-5*PX+lean,headTop+4*PX,x+5*PX+lean,headTop+7*PX);
   rect(c,p,HAIR,x-4*PX+lean,headTop+6*PX,x-2*PX+lean,headTop+9*PX);
-  boolean blink=!walk&&frame==3;
+  boolean blink=!walk&&(frame==6||frame==7);
   if(blink){
    rect(c,p,EYE,x-2*PX+lean,headTop+10*PX,x-1*PX+lean,headTop+11*PX);
    rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+3*PX+lean,headTop+11*PX);
@@ -111,7 +111,7 @@ public final class HaruPixelRenderer {
   drawLeg(c,p,x+2*PX,g-8*PX,g,other);
 
   // A tiny hair/clothing motion cue keeps idle visibly alive.
-  if(!walk&&frame==2){rect(c,p,HAIR_HI,x-8*PX+lean,g-29*PX,x-7*PX+lean,g-25*PX);}
+  if(!walk&&(frame==2||frame==5)){rect(c,p,HAIR_HI,x-8*PX+lean,g-29*PX,x-7*PX+lean,g-25*PX);}
   if(walk){rect(c,p,Color.argb(70,223,213,190),x-10*PX,g-PX,x-8*PX,g);}
   drawDivinePixels(c,p,x,headTop,divine);
  }
@@ -189,9 +189,9 @@ public final class HaruPixelRenderer {
  }
 
  private static float bob(GirlAnimationController.State state,int frame){
-  if(state==GirlAnimationController.State.WALK_LEFT||state==GirlAnimationController.State.WALK_RIGHT)return(frame==1||frame==3)?-PX:0;
-  if(state==GirlAnimationController.State.REACT)return frame==1?-PX:0;
-  if(state==GirlAnimationController.State.SEARCH_LEFT||state==GirlAnimationController.State.SEARCH_RIGHT)return frame==2?-PX:0;
+  if(state==GirlAnimationController.State.WALK_LEFT||state==GirlAnimationController.State.WALK_RIGHT)return(frame==1||frame==2||frame==5||frame==6)?-PX:0;
+  if(state==GirlAnimationController.State.REACT)return(frame==1||frame==5)?-PX:0;
+  if(state==GirlAnimationController.State.SEARCH_LEFT||state==GirlAnimationController.State.SEARCH_RIGHT)return(frame==2||frame==6)?-PX:0;
   return 0;
  }
 
