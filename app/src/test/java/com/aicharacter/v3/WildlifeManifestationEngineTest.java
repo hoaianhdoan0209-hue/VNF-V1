@@ -48,7 +48,7 @@ public final class WildlifeManifestationEngineTest {
   String id=WildlifeManifestationEngine.objectId("lakeside",species);
   WorldObject o=s.world.object(id);assertNotNull(o);
   // Keep it visible but outside passive observation range so Haru must physically approach by her own plan.
-  o.x=700f;CreatureLifeState life=s.livingWorld.creature(id);life.x=700f;life.areaId="lakeside";life.lastUpdatedAt=T0;
+  o.x=700f;o.interactionX=700f;CreatureLifeState life=s.livingWorld.creature(id);life.x=700f;life.areaId="lakeside";life.lastUpdatedAt=T0;
 
   HaruAffordanceEngine.observeQuestions(s,T0+5);
   assertTrue(s.characterGod.openQuestions.values().stream().anyMatch(q->id.equals(q.aboutObjectId)));
