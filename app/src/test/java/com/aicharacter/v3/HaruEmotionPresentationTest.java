@@ -4,6 +4,23 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public final class HaruEmotionPresentationTest {
+ @Test public void moderateLiveEmotionAlreadyChangesVisiblePose(){
+  WorldState s=state();s.emotion.fear=.38;s.emotionEpisodes.clear();
+  assertEquals(GirlAnimationController.State.REACT,GirlAnimationController.select(s).state);
+  s=state();s.emotion.sadness=.38;s.emotionEpisodes.clear();
+  assertEquals(GirlAnimationController.State.SIT,GirlAnimationController.select(s).state);
+ }
+
+ @Test public void moderateCuriosityCanShowThinkingWhileIdle(){
+  WorldState s=state();s.emotion.curiosity=.46;s.emotionEpisodes.clear();s.currentIntention="";
+  assertEquals(GirlAnimationController.State.THINK,GirlAnimationController.select(s).state);
+ }
+
+ @Test public void moderateBodyPressureChangesPostureBeforeCollapse(){
+  WorldState s=state();s.body.energy=32;s.body.sleepiness=20;
+  assertEquals(GirlAnimationController.State.SIT,GirlAnimationController.select(s).state);
+ }
+
  @Test public void strongLiveFearChangesPoseWithoutNeedingEpisodeObject(){
   WorldState s=state();
   s.emotion.fear=.72;s.emotion.anger=.08;
