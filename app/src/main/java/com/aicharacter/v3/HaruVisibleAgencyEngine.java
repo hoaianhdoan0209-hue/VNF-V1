@@ -17,6 +17,7 @@ public final class HaruVisibleAgencyEngine {
   if(!healthyForExploration(s)||s.personality==null||s.personality.curiosity<MIN_CURIOSITY)return selected;
   if(isProtectedNeed(selected.intention.id)||choiceAlreadyMovesVisibly(s,selected.intention))return selected;
 
+  boolean stalled=needsVisibleAgencyRecovery(s,now);
   WorldArea here=s.world.areaAt(s.haruX);
   WorldArea best=null;double bestScore=Double.NEGATIVE_INFINITY;
   for(WorldArea a:s.world.areas){
@@ -26,7 +27,9 @@ public final class HaruVisibleAgencyEngine {
    double score=areaScore(s,a,now);
    if(score>bestScore){bestScore=score;best=a;}
   }
-  if(best==null||bestScore<3.0)return selected;
+  if((best==null||bestScore<3.0)&&!stalled)return selected;
+  if(best==null&&stalled)best=here;
+  if(best==null)return selected;
 
   Intention in=new Intention("explore_world",0,"curiosity",best.id,
     "see what has changed there and gather firsthand evidence",.28,now+5400000L);
