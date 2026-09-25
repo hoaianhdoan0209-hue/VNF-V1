@@ -19,10 +19,11 @@ public final class WildlifeTraitRenderer {
   SpeciesEvolutionCatalog.Species species=SpeciesEvolutionCatalog.get(o.dictionaryRef);
   if(species==null)return false;
 
-  float ground=CreaturePhysicsEngine.renderGroundY(world,o,life);
-  float y=ground-(float)WorldUnits.mToPx(life.verticalOffsetM);
-  float w=Math.max(24f,o.width*1.42f),h=Math.max(18f,o.height*1.32f);
-  float motion=motionOffset(species,life,anim),bodyY=y+motion;
+  x=PixelArtRenderPolicy.snapLogical(x);
+  float ground=PixelArtRenderPolicy.snapLogical(CreaturePhysicsEngine.renderGroundY(world,o,life));
+  float y=PixelArtRenderPolicy.snapLogical(ground-(float)WorldUnits.mToPx(life.verticalOffsetM));
+  float w=PixelArtRenderPolicy.snapLogical(Math.max(24f,o.width*1.42f)),h=PixelArtRenderPolicy.snapLogical(Math.max(18f,o.height*1.32f));
+  float motion=motionOffset(species,life,anim),bodyY=PixelArtRenderPolicy.snapLogical(y+motion);
   float rhythm=(float)Math.max(.15,Math.min(1,life.body==null?.45:life.body.rhythm));
   float alert=(float)Math.max(0,Math.min(1,life.sense==null?.2:life.sense.alertness));
   int clade=parseTail(species.cladeId)%PALETTE.length;
@@ -31,7 +32,7 @@ public final class WildlifeTraitRenderer {
   int light=Color.rgb(Math.min(255,rgb[0]+52),Math.min(255,rgb[1]+52),Math.min(255,rgb[2]+46));
   int dark=Color.rgb(Math.max(0,rgb[0]-40),Math.max(0,rgb[1]-40),Math.max(0,rgb[2]-40));
 
-  p.setShader(null);p.setAntiAlias(true);p.setStrokeCap(Paint.Cap.ROUND);
+  p.setShader(null);p.setAntiAlias(false);p.setDither(false);p.setStrokeCap(Paint.Cap.SQUARE);p.setStrokeJoin(Paint.Join.MITER);
   p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(34,0,0,0));
   float shadowScale=CreaturePhysicsEngine.isFlyer(o)?.72f:1f;
   c.drawOval(x-w*.52f*shadowScale,ground-5,x+w*.52f*shadowScale,ground+5,p);
@@ -150,15 +151,16 @@ public final class WildlifeTraitRenderer {
  }
 
  private static float motionOffset(SpeciesEvolutionCatalog.Species s,CreatureLifeState life,float anim){
-  String loc=s.locomotion==null?"":s.locomotion;float drive=(float)Math.max(0,Math.min(1,life.locomotionDrive));
-  if("short-hop".equals(loc))return-(float)Math.abs(Math.sin(anim*(2.4+drive*2.8)))*(3+7*drive);
-  if("six-beat scuttle".equals(loc))return(float)Math.sin(anim*(5.0+drive*5))*1.6f;
-  if("surface-skate".equals(loc))return(float)Math.sin(anim*(2.6+drive*2))*1.2f;
-  if("air-drift".equals(loc))return(float)Math.sin(anim*(.72+drive*.8))*4.5f;
-  if("membrane-flight".equals(loc))return(float)Math.sin(anim*(1.6+drive*1.7))*3.0f;
-  if("burrow-wave".equals(loc))return(float)Math.sin(anim*(1.5+drive))*1.0f;
-  if("root-step".equals(loc))return(float)Math.sin(anim*(.65+drive*.5))*.7f;
-  return(float)Math.sin(anim*(.9+drive*1.4))*1.5f;
+  String loc=s.locomotion==null?"":s.locomotion;float drive=(float)Math.max(0,Math.min(1,life.locomotionDrive)),raw;
+  if("short-hop".equals(loc))raw=-(float)Math.abs(Math.sin(anim*(2.4+drive*2.8)))*(3+7*drive);
+  else if("six-beat scuttle".equals(loc))raw=(float)Math.sin(anim*(5.0+drive*5))*1.6f;
+  else if("surface-skate".equals(loc))raw=(float)Math.sin(anim*(2.6+drive*2))*1.2f;
+  else if("air-drift".equals(loc))raw=(float)Math.sin(anim*(.72+drive*.8))*4.5f;
+  else if("membrane-flight".equals(loc))raw=(float)Math.sin(anim*(1.6+drive*1.7))*3.0f;
+  else if("burrow-wave".equals(loc))raw=(float)Math.sin(anim*(1.5+drive))*1.0f;
+  else if("root-step".equals(loc))raw=(float)Math.sin(anim*(.65+drive*.5))*.7f;
+  else raw=(float)Math.sin(anim*(.9+drive*1.4))*1.5f;
+  return PixelArtRenderPolicy.snapLogical(raw);
  }
 
  private static int parseTail(String id){
