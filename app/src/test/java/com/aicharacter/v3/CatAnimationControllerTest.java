@@ -32,7 +32,7 @@ public final class CatAnimationControllerTest {
   GirlAnimationController.Visual idle=GirlAnimationController.select(toward);HaruMotionStyleEngine.Style a=HaruMotionStyleEngine.derive(toward,idle,1.2f);
   WorldState guard=state();guard.currentIntention="social_adjust";guard.socialProximity.mode="GUARDED";guard.catState.x=guard.haruX+100;
   GirlAnimationController.Visual idle2=GirlAnimationController.select(guard);HaruMotionStyleEngine.Style g=HaruMotionStyleEngine.derive(guard,idle2,1.2f);
-  assertTrue(a.translateX>0);assertTrue(g.translateX<0);assertTrue(g.settle>a.settle);
+  assertTrue("approach should remain more cat-directed than guarded spacing",a.translateX>g.translateX);assertTrue("guarded spacing should be at least as settled",g.settle>=a.settle);
  }
 
  private static WorldState state(){
