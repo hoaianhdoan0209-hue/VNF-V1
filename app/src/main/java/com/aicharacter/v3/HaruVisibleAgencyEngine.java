@@ -19,7 +19,7 @@ public final class HaruVisibleAgencyEngine {
   WorldArea here=s.world.areaAt(s.haruX);
   WorldArea best=null;double bestScore=Double.NEGATIVE_INFINITY;
   for(WorldArea a:s.world.areas){
-   if(a==null||!a.enabled||here!=null&&a.id.equals(here.id))continue;
+   if(a==null||here!=null&&a.id.equals(here.id))continue;
    List<String> route=WorldPathPlanner.route(s,"girl",here==null?"":here.id,a.id);
    if(route==null||route.isEmpty())continue;
    double score=areaScore(s,a,now);
