@@ -39,6 +39,8 @@ public final class HaruPixelRenderer {
   boolean walk=v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT;
   boolean search=v.state==GirlAnimationController.State.SEARCH_LEFT||v.state==GirlAnimationController.State.SEARCH_RIGHT;
   boolean react=v.state==GirlAnimationController.State.REACT,think=v.state==GirlAnimationController.State.THINK;
+  double fear=s==null||s.emotion==null?0:s.emotion.fear,sad=s==null||s.emotion==null?0:s.emotion.sadness,joy=s==null||s.emotion==null?0:s.emotion.joy,curiosity=s==null||s.emotion==null?0:s.emotion.curiosity;
+  boolean faceFear=fear>=.34,faceSad=!faceFear&&sad>=.34,faceJoy=!faceFear&&!faceSad&&joy>=.42,faceCurious=!faceFear&&!faceSad&&!faceJoy&&curiosity>=.40;
   float step=walk?PixelMotionCadence.stride(frame)*PX:0,other=-step;
   float secondary=walk?PixelMotionCadence.secondary(frame)*PX:0;
   float lean=walk?(1.0f*PX+secondary*.10f):search?.7f*PX:v.state==GirlAnimationController.State.REACT?-.6f*PX:0;
@@ -59,8 +61,24 @@ public final class HaruPixelRenderer {
   rect(c,p,SKIN,x-4*PX+lean,headTop+6*PX,x+4*PX+lean,headTop+14*PX);
   rect(c,p,HAIR,x-5*PX+lean,headTop+4*PX,x+5*PX+lean,headTop+7*PX);
   rect(c,p,HAIR,x-4*PX+lean,headTop+6*PX,x-2*PX+lean,headTop+9*PX);
-  boolean blink=!walk&&!search&&!react&&!think&&(frame==6||frame==7);
-  if(react){
+  boolean blink=!walk&&!search&&!react&&!think&&!faceFear&&!faceSad&&!faceJoy&&!faceCurious&&(frame==6||frame==7);
+  if(faceFear){
+   rect(c,p,EYE,x-3*PX+lean,headTop+9*PX,x-PX+lean,headTop+12*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+12*PX);
+   rect(c,p,SKIN,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+10*PX);
+   rect(c,p,SKIN,x+3*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+10*PX);
+  }else if(faceSad){
+   rect(c,p,EYE,x-2*PX+lean,headTop+10*PX,x-PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+3*PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x-3*PX+lean,headTop+9*PX,x-PX+lean,headTop+10*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+10*PX);
+  }else if(faceJoy){
+   rect(c,p,EYE,x-3*PX+lean,headTop+10*PX,x-PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+10*PX,x+4*PX+lean,headTop+11*PX);
+  }else if(faceCurious){
+   rect(c,p,EYE,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+11*PX);
+   rect(c,p,EYE,x+2*PX+lean,headTop+8*PX,x+4*PX+lean,headTop+11*PX);
+  }else if(react){
    rect(c,p,EYE,x-3*PX+lean,headTop+9*PX,x-PX+lean,headTop+12*PX);
    rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+4*PX+lean,headTop+12*PX);
    rect(c,p,SKIN,x-2*PX+lean,headTop+9*PX,x-PX+lean,headTop+10*PX);
@@ -79,7 +97,11 @@ public final class HaruPixelRenderer {
    rect(c,p,EYE,x+2*PX+lean,headTop+9*PX,x+3*PX+lean,headTop+11*PX);
   }
   rect(c,p,BLUSH,x+3*PX+lean,headTop+12*PX,x+4*PX+lean,headTop+13*PX);
-  if(react)rect(c,p,ACCENT,x+lean,headTop+13*PX,x+2*PX+lean,headTop+15*PX);
+  if(faceFear)rect(c,p,ACCENT,x+lean,headTop+13*PX,x+2*PX+lean,headTop+15*PX);
+  else if(faceSad){rect(c,p,ACCENT,x+lean,headTop+14*PX,x+3*PX+lean,headTop+15*PX);rect(c,p,SKIN,x+PX+lean,headTop+13*PX,x+2*PX+lean,headTop+14*PX);}
+  else if(faceJoy){rect(c,p,ACCENT,x+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);rect(c,p,ACCENT,x+PX+lean,headTop+14*PX,x+2*PX+lean,headTop+15*PX);}
+  else if(faceCurious)rect(c,p,ACCENT,x+2*PX+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);
+  else if(react)rect(c,p,ACCENT,x+lean,headTop+13*PX,x+2*PX+lean,headTop+15*PX);
   else if(think)rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+2*PX+lean,headTop+14*PX);
   else rect(c,p,ACCENT,x+PX+lean,headTop+13*PX,x+3*PX+lean,headTop+14*PX);
 
