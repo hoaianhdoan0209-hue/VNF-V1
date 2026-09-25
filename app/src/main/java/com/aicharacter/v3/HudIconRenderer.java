@@ -7,23 +7,24 @@ public final class HudIconRenderer{
  private HudIconRenderer(){}
 
  public static void drawButton(Canvas c,Paint p,MinimalHudLayout.Box b,int icon,boolean pressed,float density){
-  float d=Math.max(.75f,density),cx=(b.l+b.r)*.5f,cy=(b.t+b.b)*.5f,rad=Math.min(b.width(),b.height())*.5f;
-  p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(pressed?176:104,8,18,24));c.drawCircle(cx,cy,rad,p);
-  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth((pressed?2.2f:1.35f)*d);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);p.setColor(Color.argb(pressed?245:190,226,232,214));c.drawCircle(cx,cy,rad-1.5f*d,p);
-  c.save();if(pressed)c.translate(0,1.2f*d);draw(c,p,icon,cx,cy,Math.min(23f*d,rad*.58f),d);c.restore();
-  p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);
+  float d=Math.max(.75f,density),cx=(b.l+b.r)*.5f,cy=(b.t+b.b)*.5f,pad=2*d;
+  p.setShader(null);p.setAntiAlias(false);p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(pressed?214:166,8,18,24));c.drawRect(b.l,b.t,b.r,b.b,p);
+  p.setColor(Color.argb(pressed?255:220,226,232,214));c.drawRect(b.l,b.t,b.r,b.t+pad,p);c.drawRect(b.l,b.b-pad,b.r,b.b,p);c.drawRect(b.l,b.t,b.l+pad,b.b,p);c.drawRect(b.r-pad,b.t,b.r,b.b,p);
+  p.setColor(Color.argb(pressed?95:48,120,151,143));c.drawRect(b.l+pad,b.t+pad,b.r-pad,b.t+pad*2,p);
+  c.save();if(pressed)c.translate(0,2*d);draw(c,p,icon,cx,cy,Math.min(23f*d,Math.min(b.width(),b.height())*.29f),d);c.restore();
+  p.setStyle(Paint.Style.FILL);p.setStrokeCap(Paint.Cap.BUTT);p.setStrokeJoin(Paint.Join.MITER);
  }
  public static void drawGodButton(Canvas c,Paint p,MinimalHudLayout.Box b,boolean pressed,float density,GodSessionManager.State state,long now){
-  float d=Math.max(.75f,density),cx=(b.l+b.r)*.5f,cy=(b.t+b.b)*.5f,rad=Math.min(b.width(),b.height())*.5f,pulse=(float)(.5+.5*Math.sin(now/520.0));
+  float d=Math.max(.75f,density),cx=(b.l+b.r)*.5f,cy=(b.t+b.b)*.5f,rad=Math.min(b.width(),b.height())*.5f,pulse=(float)(.5+.5*Math.sin(now/520.0));p.setAntiAlias(false);
   if(state==GodSessionManager.State.ONLINE){
-   p.setStyle(Paint.Style.FILL);p.setShader(new RadialGradient(cx,cy,rad*1.42f,Color.argb((int)(18+18*pulse),235,219,177),Color.TRANSPARENT,Shader.TileMode.CLAMP));c.drawCircle(cx,cy,rad*1.42f,p);p.setShader(null);
+   p.setStyle(Paint.Style.FILL);p.setColor(Color.argb((int)(18+18*pulse),235,219,177));float glow=rad*1.10f;c.drawRect(cx-glow,cy-glow,cx+glow,cy+glow,p);
   }
   drawButton(c,p,b,GOD,pressed,d);
   p.setStyle(Paint.Style.STROKE);p.setStrokeCap(Paint.Cap.ROUND);
   if(state==GodSessionManager.State.CONNECTING){
    p.setStrokeWidth(1.35f*d);p.setColor(Color.argb(180,193,220,213));RectF rr=new RectF(cx-rad*.84f,cy-rad*.84f,cx+rad*.84f,cy+rad*.84f);c.drawArc(rr,(now%1800L)/1800f*360f,112,false,p);
   }else if(state==GodSessionManager.State.ONLINE){
-   p.setStrokeWidth((1.05f+.35f*pulse)*d);p.setColor(Color.argb((int)(125+70*pulse),241,225,184));c.drawCircle(cx,cy,rad*.82f,p);
+   p.setStrokeWidth((1.05f+.35f*pulse)*d);p.setColor(Color.argb((int)(125+70*pulse),241,225,184));float rr=rad*.82f;c.drawRect(cx-rr,cy-rr,cx+rr,cy+rr,p);
    for(int i=0;i<4;i++){double a=i*Math.PI/2.0+now/2100.0;float x=cx+(float)Math.cos(a)*rad*.98f,y=cy+(float)Math.sin(a)*rad*.98f;p.setStyle(Paint.Style.FILL);p.setColor(Color.argb((int)(90+70*pulse),197,226,216));c.drawCircle(x,y,1.1f*d,p);p.setStyle(Paint.Style.STROKE);}
   }else if(state==GodSessionManager.State.DEGRADED){
    p.setStrokeWidth(1.05f*d);p.setColor(Color.argb(115,171,191,194));RectF rr=new RectF(cx-rad*.80f,cy-rad*.80f,cx+rad*.80f,cy+rad*.80f);c.drawArc(rr,18,74,false,p);c.drawArc(rr,142,52,false,p);c.drawArc(rr,246,68,false,p);
@@ -33,12 +34,12 @@ public final class HudIconRenderer{
 
  public static void drawStatus(Canvas c,Paint p,Paint text,MinimalHudLayout.Box b,String phase,String weather,double tempC,float density){
   float d=Math.max(.75f,density);
-  p.setShader(null);p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(88,7,17,22));c.drawRoundRect(b.l,b.t,b.r,b.b,12*d,12*d,p);
-  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(d);p.setColor(Color.argb(84,211,225,207));c.drawRoundRect(b.l+.5f*d,b.t+.5f*d,b.r-.5f*d,b.b-.5f*d,12*d,12*d,p);
+  p.setShader(null);p.setAntiAlias(false);p.setStyle(Paint.Style.FILL);p.setColor(Color.argb(150,7,17,22));c.drawRect(b.l,b.t,b.r,b.b,p);
+  p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(Math.max(1f,d));p.setStrokeJoin(Paint.Join.MITER);p.setColor(Color.argb(130,211,225,207));c.drawRect(b.l+.5f*d,b.t+.5f*d,b.r-.5f*d,b.b-.5f*d,p);
   float cy=(b.t+b.b)*.5f,x=b.l+18*d;draw(c,p,"NIGHT".equals(phase)?MOON:SUN,x,cy,8.5f*d,d);
   int wx="RAIN".equals(weather)?RAIN:"CLOUDY".equals(weather)?CLOUD:0;
   if(wx!=0){x+=27*d;draw(c,p,wx,x,cy,8.5f*d,d);}
-  text.setTypeface(Typeface.create(Typeface.SANS_SERIF,Typeface.NORMAL));text.setTextSize(11.5f*d);text.setColor(Color.argb(220,231,232,215));text.setTextAlign(Paint.Align.RIGHT);
+  text.setTypeface(Typeface.create(Typeface.MONOSPACE,Typeface.BOLD));text.setAntiAlias(false);text.setSubpixelText(false);text.setTextSize(11.5f*d);text.setColor(Color.argb(220,231,232,215));text.setTextAlign(Paint.Align.RIGHT);
   c.drawText(Math.round(tempC)+"°",b.r-11*d,cy+4*d,text);text.setTextAlign(Paint.Align.LEFT);
   p.setStyle(Paint.Style.FILL);
  }
