@@ -19,12 +19,15 @@ public final class WildlifeMotionReadabilityTest {
 
  @Test public void visibleRepresentativeMotionStillRespectsDormantTraits(){
   SpeciesEvolutionCatalog.Species active=null,dormant=null;
-  for(SpeciesEvolutionCatalog.Species x:SpeciesEvolutionCatalog.all()){
-   if(active==null&&!x.lifeCycle.contains("dormant")&&!x.lifeCycle.contains("long-slow"))active=x;
-   if(dormant==null&&(x.lifeCycle.contains("dormant")||x.lifeCycle.contains("long-slow")))dormant=x;
-   if(active!=null&&dormant!=null)break;
+  for(SpeciesEvolutionCatalog.Species d:SpeciesEvolutionCatalog.all()){
+   if(!(d.lifeCycle.contains("dormant")||d.lifeCycle.contains("long-slow")))continue;
+   for(SpeciesEvolutionCatalog.Species a:SpeciesEvolutionCatalog.all()){
+    if(a.lifeCycle.contains("dormant")||a.lifeCycle.contains("long-slow"))continue;
+    if(d.locomotion.equals(a.locomotion)){active=a;dormant=d;break;}
+   }
+   if(active!=null)break;
   }
-  assertNotNull(active);assertNotNull(dormant);
+  assertNotNull("catalog should contain an active/dormant pair with the same locomotion",active);assertNotNull(dormant);
   WorldState s=WorldState.fresh();s.world=new WorldModel();s.livingWorld=new LivingWorldState();
   WorldArea a=new WorldArea("test","test","test",0,1000,846,true,"vegetation,water,open");s.world.areas.add(a);
   SpeciesPopulationState pa=s.livingWorld.population(active.key,"test");pa.relativeAbundance=.5;pa.carryingCapacity=.7;
