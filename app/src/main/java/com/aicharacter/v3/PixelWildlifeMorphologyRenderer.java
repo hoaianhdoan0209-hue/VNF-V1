@@ -14,6 +14,7 @@ public final class PixelWildlifeMorphologyRenderer {
  private PixelWildlifeMorphologyRenderer(){}
 
  public static int bodyPlanCount(){return BODY.length;}
+ public static boolean supportsBodyPlan(String body){return index(body)>=0;}
 
  public static boolean drawBody(Canvas c,Paint p,String body,float x,float y,float w,float h,float anim,float rhythm,int base,int light,int dark){
   if(index(body)<0||c==null||p==null)return false;
