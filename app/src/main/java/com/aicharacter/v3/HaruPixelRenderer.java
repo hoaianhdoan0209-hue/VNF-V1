@@ -4,7 +4,7 @@ import android.graphics.*;
 
 /** Chunky block-pixel Haru sprite driven only by existing presentation state. */
 public final class HaruPixelRenderer {
- private static final float PX=4f;
+ private static final float PX=6f;
  private static final int HAIR=Color.rgb(53,42,43),HAIR_HI=Color.rgb(83,61,58);
  private static final int SKIN=Color.rgb(238,199,168),SKIN_SHADOW=Color.rgb(206,157,135);
  private static final int TOP=Color.rgb(228,218,201),TOP_SHADOW=Color.rgb(184,176,164);
@@ -56,7 +56,7 @@ public final class HaruPixelRenderer {
   // Fringe.
   rect(c,p,HAIR,x-5*PX+lean,headTop+2*PX,x+5*PX+lean,headTop+6*PX);
   rect(c,p,HAIR,x-4*PX+lean,headTop+5*PX,x-2*PX+lean,headTop+8*PX);
-  rect(c,p,HAIR_HI,x-2*PX+lean,headTop+3*PX,x*0+ x+0*PX+lean,headTop+5*PX);
+  rect(c,p,HAIR_HI,x-2*PX+lean,headTop+3*PX,x+lean,headTop+5*PX);
 
   // Neck and top.
   rect(c,p,SKIN,x-2*PX,headTop+14*PX,x+2*PX,torsoTop+2*PX);
