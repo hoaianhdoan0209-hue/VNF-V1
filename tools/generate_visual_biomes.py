@@ -8,7 +8,7 @@ os.makedirs(OUT,exist_ok=True);os.makedirs(PRE,exist_ok=True)
 
 W,H=800,360
 OUT_W,OUT_H=2400,1080
-REV="authored-organic-biome-v9-aligned-bloom-2026-09"
+REV="authored-pixel-biome-v10-commercial-grid-2026-09"\nPIX_W,PIX_H=1200,540\nPIX_COLORS={"sky":64,"distant":72,"mid":96,"ground":88,"foreground":80}
 C={
  "home":((68,111,137),(198,191,151),(42,68,64),(94,120,77),(70,91,57),(229,176,103)),
  "garden":((91,145,159),(225,207,153),(47,85,62),(101,143,76),(72,105,55),(242,188,111)),
@@ -417,6 +417,18 @@ def _emissive_bloom(base,kind,biome):
     bloom=bloom.resize(base.size,Image.Resampling.BICUBIC)
     return Image.alpha_composite(base,bloom)
 
+def _pixel_art_finalize(rgba,kind):
+    """Collapse high-res lighting into authored pixel clusters."""
+    rgba=rgba.convert("RGBA")
+    alpha=rgba.getchannel("A").resize((PIX_W,PIX_H),Image.Resampling.NEAREST)
+    rgb=rgba.convert("RGB").resize((PIX_W,PIX_H),Image.Resampling.BOX)
+    rgb=Image.eval(rgb,lambda v:(v//8)*8)
+    q=rgb.quantize(colors=PIX_COLORS.get(kind,88),method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE).convert("RGB")
+    low=Image.merge("RGBA",(*q.split(),alpha))
+    aa=low.getchannel("A").point(lambda v:0 if v<20 else (255 if v>235 else v))
+    low.putalpha(aa)
+    return low.resize((OUT_W,OUT_H),Image.Resampling.NEAREST)
+
 def save(im,a,path):
     name=os.path.basename(path).replace(".png","")
     biome,kind=name.split("_",1)
@@ -440,6 +452,7 @@ def save(im,a,path):
     else:
         rgba=ImageEnhance.Contrast(rgba).enhance(1.04)
         rgba=ImageEnhance.Color(rgba).enhance(1.08)
+    rgba=_pixel_art_finalize(rgba,kind)
     rgba.save(path,optimize=True,compress_level=9)
 
 def cluster(d,r,x,y,rx,ry,lo,hi,count=20):
