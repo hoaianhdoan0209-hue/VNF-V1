@@ -203,4 +203,95 @@ print("runtime capture validation: 4 distinct biomes,",
       f"{len(set(ch))}/10 distinct cat pose frames")
 PY
 
-ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses"
+run_natural_probe() {
+  local natural="$OUT/natural-play"
+  mkdir -p "$natural"
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adb shell pm clear "$PKG" >/dev/null
+  wait_for_pm
+  adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
+  adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
+  adb logcat -c || true
+
+  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_natural_probe true >/dev/null
+
+  local start_ready=0
+  for _ in $(seq 1 40); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "NATURAL_QA sample=start"; then
+      start_ready=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$start_ready" -ne 1 ]]; then
+    echo "Natural-play start sample was not emitted." >&2
+    dump_runtime_debug
+    return 1
+  fi
+  timeout 12s adb exec-out screencap -p > "$natural/start.png"
+  valid_png "$natural/start.png"
+
+  local final_ready=0
+  for _ in $(seq 1 205); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "NATURAL_QA sample=final"; then
+      final_ready=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$final_ready" -ne 1 ]]; then
+    echo "Natural-play final sample was not emitted." >&2
+    dump_runtime_debug
+    return 1
+  fi
+  timeout 12s adb exec-out screencap -p > "$natural/final.png"
+  valid_png "$natural/final.png"
+  adb logcat -d -s 'VNF:I' '*:S' > "$natural/runtime.log"
+
+  python - "$natural/runtime.log" <<'PY2'
+import re,sys
+from pathlib import Path
+
+text=Path(sys.argv[1]).read_text(errors="replace")
+pattern=re.compile(
+    r"NATURAL_QA sample=(start|final) haruX=([-+0-9.eE]+) "
+    r"intention=(\S*) activity=(\S*) plan=(\S*) status=(\S*) "
+    r"travel=(true|false) planProgress=(\d+) simulatedAt=(\d+)"
+)
+samples={}
+for m in pattern.finditer(text):
+    samples[m.group(1)]={
+        "x":float(m.group(2)),
+        "intention":m.group(3),
+        "activity":m.group(4),
+        "plan":m.group(5),
+        "status":m.group(6),
+        "travel":m.group(7)=="true",
+        "progress":int(m.group(8)),
+        "simulated":int(m.group(9)),
+    }
+if set(samples)!={"start","final"}:
+    raise SystemExit(f"missing natural-play samples: {samples.keys()}")
+a,b=samples["start"],samples["final"]
+dx=abs(b["x"]-a["x"])
+changed=(
+    dx>=20.0 or
+    a["intention"]!=b["intention"] or
+    a["activity"]!=b["activity"] or
+    a["plan"]!=b["plan"] or
+    a["status"]!=b["status"] or
+    b["progress"]>a["progress"]+1000
+)
+if b["simulated"]<=a["simulated"]:
+    raise SystemExit("natural-play simulation clock did not advance")
+if not changed:
+    raise SystemExit(f"Haru showed no natural runtime progress over probe window: start={a} final={b}")
+if not b["intention"] and b["activity"] in ("", "standing_quietly") and not b["travel"]:
+    raise SystemExit(f"Haru ended natural probe as an idle placeholder: {b}")
+print(f"natural-play smoke PASS: dx={dx:.1f} start={a} final={b}")
+PY2
+}
+
+run_natural_probe
+
+ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play"
