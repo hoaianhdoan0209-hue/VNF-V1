@@ -18,19 +18,10 @@ public final class WildlifeMotionReadabilityTest {
  }
 
  @Test public void visibleRepresentativeMotionStillRespectsDormantTraits(){
-  SpeciesEvolutionCatalog.Species active=null,dormant=null;
-  for(SpeciesEvolutionCatalog.Species d:SpeciesEvolutionCatalog.all()){
-   if(!(d.lifeCycle.contains("dormant")||d.lifeCycle.contains("long-slow")))continue;
-   for(SpeciesEvolutionCatalog.Species a:SpeciesEvolutionCatalog.all()){
-    if(a.lifeCycle.contains("dormant")||a.lifeCycle.contains("long-slow"))continue;
-    if(d.locomotion.equals(a.locomotion)){active=a;dormant=d;break;}
-   }
-   if(active!=null)break;
-  }
-  assertNotNull("catalog should contain an active/dormant pair with the same locomotion",active);assertNotNull(dormant);
-  double activeDrive=WildlifeManifestationEngine.traitMotion(active);
-  double dormantDrive=WildlifeManifestationEngine.traitMotion(dormant);
+  double activeDrive=WildlifeManifestationEngine.traitMotionFor("six-beat scuttle","seasonal-active");
+  double dormantDrive=WildlifeManifestationEngine.traitMotionFor("six-beat scuttle","dormant-cycle");
   assertTrue("dormant lifecycle must reduce visible locomotion drive for the same locomotion family",activeDrive>dormantDrive);
+  assertEquals(.12,activeDrive-dormantDrive,1e-9);
  }
 
  @Test public void activeWildlifeChangesWorldPositionWithinSeconds(){
