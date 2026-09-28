@@ -9,7 +9,7 @@ import java.util.*;
  */
 public final class HaruVisibleAgencyEngine {
  private static final double MIN_CURIOSITY=.46;
- private static final long VISIBLE_AGENCY_WATCHDOG_MS=42000L;
+ private static final long VISIBLE_AGENCY_WATCHDOG_MS=18000L;
  private HaruVisibleAgencyEngine(){}
 
  public static LifeDecision adjustChoice(WorldState s,LifeDecision selected,long now){
@@ -28,11 +28,12 @@ public final class HaruVisibleAgencyEngine {
    if(score>bestScore){bestScore=score;best=a;}
   }
   if((best==null||bestScore<3.0)&&!stalled)return selected;
-  if(best==null&&stalled)best=here;
-  if(best==null)return selected;
-
-  Intention in=new Intention("explore_world",0,"curiosity",best.id,
-    "see what has changed there and gather firsthand evidence",.28,now+5400000L);
+  WorldObject local=null;
+  if(best==null&&stalled)local=localViewpoint(s,here);
+  if(best==null&&local==null)return selected;
+  String target=best!=null?best.id:local.id;
+  Intention in=new Intention("explore_world",0,"curiosity",target,
+    best!=null?"see what has changed there and gather firsthand evidence":"walk to a different local viewpoint and inspect what is actually there",.28,now+5400000L);
   LifeDecision d=new LifeDecision(in)
     .reason("curiosity",s.personality.curiosity*12)
     .reason("memory_novelty",memoryNovelty(s,best.id,now)*10)
@@ -41,7 +42,7 @@ public final class HaruVisibleAgencyEngine {
     .reason("visible_agency_recovery",stalled?11:3);
   in.utility=d.reasons.values().stream().mapToDouble(Double::doubleValue).sum();
   WorldEventBus.publishId(s,now,"haru_visible_choice_"+Long.toHexString(now),
-    "HARU_VISIBLE_AUTONOMY_CHOSEN",best.id,
+    "HARU_VISIBLE_AUTONOMY_CHOSEN",target,
     "Haru independently chose a reachable place/viewpoint to investigate instead of remaining visibly idle.");
   return d;
  }
@@ -83,6 +84,24 @@ public final class HaruVisibleAgencyEngine {
   return anchor<=0||now-anchor>=VISIBLE_AGENCY_WATCHDOG_MS;
  }
 
+
+ private static WorldObject localViewpoint(WorldState s,WorldArea here){
+  if(s==null||s.world==null||here==null)return null;
+  WorldObject best=null;double score=Double.NEGATIVE_INFINITY;
+  for(WorldObject o:s.world.objects){
+   if(o==null||!o.enabled||o.id==null||o.id.isEmpty())continue;
+   if(!here.id.equals(HaruVisionEngine.actualAreaId(s,o)))continue;
+   float ox=HaruVisionEngine.actualX(s,o);double d=Math.abs(ox-s.haruX);
+   if(d<110||d>Math.max(180,here.right-here.left-.01))continue;
+   String tags=o.tags==null?"":o.tags.toLowerCase(java.util.Locale.ROOT);
+   double interest=Math.min(5,d/95.0);
+   if("creature".equals(o.type)||tags.contains("flora")||tags.contains("vegetation"))interest+=3.2;
+   if(tags.contains("water")||tags.contains("reflect")||tags.contains("landmark"))interest+=2.4;
+   if(o.collision)interest-=1.5;
+   if(interest>score){score=interest;best=o;}
+  }
+  return best;
+ }
  private static double areaScore(WorldState s,WorldArea a,long now){
   double score=memoryNovelty(s,a.id,now)*10+semanticInterest(a);
   WorldArea here=s.world.areaAt(s.haruX);
