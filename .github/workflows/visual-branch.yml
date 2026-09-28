@@ -22,8 +22,19 @@ jobs:
       - name: Checkout visual branch
         uses: actions/checkout@v4
 
+      - name: Setup Python for runtime QA
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install runtime image validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow==11.3.0
+
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -87,6 +98,7 @@ jobs:
           script: bash tools/capture_visual_runtime.sh
 
       - name: Verify CI did not mutate tracked source
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
