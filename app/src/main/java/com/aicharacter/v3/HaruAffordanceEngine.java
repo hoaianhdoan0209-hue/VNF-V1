@@ -45,7 +45,7 @@ public final class HaruAffordanceEngine {
   OpenQuestionState q=findQuestion(s,o.id);if(q!=null)p.questionId=q.questionId;
   HaruReasoningEngine.attachReasoningToPlan(s,p,now);
   s.planState=p;s.currentIntention="affordance_inquiry";s.persistentIntentionTarget=o.id;s.intentionStartedAt=now;s.haruActivity="following up on something she noticed";
-  boolean started=TravelEngine.start(s,s.girlTravel,"girl",o.areaId,p.planId,now);
+  WorldArea here=s.world.areaAt(s.haruX),targetArea=s.world.area(o.areaId);float targetX=HaruVisionEngine.actualX(s,o);boolean sameArea=here!=null&&targetArea!=null&&here.id.equals(targetArea.id);boolean started=sameArea?TravelEngine.startLocal(s,s.girlTravel,"girl",o.id,targetX,52f,p.planId,now):TravelEngine.start(s,s.girlTravel,"girl",o.areaId,p.planId,now);
   if(!started){p.status="FAILED";p.lastOutcome="affordance route unavailable";p.lastProgressAt=now;s.currentIntention="";s.persistentIntentionTarget="";PlanExecutor.learnTerminalOutcome(s,p,now,"affordance_route_failed",p.lastOutcome,true);return false;}
   WorldEventBus.publishId(s,now,"aff_goal_"+p.planId,"HARU_GOAL_FORMED",o.id,"Haru formed a goal from a visible world affordance.");
   return true;
