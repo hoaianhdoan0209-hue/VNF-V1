@@ -2,6 +2,10 @@
 
 Source checklist: VNF_Bang_Test_Trai_Nghiem_Thuc_Te.xlsx (30 current-experience tests).
 
+> **DEVICE VERIFICATION STATUS:** NOT COMPLETE.
+>
+> As of 2026-09-28, the saved real-device checklist records **0 PASS / 0 FAIL / 30 NOT TESTED**. The table below is an automated/contract coverage map plus the device tests that still need to be performed. It must not be read as “30/30 player-experience PASS”.
+
 ## Gate meaning
 - AUTOMATED: regression/contract coverage exists and must stay green.
 - DEVICE E2E: automated coverage protects wiring/logic, but the final perceptual result must still be verified on a real phone.
