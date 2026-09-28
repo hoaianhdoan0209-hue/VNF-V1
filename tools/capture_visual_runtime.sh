@@ -248,50 +248,155 @@ run_natural_probe() {
   valid_png "$natural/final.png"
   adb logcat -d -s 'VNF:I' '*:S' > "$natural/runtime.log"
 
-  python - "$natural/runtime.log" <<'PY2'
-import re,sys
+  python - "$natural/runtime.log" "$natural/final_state.json" <<'PY2'
+import json,re,sys
 from pathlib import Path
 
 text=Path(sys.argv[1]).read_text(errors="replace")
-pattern=re.compile(
-    r"NATURAL_QA sample=(start|final) haruX=([-+0-9.eE]+) "
-    r"intention=(\S*) activity=(\S*) plan=(\S*) status=(\S*) "
-    r"travel=(true|false) planProgress=(\d+) simulatedAt=(\d+)"
-)
 samples={}
-for m in pattern.finditer(text):
-    samples[m.group(1)]={
-        "x":float(m.group(2)),
-        "intention":m.group(3),
-        "activity":m.group(4),
-        "plan":m.group(5),
-        "status":m.group(6),
-        "travel":m.group(7)=="true",
-        "progress":int(m.group(8)),
-        "simulated":int(m.group(9)),
-    }
+for m in re.finditer(r"NATURAL_QA sample=(start|final) (.*)",text):
+    fields={}
+    for token in m.group(2).split():
+        if "=" in token:
+            k,v=token.split("=",1);fields[k]=v
+    samples[m.group(1)]=fields
 if set(samples)!={"start","final"}:
     raise SystemExit(f"missing natural-play samples: {samples.keys()}")
+def num(d,k): return float(d.get(k,"0"))
+def integer(d,k): return int(float(d.get(k,"0")))
 a,b=samples["start"],samples["final"]
-dx=abs(b["x"]-a["x"])
+dx=abs(num(b,"haruX")-num(a,"haruX"))
 changed=(
     dx>=20.0 or
-    a["intention"]!=b["intention"] or
-    a["activity"]!=b["activity"] or
-    a["plan"]!=b["plan"] or
-    a["status"]!=b["status"] or
-    b["progress"]>a["progress"]+1000
+    a.get("intention")!=b.get("intention") or
+    a.get("activity")!=b.get("activity") or
+    a.get("plan")!=b.get("plan") or
+    a.get("status")!=b.get("status") or
+    integer(b,"planProgress")>integer(a,"planProgress")+1000
 )
-if b["simulated"]<=a["simulated"]:
+if integer(b,"simulatedAt")<=integer(a,"simulatedAt"):
     raise SystemExit("natural-play simulation clock did not advance")
 if not changed:
     raise SystemExit(f"Haru showed no natural runtime progress over probe window: start={a} final={b}")
-if not b["intention"] and b["activity"] in ("", "standing_quietly") and not b["travel"]:
+if not b.get("intention") and b.get("activity") in ("", "standing_quietly") and b.get("travel")!="true":
     raise SystemExit(f"Haru ended natural probe as an idle placeholder: {b}")
+Path(sys.argv[2]).write_text(json.dumps(b,sort_keys=True))
 print(f"natural-play smoke PASS: dx={dx:.1f} start={a} final={b}")
 PY2
+
+  adb shell input keyevent KEYCODE_HOME >/dev/null 2>&1 || true
+  sleep 3
+  if ! adb shell run-as "$PKG" test -s files/world/world.json; then
+    echo "World save was not present before reopen." >&2
+    return 1
+  fi
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adb logcat -c || true
+  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_reopen_probe true >/dev/null
+  local reopen_ready=0
+  for _ in $(seq 1 50); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "REOPEN_QA"; then
+      reopen_ready=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$reopen_ready" -ne 1 ]]; then
+    echo "Reopen continuity sample was not emitted." >&2
+    dump_runtime_debug
+    return 1
+  fi
+  adb logcat -d -s 'VNF:I' '*:S' > "$natural/reopen.log"
+  timeout 12s adb exec-out screencap -p > "$natural/reopen.png"
+  valid_png "$natural/reopen.png"
+
+  python - "$natural/final_state.json" "$natural/reopen.log" <<'PY3'
+import json,re,sys
+from pathlib import Path
+before=json.loads(Path(sys.argv[1]).read_text())
+text=Path(sys.argv[2]).read_text(errors="replace")
+matches=list(re.finditer(r"REOPEN_QA (.*)",text))
+if not matches:
+    raise SystemExit("missing REOPEN_QA sample")
+after={}
+for token in matches[-1].group(1).split():
+    if "=" in token:
+        k,v=token.split("=",1);after[k]=v
+def i(d,k): return int(float(d.get(k,"0")))
+if i(after,"createdAt")!=i(before,"createdAt"):
+    raise SystemExit(f"world identity reset across reopen: before={before} after={after}")
+if i(after,"simulatedAt")<i(before,"simulatedAt"):
+    raise SystemExit(f"causal time moved backwards across reopen: before={before} after={after}")
+if i(after,"openedAt")<i(before,"openedAt"):
+    raise SystemExit(f"openedAt moved backwards across reopen: before={before} after={after}")
+print(f"reopen continuity PASS: createdAt={after.get('createdAt')} simulated {before.get('simulatedAt')} -> {after.get('simulatedAt')}")
+PY3
 }
 
 run_natural_probe
 
-ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play"
+run_cat_social_probe() {
+  local social="$OUT/cat-social"
+  mkdir -p "$social"
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adb shell pm clear "$PKG" >/dev/null
+  wait_for_pm
+  adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
+  adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
+  adb logcat -c || true
+  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_cat_social_probe true >/dev/null
+
+  local start_ready=0 final_ready=0
+  for _ in $(seq 1 45); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "CAT_QA sample=start"; then start_ready=1; break; fi
+    sleep 1
+  done
+  [[ "$start_ready" -eq 1 ]] || { echo "Cat social start sample missing." >&2; dump_runtime_debug; return 1; }
+  timeout 12s adb exec-out screencap -p > "$social/start.png"
+  valid_png "$social/start.png"
+
+  for _ in $(seq 1 35); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "CAT_QA sample=final"; then final_ready=1; break; fi
+    sleep 1
+  done
+  [[ "$final_ready" -eq 1 ]] || { echo "Cat social final sample missing." >&2; dump_runtime_debug; return 1; }
+  timeout 12s adb exec-out screencap -p > "$social/final.png"
+  valid_png "$social/final.png"
+  adb logcat -d -s 'VNF:I' '*:S' > "$social/runtime.log"
+
+  python - "$social/runtime.log" <<'PY4'
+import re,sys
+from pathlib import Path
+text=Path(sys.argv[1]).read_text(errors="replace")
+samples={}
+for m in re.finditer(r"CAT_QA sample=(start|final) (.*)",text):
+    fields={}
+    for token in m.group(2).split():
+        if "=" in token:
+            k,v=token.split("=",1);fields[k]=v
+    samples[m.group(1)]=fields
+if set(samples)!={"start","final"}:
+    raise SystemExit(f"missing cat social samples: {samples.keys()}")
+a,b=samples["start"],samples["final"]
+def f(d,k): return float(d.get(k,"0"))
+def i(d,k): return int(float(d.get(k,"0")))
+dx=abs(f(b,"catX")-f(a,"catX"))
+social_change=(
+    dx>=12.0 or
+    a.get("mode")!=b.get("mode") or
+    b.get("travel")=="true" or
+    i(b,"approaches")>i(a,"approaches") or
+    i(b,"retreats")>i(a,"retreats") or
+    i(b,"settles")>i(a,"settles")
+)
+if i(b,"simulatedAt")<=i(a,"simulatedAt"):
+    raise SystemExit("cat social probe simulation clock did not advance")
+if not social_change:
+    raise SystemExit(f"cat showed no autonomous social response: start={a} final={b}")
+print(f"cat social runtime PASS: dx={dx:.1f} start={a} final={b}")
+PY4
+}
+
+run_cat_social_probe
+
+ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play" "$OUT/cat-social"
