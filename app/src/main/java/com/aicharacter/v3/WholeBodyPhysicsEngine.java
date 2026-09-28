@@ -24,7 +24,9 @@ public final class WholeBodyPhysicsEngine{
   double stability=Math.max(0,1-edge/Math.max(.04,supportHalf*.65));
   p.balance=Math.max(.05,Math.min(1,capability*(.58+.42*p.traction)*stability));
 
-  if(p.grounded&&p.balance<.12){
+  BodyRigState girlRig="girl".equals(actor)?s.bodyRig:null;
+  boolean severeInstability=p.slipSeverity>.82||(girlRig!=null&&girlRig.recoveryStep>.92);
+  if(p.grounded&&p.balance<.08&&severeInstability){
    double bodyHeight="cat".equals(actor)?.24:.55;
    double loss=Math.max(.10,Math.min(bodyHeight,bodyHeight*(.42+(1-p.balance)*.48)));
    loseGroundSupport(s,actor,loss,p.velocityX,now);

@@ -115,6 +115,35 @@ public final class WorldPhysicsInvariantTest {
   assertTrue(s.girlPhysics.traction<dry);
  }
 
+ @Test public void transientWalkingBalanceDipDoesNotEraseTravelProgress(){
+  WorldState s=flat();
+  s.body.energy=90;s.body.sleepiness=10;s.body.pain=0;
+  s.girlTravel=new TravelState();
+  s.girlTravel.actor="girl";s.girlTravel.originArea="field";s.girlTravel.destinationArea="field";
+  s.girlTravel.currentPlanId="walk_flat";s.girlTravel.travelMode="LOCAL";s.girlTravel.targetType="OBJECT";s.girlTravel.targetId="flat_target";
+  s.girlTravel.active=true;s.girlTravel.segmentStartX=s.haruX;s.girlTravel.segmentEndX=700f;s.girlTravel.previousX=s.haruX;s.girlTravel.interactionRange=10;s.girlTravel.startedAt=T0;s.girlTravel.segmentStartedAt=T0;
+  s.girlPhysics.grounded=true;s.girlPhysics.balance=.05;s.girlPhysics.slipSeverity=0;
+  s.bodyRig.recoveryStep=.25;
+  float start=s.haruX,previousProgress=s.girlTravel.progress;
+  for(int i=1;i<=120;i++){
+   long now=T0+i*250L;
+   PhysicalLifeStepEngine.advance(s,.25,now,true,false);
+   assertTrue("flat-ground travel progress must not move backwards",s.girlTravel.progress+1e-6>=previousProgress);
+   previousProgress=s.girlTravel.progress;
+   if(!s.girlTravel.active)break;
+  }
+  assertTrue("Haru should make visible flat-ground progress",s.haruX>start+20f);
+  assertTrue("ordinary walking must not repeatedly lose support",s.girlPhysics.grounded);
+ }
+
+ @Test public void severeInstabilityCanStillLoseGroundSupport(){
+  WorldState s=flat();
+  s.girlPhysics.grounded=true;s.girlPhysics.balance=.05;s.girlPhysics.slipSeverity=.95;
+  s.bodyRig.recoveryStep=1;
+  WholeBodyPhysicsEngine.prepare(s,"girl",.05,T0+50);
+  assertFalse("genuine severe instability should still be able to break support",s.girlPhysics.grounded);
+ }
+
  @Test public void cameraHorizontalFollowIsSmoothedAndBounded(){
   WorldState s=flat();
   CatCameraDirector.resetForTest();
