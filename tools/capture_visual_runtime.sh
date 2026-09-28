@@ -448,13 +448,13 @@ run_presentation_probes() {
 import re,sys
 from pathlib import Path
 text=Path(sys.argv[1]).read_text(errors="replace")
-m=list(re.finditer(r"CAMERA_QA shot=(\S+) targetZoom=([0-9.]+) visualZoom=([0-9.]+)",text))
+m=list(re.finditer(r"CAMERA_QA shot=(\S+) targetZoom=([0-9.]+) visualZoom=([0-9.]+) clear=(true|false)",text))
 if not m: raise SystemExit("missing CAMERA_QA fields")
-shot,target,visual=m[-1].group(1),float(m[-1].group(2)),float(m[-1].group(3))
+shot,target,visual,clear=m[-1].group(1),float(m[-1].group(2)),float(m[-1].group(3)),m[-1].group(4)
 if shot not in {"CLOSE","INTIMATE_CLOSE"}:
     raise SystemExit(f"camera did not choose a readable close shot: {shot}")
-if target < 1.40 or visual < 1.25:
-    raise SystemExit(f"camera close framing too weak: target={target} visual={visual}")
+if target < 1.40 or visual < 1.25 or clear!="true":
+    raise SystemExit(f"camera close framing not presentation-ready: target={target} visual={visual} clear={clear}")
 print(f"camera runtime PASS: shot={shot} targetZoom={target:.3f} visualZoom={visual:.3f}")
 PYCAM
 
@@ -480,11 +480,11 @@ import re,sys
 from hashlib import sha256
 from pathlib import Path
 text=Path(sys.argv[1]).read_text(errors="replace")
-m=list(re.finditer(r"GOD_QA scene=(true|false) world=(true|false) divine=(true|false) children=(\d+)",text))
+m=list(re.finditer(r"GOD_QA scene=(true|false) world=(true|false) divine=(true|false) clear=(true|false) children=(\d+)",text))
 if not m: raise SystemExit("missing GOD_QA fields")
-scene,world,divine,children=m[-1].groups()
-if scene!="true" or world!="true" or divine!="true" or int(children)<2:
-    raise SystemExit(f"God is not visibly layered over the live world: scene={scene} world={world} divine={divine} children={children}")
+scene,world,divine,clear,children=m[-1].groups()
+if scene!="true" or world!="true" or divine!="true" or clear!="true" or int(children)<2:
+    raise SystemExit(f"God is not visibly layered over a stable live world: scene={scene} world={world} divine={divine} clear={clear} children={children}")
 if sha256(Path(sys.argv[2]).read_bytes()).digest()==sha256(Path(sys.argv[3]).read_bytes()).digest():
     raise SystemExit("God manifestation capture is identical to camera-only capture")
 print(f"God runtime PASS: scene={scene} world={world} divine={divine} children={children}")
