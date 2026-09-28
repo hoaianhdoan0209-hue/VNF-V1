@@ -15,6 +15,7 @@ public final class LifeSimulationKernel {
  public static void beginSlice(WorldState s,double seconds,long now,Mode mode){
   if(s==null||seconds<=0)return;
   syncClock(s,now);
+  DivineGiftEffectEngine.advance(s,now);
   AtmosphereEvolutionEngine.advance(s,now);
   RespirationEngine.advance(s,now);
   ThermalEngine.advance(s,now);
