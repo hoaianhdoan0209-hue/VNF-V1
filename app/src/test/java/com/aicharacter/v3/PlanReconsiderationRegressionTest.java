@@ -48,4 +48,44 @@ public final class PlanReconsiderationRegressionTest {
   assertEquals("reconsider_test",s.haruSpeech.pendingSourceEventId);
   assertTrue(s.haruSpeech.pendingText.contains("đổi hướng"));
  }
+ @Test public void visibleCatCanTriggerReconsiderationEvenWhenHaruIsNotTravelling(){
+  WorldState s=WorldState.fresh();
+  s.world=new WorldModel();
+  s.world.areas.add(new WorldArea("home_shelter","Nhà","nơi trú",0,1000,846,true,"interior,shelter,home,dry,quiet"));
+  s.haruX=500f;
+  s.catX=520f;
+  s.catState.x=520f;
+  s.catState.areaId="home_shelter";
+  s.relationship.attachment=100;
+  s.body.energy=95;
+  s.body.sleepiness=5;
+  s.body.pain=0;
+  s.body.health=100;
+  s.digestive.stomachFood=.82;
+  s.digestive.nutrientReserve=.88;
+  s.hydration.hydration=.95;
+  s.hydration.bladderFill=.05;
+  s.environment.weather="CLEAR";
+  s.girlTravel.active=false;
+  s.girlTravel.interruption="";
+
+  PlanState p=new PlanState();
+  p.planId="quiet_observation";
+  p.status="ACTIVE";
+  p.intentionId="observe_lake";
+  p.destination="lakeside";
+  p.plannedAction="OBSERVE";
+  p.createdAt=T0-30000L;
+  p.lastProgressAt=T0-5000L;
+  p.commitment=0;
+  s.planState=p;
+  s.currentIntention=p.intentionId;
+
+  PlanReconsiderationEngine.Result r=PlanReconsiderationEngine.evaluate(s,T0);
+
+  assertTrue("the cat is locally visible through HaruVision",HaruVisionEngine.observe(s).catVisible);
+  assertEquals("a highly relevant nearby cat should make a low-commitment leisure plan genuinely reconsider",PlanReconsiderationEngine.Decision.REPLAN,r.decision);
+  assertTrue(r.contradictory.contains("cat"));
+ }
+
 }
