@@ -40,6 +40,32 @@ install_apk() {
   return 1
 }
 
+start_probe() {
+  local probe="$1"
+  shift
+  for attempt in 1 2 3; do
+    adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+    adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
+    # Do not use -W here: emulator ActivityManager can occasionally leave the
+    # client waiting even after the process has started successfully.
+    timeout 20s adb shell am start -n "$ACTIVITY" "$@" >/dev/null 2>&1 || true
+    for _ in $(seq 1 30); do
+      pid="$(adb shell pidof "$PKG" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
+      if [[ -n "$pid" ]]; then
+        echo "probe start ok probe=$probe attempt=$attempt pid=$pid"
+        return 0
+      fi
+      sleep 1
+    done
+    echo "Probe start attempt $attempt failed for $probe." >&2
+    wait_for_pm || true
+    sleep 2
+  done
+  echo "Could not start probe $probe." >&2
+  dump_runtime_debug
+  return 1
+}
+
 valid_png() {
   local f="$1"
   python - "$f" <<'PY'
@@ -213,7 +239,7 @@ run_natural_probe() {
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
 
-  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_natural_probe true >/dev/null
+  start_probe natural --ez vnf_debug_natural_probe true
 
   local start_ready=0
   for _ in $(seq 1 40); do
@@ -329,7 +355,7 @@ PYSAVEFAIL
   fi
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
   adb logcat -c || true
-  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_reopen_probe true >/dev/null
+  start_probe reopen --ez vnf_debug_reopen_probe true
   local reopen_ready=0
   for _ in $(seq 1 50); do
     if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "REOPEN_QA"; then
@@ -379,7 +405,7 @@ run_cat_social_probe() {
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
-  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_cat_social_probe true >/dev/null
+  start_probe cat-social --ez vnf_debug_cat_social_probe true
 
   local start_ready=0 final_ready=0
   for _ in $(seq 1 45); do
@@ -442,7 +468,7 @@ run_presentation_probes() {
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
-  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_camera_probe true >/dev/null
+  start_probe camera --ez vnf_debug_camera_probe true
   local camera_ready=0
   for _ in $(seq 1 60); do
     if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "CAMERA_QA"; then camera_ready=1; break; fi
@@ -473,7 +499,7 @@ PYCAM
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
-  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_god_probe true >/dev/null
+  start_probe god --ez vnf_debug_god_probe true
   local god_ready=0
   for _ in $(seq 1 60); do
     if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "GOD_QA"; then god_ready=1; break; fi
