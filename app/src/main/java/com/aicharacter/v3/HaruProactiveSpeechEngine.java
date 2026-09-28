@@ -59,6 +59,7 @@ public final class HaruProactiveSpeechEngine {
   if("observe_lake".equals(id))return new Candidate("Mình muốn ra nhìn mặt hồ một lúc.","ánh mắt hướng về phía hồ",src);
   if("explore_garden".equals(id))return new Candidate("Mình muốn đi dọc lối cỏ xem có gì thay đổi.","chú ý đến khu vườn",src);
   if("explore_world".equals(id))return new Candidate("Mình muốn sang chỗ khác xem có gì đã thay đổi.","nhìn về phía nơi mình ít để ý gần đây",src);
+  if("affordance_inquiry".equals(id))return new Candidate("Cái đó làm mình tò mò. Mình muốn lại gần hơn để nhìn cho rõ trước khi nghĩ tiếp.","chủ động đổi hướng về thứ vừa khiến mình chú ý",src);
   if("study_ecology".equals(id)||"watch_reedling".equals(id))return new Candidate("Mình muốn quan sát chúng thêm một lúc.","tập trung vào những chuyển động nhỏ quanh mình",src);
   if("reflect".equals(id)||"quiet_pause".equals(id)||"seek_solitude".equals(id))return new Candidate("Mình muốn yên một chút để nghĩ.","thả lỏng vai và im đi một nhịp",src);
   if("drink".equals(id))return new Candidate("Mình khát rồi. Mình về lấy nước.","liếm môi rất nhẹ rồi đổi hướng",src);
