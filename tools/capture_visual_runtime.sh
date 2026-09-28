@@ -50,7 +50,8 @@ start_probe() {
     # client waiting even after the process has started successfully.
     timeout 20s adb shell am start -n "$ACTIVITY" "$@" >/dev/null 2>&1 || true
     for _ in $(seq 1 30); do
-      pid="$(adb shell pidof "$PKG" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
+      pid_raw="$(adb shell pidof "$PKG" 2>/dev/null || true)"
+      pid="$(printf '%s' "$pid_raw" | tr -d '\r' | awk '{print $1}')"
       if [[ -n "$pid" ]]; then
         echo "probe start ok probe=$probe attempt=$attempt pid=$pid"
         return 0
