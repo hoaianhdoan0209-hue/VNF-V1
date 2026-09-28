@@ -6,8 +6,8 @@ package com.aicharacter.v3;
  */
 public final class CatSocialEngine {
  private static final double PERCEPTION_RANGE=420.0;
- private static final long PLAYER_OVERRIDE_MS=6500L,RESPONSE_COOLDOWN_MS=9000L,LEARNING_INTERVAL_MS=8000L;
- private static final double APPROACH_AFFINITY=.39,SETTLE_COMFORT=.46,SETTLE_FAMILIARITY=.40,CALM_FAMILIARITY_GAIN=.022,CALM_COMFORT_GAIN=.026;
+ private static final long PLAYER_OVERRIDE_MS=6500L,RESPONSE_COOLDOWN_MS=8000L,LEARNING_INTERVAL_MS=5000L;
+ private static final double APPROACH_AFFINITY=.39,SETTLE_COMFORT=.46,SETTLE_FAMILIARITY=.40,CALM_FAMILIARITY_GAIN=.030,CALM_COMFORT_GAIN=.034;
  private CatSocialEngine(){}
 
  public static boolean tick(WorldState s,long now){
