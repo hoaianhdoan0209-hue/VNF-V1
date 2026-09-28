@@ -23,3 +23,13 @@ public final class PixelMotionCadenceTest {
   assertEquals(PixelMotionCadence.lift(1),PixelMotionCadence.lift(5),1e-6);
  }
 }
+ @Test public void normalizedStridePhaseMapsToPhysicalWalkFrames(){
+  assertEquals(0,PixelMotionCadence.frameForPhase(0.0));
+  assertEquals(2,PixelMotionCadence.frameForPhase(.25));
+  assertEquals(4,PixelMotionCadence.frameForPhase(.50));
+  assertEquals(6,PixelMotionCadence.frameForPhase(.75));
+  assertEquals(0,PixelMotionCadence.frameForPhase(1.0));
+  assertEquals(7,PixelMotionCadence.frameForPhase(-.01));
+  assertEquals(0,PixelMotionCadence.frameForPhase(Double.NaN));
+ }
+
