@@ -341,7 +341,21 @@ Path(sys.argv[2]).write_text(json.dumps(b,sort_keys=True))
 print(f"natural-play living presentation PASS: dx={dx:.1f} speechCount={b.get('speechCount')} anim={anim} frames={frames} fps={fps:.2f}")
 PY2
 
+  adb logcat -c || true
   adb shell input keyevent KEYCODE_HOME >/dev/null 2>&1 || true
+  local lifecycle_saved=0
+  for _ in $(seq 1 30); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "LIFECYCLE_SAVE pause"; then
+      lifecycle_saved=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$lifecycle_saved" -ne 1 ]]; then
+    echo "Pause lifecycle did not confirm a committed world save." >&2
+    dump_runtime_debug
+    return 1
+  fi
   local persisted_ready=0
   for _ in $(seq 1 25); do
     if adb exec-out run-as "$PKG" cat files/world/world.json > "$natural/persisted.json" 2>/dev/null; then
@@ -364,7 +378,7 @@ PYSAVE
     sleep 1
   done
   if [[ "$persisted_ready" -ne 1 ]]; then
-    echo "World save was missing or changed identity before reopen." >&2
+    echo "Lifecycle save completed but persisted causal cursor did not reach the final visible world state." >&2
     dump_runtime_debug
     return 1
   fi

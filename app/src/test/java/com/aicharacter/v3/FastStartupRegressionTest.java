@@ -156,6 +156,24 @@ public final class FastStartupRegressionTest {
   assertTrue(body.contains("RESUME_WORLD_REFRESH conflict=true"));
  }
 
+ @Test public void freshSeedHandoffStaysFreshEvenIfActiveWorldAlreadySaved()throws Exception{
+  String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
+  int seed=repo.indexOf("public synchronized boolean commitPendingInitialSeed()");
+  int load=repo.indexOf("public synchronized WorldState loadOrCreate()",seed);
+  assertTrue(seed>=0&&load>seed);
+  String body=repo.substring(seed,load);
+  assertTrue(body.contains("if(pendingInitialSeed==null)return false"));
+  assertTrue(body.contains("if(current==null)save(seed)"));
+  assertFalse("an already-persisted fresh world must not be misclassified as historical",body.contains("if(current!=null)return false"));
+  assertTrue(body.contains("return true"));
+ }
+
+ @Test public void lifecycleSaveIsObservableBeforeReopenQa()throws Exception{
+  String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
+  assertTrue(main.contains("LIFECYCLE_SAVE pause simulatedAt="));
+  assertTrue(main.contains("LIFECYCLE_SAVE stop simulatedAt="));
+ }
+
  @Test public void failedSaveRestoresInMemorySavedTimestamp()throws Exception{
   String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
   int save=repo.indexOf("public synchronized void save(WorldState state)");

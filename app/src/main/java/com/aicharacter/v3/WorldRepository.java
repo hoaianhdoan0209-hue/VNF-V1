@@ -63,10 +63,11 @@ public final class WorldRepository{
  public synchronized boolean commitPendingInitialSeed(){
   if(pendingInitialSeed==null)return false;
   WorldState seed=pendingInitialSeed;pendingInitialSeed=null;
-  // Never overwrite a world that another writer has already committed.
+  // A pending seed proves this process opened a fresh world. If another active
+  // writer already persisted that same new world, the fresh-start handoff is
+  // still complete and must not fall into historical reconciliation.
   WorldState current=tryLoad(saveFile);
-  if(current!=null)return false;
-  save(seed);
+  if(current==null)save(seed);
   return true;
  }
 
