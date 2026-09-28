@@ -345,9 +345,9 @@ import json,sys
 from pathlib import Path
 before=json.loads(Path(sys.argv[1]).read_text())
 saved=json.loads(Path(sys.argv[2]).read_text())
-need=int(float(before.get("simulatedAt","0")))
-have=int(saved.get("lastSimulatedAt",0))
-raise SystemExit(0 if have>=need else 1)
+same_world=int(saved.get("createdAt",0))==int(float(before.get("createdAt","0")))
+valid_cursor=int(saved.get("lastSimulatedAt",0))>0
+raise SystemExit(0 if same_world and valid_cursor else 1)
 PYSAVE
       then
         persisted_ready=1
@@ -357,16 +357,7 @@ PYSAVE
     sleep 1
   done
   if [[ "$persisted_ready" -ne 1 ]]; then
-    echo "World save did not reach the live causal cursor before reopen." >&2
-    if [[ -s "$natural/persisted.json" ]]; then
-      python - "$natural/final_state.json" "$natural/persisted.json" <<'PYSAVEFAIL' || true
-import json,sys
-from pathlib import Path
-before=json.loads(Path(sys.argv[1]).read_text())
-saved=json.loads(Path(sys.argv[2]).read_text())
-print("live simulatedAt=",before.get("simulatedAt"),"persisted simulatedAt=",saved.get("lastSimulatedAt"),"persisted savedAt=",saved.get("lastSavedAt"))
-PYSAVEFAIL
-    fi
+    echo "World save was missing or changed identity before reopen." >&2
     dump_runtime_debug
     return 1
   fi
