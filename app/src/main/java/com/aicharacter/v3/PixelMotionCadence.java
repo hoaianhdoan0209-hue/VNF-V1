@@ -8,7 +8,8 @@ public final class PixelMotionCadence {
  private static final float[] SECONDARY={.8f,.45f,0f,-.45f,-.8f,-.45f,0f,.45f};
  private PixelMotionCadence(){}
 
- public static int frame(int frame){int f=frame%8;return f<0?f+8:f;}\n public static int frameForPhase(double phase){if(!Double.isFinite(phase))return 0;double p=phase-Math.floor(phase);return frame((int)Math.floor(p*frameCount()));}
+ public static int frame(int frame){int f=frame%8;return f<0?f+8:f;}
+ public static int frameForPhase(double phase){if(!Double.isFinite(phase))return 0;double p=phase-Math.floor(phase);return frame((int)Math.floor(p*frameCount()));}
  public static float stride(int frame){return STRIDE[frame(frame)];}
  public static float lift(int frame){return LIFT[frame(frame)];}
  public static float compression(int frame){return COMPRESSION[frame(frame)];}
