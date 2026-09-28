@@ -427,4 +427,74 @@ PY4
 
 run_cat_social_probe
 
-ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play" "$OUT/cat-social"
+run_presentation_probes() {
+  local present="$OUT/presentation"
+  mkdir -p "$present"
+
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adb shell pm clear "$PKG" >/dev/null
+  wait_for_pm
+  adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
+  adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
+  adb logcat -c || true
+  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_camera_probe true >/dev/null
+  local camera_ready=0
+  for _ in $(seq 1 60); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "CAMERA_QA"; then camera_ready=1; break; fi
+    sleep 1
+  done
+  [[ "$camera_ready" -eq 1 ]] || { echo "Camera presentation probe missing." >&2; dump_runtime_debug; return 1; }
+  timeout 12s adb exec-out screencap -p > "$present/camera_close.png"
+  valid_png "$present/camera_close.png"
+  adb logcat -d -s 'VNF:I' '*:S' > "$present/camera.log"
+
+  python - "$present/camera.log" <<'PYCAM'
+import re,sys
+from pathlib import Path
+text=Path(sys.argv[1]).read_text(errors="replace")
+m=list(re.finditer(r"CAMERA_QA shot=(\S+) targetZoom=([0-9.]+) visualZoom=([0-9.]+)",text))
+if not m: raise SystemExit("missing CAMERA_QA fields")
+shot,target,visual=m[-1].group(1),float(m[-1].group(2)),float(m[-1].group(3))
+if shot not in {"CLOSE","INTIMATE_CLOSE"}:
+    raise SystemExit(f"camera did not choose a readable close shot: {shot}")
+if target < 1.40 or visual < 1.25:
+    raise SystemExit(f"camera close framing too weak: target={target} visual={visual}")
+print(f"camera runtime PASS: shot={shot} targetZoom={target:.3f} visualZoom={visual:.3f}")
+PYCAM
+
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adb shell pm clear "$PKG" >/dev/null
+  wait_for_pm
+  adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
+  adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
+  adb logcat -c || true
+  timeout 45s adb shell am start -W -n "$ACTIVITY" --ez vnf_debug_god_probe true >/dev/null
+  local god_ready=0
+  for _ in $(seq 1 60); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "GOD_QA"; then god_ready=1; break; fi
+    sleep 1
+  done
+  [[ "$god_ready" -eq 1 ]] || { echo "God presentation probe missing." >&2; dump_runtime_debug; return 1; }
+  timeout 12s adb exec-out screencap -p > "$present/god_presence.png"
+  valid_png "$present/god_presence.png"
+  adb logcat -d -s 'VNF:I' '*:S' > "$present/god.log"
+
+  python - "$present/god.log" "$present/camera_close.png" "$present/god_presence.png" <<'PYGOD'
+import re,sys
+from hashlib import sha256
+from pathlib import Path
+text=Path(sys.argv[1]).read_text(errors="replace")
+m=list(re.finditer(r"GOD_QA scene=(true|false) world=(true|false) divine=(true|false) children=(\d+)",text))
+if not m: raise SystemExit("missing GOD_QA fields")
+scene,world,divine,children=m[-1].groups()
+if scene!="true" or world!="true" or divine!="true" or int(children)<2:
+    raise SystemExit(f"God is not visibly layered over the live world: scene={scene} world={world} divine={divine} children={children}")
+if sha256(Path(sys.argv[2]).read_bytes()).digest()==sha256(Path(sys.argv[3]).read_bytes()).digest():
+    raise SystemExit("God manifestation capture is identical to camera-only capture")
+print(f"God runtime PASS: scene={scene} world={world} divine={divine} children={children}")
+PYGOD
+}
+
+run_presentation_probes
+
+ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play" "$OUT/cat-social" "$OUT/presentation"
