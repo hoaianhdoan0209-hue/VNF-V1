@@ -139,12 +139,28 @@ public final class FastStartupRegressionTest {
   assertTrue(view.contains("MAX_ACTIVE_CATCHUP_STEPS=8"));
  }
 
- @Test public void persistentRefreshRetriesConflictsInsteadOfDroppingTimeline()throws Exception{
+ @Test public void persistentRefreshNeverPersistsACompetingTimeline()throws Exception{
   String main=read(appRoot().resolve("src/main/java/com/aicharacter/v3/MainActivity.java"));
-  assertTrue(main.contains("worldRefreshRetryCount<3"));
-  assertTrue(main.contains("refreshPersistentWorldAfterResume(System.currentTimeMillis()),120L"));
-  assertTrue(main.contains("RESUME_WORLD_REFRESH conflict=true"));
-  assertTrue(main.contains("if(!isDebugVisualCapture())gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),80L)"));
+  int refresh=main.indexOf("private void refreshPersistentWorldAfterResume");
+  int next=main.indexOf("private boolean worldReadyForInteraction",refresh);
+  assertTrue(refresh>=0&&next>refresh);
+  String body=main.substring(refresh,next);
+  int advance=body.indexOf("WorldContinuityEngine.advanceForPlayerOpen(live,now)");
+  int accepted=body.indexOf("if(untouched)");
+  int persist=body.indexOf("r.save(live)",accepted);
+  assertTrue(advance>=0&&accepted>advance&&persist>accepted);
+  assertFalse("candidate refresh must not write disk before UI accepts it",body.substring(advance,accepted).contains("r.save(live)"));
+  assertTrue(body.contains("boolean seeded=r.commitPendingInitialSeed()"));
+  assertTrue(body.contains("if(seeded)"));
+  assertTrue(body.contains("worldRefreshRetryCount<3"));
+  assertTrue(body.contains("RESUME_WORLD_REFRESH conflict=true"));
+ }
+
+ @Test public void failedSaveRestoresInMemorySavedTimestamp()throws Exception{
+  String repo=read(appRoot().resolve("src/main/java/com/aicharacter/v3/WorldRepository.java"));
+  int save=repo.indexOf("public synchronized void save(WorldState state)");
+  int restore=repo.indexOf("state.lastSavedAt=priorSaved",save);
+  assertTrue(save>=0&&restore>save);
  }
 
  @Test public void v105UsesNextUpdaterVersion()throws Exception{

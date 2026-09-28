@@ -289,7 +289,12 @@ run_natural_probe() {
   fi
   timeout 12s adb exec-out screencap -p > "$natural/final.png"
   valid_png "$natural/final.png"
-  adb logcat -d -s 'VNF:I' '*:S' > "$natural/runtime.log"
+  adb logcat -d -t 4000 > "$natural/runtime.log"
+  if grep -Eq "Could not persist proactive Haru speech delivery|Refusing to replace a causally newer committed world|Accepted world refresh could not persist" "$natural/runtime.log"; then
+    echo "Natural-play detected a competing timeline persistence failure." >&2
+    grep -E "Could not persist proactive Haru speech delivery|Refusing to replace a causally newer committed world|Accepted world refresh could not persist" "$natural/runtime.log" >&2 || true
+    return 1
+  fi
 
   python - "$natural/runtime.log" "$natural/final_state.json" <<'PY2'
 import json,re,sys

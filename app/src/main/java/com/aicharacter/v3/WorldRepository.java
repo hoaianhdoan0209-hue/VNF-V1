@@ -60,13 +60,14 @@ public final class WorldRepository{
  }
 
  /** Persist a fresh-install seed only after the first world frame is already visible. */
- public synchronized void commitPendingInitialSeed(){
-  if(pendingInitialSeed==null)return;
+ public synchronized boolean commitPendingInitialSeed(){
+  if(pendingInitialSeed==null)return false;
   WorldState seed=pendingInitialSeed;pendingInitialSeed=null;
   // Never overwrite a world that another writer has already committed.
   WorldState current=tryLoad(saveFile);
-  if(current!=null)return;
+  if(current!=null)return false;
   save(seed);
+  return true;
  }
 
  public synchronized WorldState loadOrCreate(){
@@ -158,9 +159,10 @@ public final class WorldRepository{
  }
 
  public synchronized void save(WorldState state){
+  if(state==null)throw new IllegalStateException("Could not persist VNF world",new IOException("World state is null"));
+  long priorSaved=state.lastSavedAt;
   try{
-   if(state==null)throw new IOException("World state is null");
-   long wallNow=System.currentTimeMillis(),priorSaved=state.lastSavedAt;
+   long wallNow=System.currentTimeMillis();
    StateInvariantChecker.normalize(state,wallNow);
    if(state.world==null)attachDefinition(state);
    StateInvariantChecker.repairOrReport(state,wallNow);
@@ -197,6 +199,7 @@ public final class WorldRepository{
     throw new IOException("Committed world save lost causal progress");
    }
   }catch(Exception e){
+   state.lastSavedAt=priorSaved;
    throw new IllegalStateException("Could not persist VNF world",e);
   }
  }

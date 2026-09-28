@@ -62,17 +62,29 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   final long expectedSavedAt=state.lastSavedAt,expectedSimulatedAt=state.lastSimulatedAt;
   new Thread(()->{
    try{
-    r.commitPendingInitialSeed();
+    boolean seeded=r.commitPendingInitialSeed();
+    if(seeded){
+     runOnUiThread(()->{worldCatchupInFlight=false;worldRefreshRetryCount=0;Log.i(TAG,"RESUME_WORLD_REFRESH freshSeed=true");});
+     return;
+    }
     WorldState live=r.loadOrCreate();
     long now=Math.max(resumedAt,System.currentTimeMillis());
     WorldContinuityEngine.advanceForPlayerOpen(live,now);
-    r.save(live);
     runOnUiThread(()->{
      worldCatchupInFlight=false;
      if(isFinishing()||isDestroyed()||state==null)return;
      boolean untouched=state.lastSavedAt<=expectedSavedAt&&state.lastSimulatedAt<=expectedSimulatedAt;
-     if(untouched){worldRefreshRetryCount=0;state=live;if(gameView!=null)gameView.replaceState(live,true);Log.i(TAG,"RESUME_WORLD_REFRESH ready=true");}
-     else{Log.i(TAG,"RESUME_WORLD_REFRESH conflict=true retry="+worldRefreshRetryCount);if(worldRefreshRetryCount<3&&gameView!=null){worldRefreshRetryCount++;gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),120L);}else worldRefreshRetryCount=0;}
+     if(untouched){
+      worldRefreshRetryCount=0;
+      state=live;
+      if(gameView!=null)gameView.replaceState(live,true);
+      try{r.save(live);Log.i(TAG,"RESUME_WORLD_REFRESH ready=true persisted=true");}
+      catch(Throwable e){Log.e(TAG,"Accepted world refresh could not persist",e);}
+     }else{
+      Log.i(TAG,"RESUME_WORLD_REFRESH conflict=true retry="+worldRefreshRetryCount);
+      if(worldRefreshRetryCount<3&&gameView!=null){worldRefreshRetryCount++;gameView.postDelayed(()->refreshPersistentWorldAfterResume(System.currentTimeMillis()),120L);}
+      else worldRefreshRetryCount=0;
+     }
     });
    }catch(Throwable e){Log.e(TAG,"Persistent world refresh failed",e);runOnUiThread(()->{worldCatchupInFlight=false;worldRefreshRetryCount=0;});}
   },"VNF-World-Refresh").start();
