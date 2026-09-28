@@ -411,6 +411,51 @@ if i(after,"openedAt")<i(before,"openedAt"):
     raise SystemExit(f"openedAt moved backwards across reopen: before={before} after={after}")
 print(f"reopen continuity PASS: createdAt={after.get('createdAt')} simulated {before.get('simulatedAt')} -> {after.get('simulatedAt')}")
 PY3
+
+  # Simulate an Android app update in-place. This must preserve private app data.
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  if ! timeout 90s adb install -r "$APK" >/dev/null; then
+    echo "Install-over update simulation failed." >&2
+    return 1
+  fi
+  adb logcat -c || true
+  start_probe update-preserve --ez vnf_debug_reopen_probe true
+  local update_ready=0
+  for _ in $(seq 1 50); do
+    if adb logcat -d -s 'VNF:I' '*:S' 2>/dev/null | grep -Fq "REOPEN_QA"; then
+      update_ready=1
+      break
+    fi
+    sleep 1
+  done
+  if [[ "$update_ready" -ne 1 ]]; then
+    echo "Post-update continuity sample was not emitted." >&2
+    dump_runtime_debug
+    return 1
+  fi
+  adb logcat -d -s 'VNF:I' '*:S' > "$natural/update-preserve.log"
+  timeout 12s adb exec-out screencap -p > "$natural/update-preserve.png"
+  valid_png "$natural/update-preserve.png"
+
+  python - "$natural/final_state.json" "$natural/update-preserve.log" <<'PYUP'
+import json,re,sys
+from pathlib import Path
+before=json.loads(Path(sys.argv[1]).read_text())
+text=Path(sys.argv[2]).read_text(errors="replace")
+matches=list(re.finditer(r"REOPEN_QA (.*)",text))
+if not matches:
+    raise SystemExit("missing post-update REOPEN_QA sample")
+after={}
+for token in matches[-1].group(1).split():
+    if "=" in token:
+        k,v=token.split("=",1);after[k]=v
+def i(d,k): return int(float(d.get(k,"0")))
+if i(after,"createdAt")!=i(before,"createdAt"):
+    raise SystemExit(f"world identity reset across install-over update: before={before} after={after}")
+if i(after,"simulatedAt")<i(before,"simulatedAt"):
+    raise SystemExit(f"causal time moved backwards across install-over update: before={before} after={after}")
+print(f"install-over continuity PASS: createdAt={after.get('createdAt')} simulated {before.get('simulatedAt')} -> {after.get('simulatedAt')}")
+PYUP
 }
 
 run_cat_social_probe() {
