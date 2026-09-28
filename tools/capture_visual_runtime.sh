@@ -346,8 +346,10 @@ from pathlib import Path
 before=json.loads(Path(sys.argv[1]).read_text())
 saved=json.loads(Path(sys.argv[2]).read_text())
 same_world=int(saved.get("createdAt",0))==int(float(before.get("createdAt","0")))
-valid_cursor=int(saved.get("lastSimulatedAt",0))>0
-raise SystemExit(0 if same_world and valid_cursor else 1)
+persisted_cursor=int(saved.get("lastSimulatedAt",0))
+required_cursor=int(float(before.get("simulatedAt","0")))
+cursor_caught_up=persisted_cursor>=required_cursor
+raise SystemExit(0 if same_world and cursor_caught_up else 1)
 PYSAVE
       then
         persisted_ready=1
