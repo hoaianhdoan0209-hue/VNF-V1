@@ -43,7 +43,7 @@ public final class HaruProactiveSpeechEngine {
    String t=e.type==null?"":e.type.toUpperCase(java.util.Locale.ROOT),summary=e.summary==null?"":e.summary.toUpperCase(java.util.Locale.ROOT);
    if("CAT_SOCIAL_SETTLE_NEAR".equals(t))return new Candidate("Nó tự ở lại gần mình rồi…","khẽ nhìn xuống phía con mèo",e.eventId);
    if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("APPROACH"))return new Candidate("Nó vừa tự lại gần mình.","ánh mắt dịu xuống một chút",e.eventId);
-   if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("RETREAT"))return new Candidate("Nó muốn có thêm khoảng cách. Mình sẽ để nó yên một chút.","lùi sự chú ý lại, không ép gần hơn",e.eventId);
+   if("CAT_SOCIAL_RESPONSE_COMPLETED".equals(t)&&summary.contains("RETREAT"))return new Candidate("Nó muốn có thêm khoảng cách. Mình sẽ để nó yên một chút.","lùi sự chú ý lại, không ép gần hơn",e.eventId);\n   if("PLAN_RECONSIDERED".equals(t))return new Candidate("Mình đổi hướng một chút. Kế hoạch vừa rồi không còn hợp với tình hình nữa.","dừng lại một nhịp rồi chủ động đổi hướng",e.eventId);
    if("PLAN_POST_OUTCOME_REVIEWED".equals(t)&&summary.contains("STATUS=FAILED"))return new Candidate("Cách vừa rồi không ổn. Mình phải nghĩ lại.","im một nhịp rồi suy nghĩ",e.eventId);
    if("ECOLOGY_VISIBLE_MANIFESTATION".equals(t))return new Candidate("Ở đây có một sinh vật mình chưa từng để ý thấy trước đó. Mình muốn nhìn kỹ hơn.","ánh mắt chuyển sang một chuyển động lạ trong môi trường",e.eventId);
    if("VISIBLE_UNEXPLAINED_ECOLOGY_PULSE".equals(t))return new Candidate("Nhịp sống của chúng vừa đổi rất đột ngột… Mình chưa biết vì sao.","chăm chú nhìn lại sinh vật trước mặt, chưa vội gán nguyên nhân",e.eventId);
