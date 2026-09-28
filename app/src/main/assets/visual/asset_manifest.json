@@ -1,6 +1,6 @@
 {
   "version": 4,
-  "milestone": "V0.99C",
+  "milestone": "V1.0.5-dev",
   "logicalViewport": [
     2400,
     1080
@@ -480,17 +480,6 @@
       "visualRevision": "authored-pixel-biome-v10-commercial-grid-2026-09"
     },
     {
-      "id": "home_warm_light",
-      "path": "app/src/main/res/drawable-nodpi/home_warm_light.png",
-      "dimensions": [
-        1600,
-        720
-      ],
-      "bytes": 4906,
-      "decodedBytes": 4608000,
-      "sha256": "fbb3b4021db31355f244b2a8139ee119b9503dc48e5e9d5f1c03e3dd5aead860"
-    },
-    {
       "id": "icon_close",
       "path": "app/src/main/res/drawable-nodpi/icon_close.png",
       "dimensions": [
@@ -632,28 +621,6 @@
       "bytes": 288728,
       "decodedBytes": 4608000,
       "visualRevision": "layered-pixel-art-2026-09"
-    },
-    {
-      "id": "light_evening",
-      "path": "app/src/main/res/drawable-nodpi/light_evening.png",
-      "dimensions": [
-        1600,
-        720
-      ],
-      "bytes": 6535,
-      "decodedBytes": 4608000,
-      "sha256": "4a0097c9ee3f31d5afd04c4f3a578bb168311977bf8d3728cba9dabd296c6eae"
-    },
-    {
-      "id": "light_night",
-      "path": "app/src/main/res/drawable-nodpi/light_night.png",
-      "dimensions": [
-        1600,
-        720
-      ],
-      "bytes": 6377,
-      "decodedBytes": 4608000,
-      "sha256": "e300ebc225c564a60a5e5fb0aefd99721ffdeb26e1e97d28745dc6042f1ab179"
     },
     {
       "id": "light_rain",
