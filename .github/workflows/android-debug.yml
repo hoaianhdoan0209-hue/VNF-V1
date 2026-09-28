@@ -26,13 +26,6 @@ jobs:
       - name: Checkout live VNF branch
         uses: actions/checkout@v4
 
-      - name: Generate packaged pixel biome assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m pip install --disable-pip-version-check pillow==11.3.0
-          python3 tools/generate_visual_biomes.py "$GITHUB_WORKSPACE"
-
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -66,7 +59,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fL --retry 3 --retry-delay 2             "https://services.gradle.org/distributions/gradle-8.14.1-bin.zip"             -o /tmp/gradle-8.14.1-bin.zip
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://services.gradle.org/distributions/gradle-8.14.1-bin.zip" \
+            -o /tmp/gradle-8.14.1-bin.zip
           unzip -q /tmp/gradle-8.14.1-bin.zip -d /tmp
           /tmp/gradle-8.14.1/bin/gradle --version
 
@@ -78,6 +73,12 @@ jobs:
 
       - name: Verify APK
         run: test -f app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Verify CI did not mutate tracked source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- .
 
       - name: Upload VNF debug APK
         uses: actions/upload-artifact@v4
