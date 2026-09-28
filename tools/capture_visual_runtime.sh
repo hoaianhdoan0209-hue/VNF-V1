@@ -66,6 +66,23 @@ start_probe() {
   return 1
 }
 
+clear_probe_data() {
+  local probe="$1"
+  adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  for attempt in 1 2 3; do
+    if timeout 20s adb shell pm clear "$PKG" >/dev/null 2>&1; then
+      wait_for_pm
+      return 0
+    fi
+    echo "Probe data reset attempt $attempt failed for $probe." >&2
+    wait_for_pm || true
+    sleep 2
+  done
+  echo "Could not reset app data for probe $probe." >&2
+  dump_runtime_debug
+  return 1
+}
+
 valid_png() {
   local f="$1"
   python - "$f" <<'PY'
@@ -233,8 +250,7 @@ run_natural_probe() {
   local natural="$OUT/natural-play"
   mkdir -p "$natural"
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
-  adb shell pm clear "$PKG" >/dev/null
-  wait_for_pm
+  clear_probe_data natural
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
@@ -400,8 +416,7 @@ run_cat_social_probe() {
   local social="$OUT/cat-social"
   mkdir -p "$social"
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
-  adb shell pm clear "$PKG" >/dev/null
-  wait_for_pm
+  clear_probe_data cat-social
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
@@ -463,8 +478,7 @@ run_presentation_probes() {
   mkdir -p "$present"
 
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
-  adb shell pm clear "$PKG" >/dev/null
-  wait_for_pm
+  clear_probe_data camera
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
@@ -494,8 +508,7 @@ print(f"camera runtime PASS: shot={shot} targetZoom={target:.3f} visualZoom={vis
 PYCAM
 
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
-  adb shell pm clear "$PKG" >/dev/null
-  wait_for_pm
+  clear_probe_data god
   adb shell pm grant "$PKG" android.permission.RECORD_AUDIO >/dev/null 2>&1 || true
   adb shell pm grant "$PKG" android.permission.POST_NOTIFICATIONS >/dev/null 2>&1 || true
   adb logcat -c || true
