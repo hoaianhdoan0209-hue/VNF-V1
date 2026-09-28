@@ -34,10 +34,11 @@ public final class HaruVisibleAgencyEngine {
   String target=best!=null?best.id:local.id;
   Intention in=new Intention("explore_world",0,"curiosity",target,
     best!=null?"see what has changed there and gather firsthand evidence":"walk to a different local viewpoint and inspect what is actually there",.28,now+5400000L);
+  String noveltyArea=best!=null?best.id:(here==null?"":here.id);
   LifeDecision d=new LifeDecision(in)
     .reason("curiosity",s.personality.curiosity*12)
-    .reason("memory_novelty",memoryNovelty(s,best.id,now)*10)
-    .reason("world_interest",semanticInterest(best))
+    .reason("memory_novelty",memoryNovelty(s,noveltyArea,now)*10)
+    .reason("world_interest",best!=null?semanticInterest(best):localInterest(local))
     .reason("healthy_body",4)
     .reason("visible_agency_recovery",stalled?11:3);
   in.utility=d.reasons.values().stream().mapToDouble(Double::doubleValue).sum();
@@ -85,6 +86,12 @@ public final class HaruVisibleAgencyEngine {
  }
 
 
+ private static double localInterest(WorldObject o){
+  if(o==null)return 0;String tags=o.tags==null?"":o.tags.toLowerCase(java.util.Locale.ROOT);double v=1;
+  if("creature".equals(o.type)||tags.contains("flora")||tags.contains("vegetation"))v+=2.6;
+  if(tags.contains("water")||tags.contains("reflect")||tags.contains("landmark"))v+=1.8;
+  return v;
+ }
  private static WorldObject localViewpoint(WorldState s,WorldArea here){
   if(s==null||s.world==null||here==null)return null;
   WorldObject best=null;double score=Double.NEGATIVE_INFINITY;
