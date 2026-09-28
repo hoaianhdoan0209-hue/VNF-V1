@@ -280,8 +280,17 @@ if not changed:
     raise SystemExit(f"Haru showed no natural runtime progress over probe window: start={a} final={b}")
 if not b.get("intention") and b.get("activity") in ("", "standing_quietly") and b.get("travel")!="true":
     raise SystemExit(f"Haru ended natural probe as an idle placeholder: {b}")
+if integer(b,"speechCount") < 1 or integer(b,"lastSpoken") < integer(b,"createdAt"):
+    raise SystemExit(f"Haru produced no autonomous speech during fresh natural-play session: start={a} final={b}")
+frames=integer(b,"frames")
+fps=num(b,"fps")
+anim=b.get("state","")
+if not anim or frames < 2 or fps <= 0:
+    raise SystemExit(f"Haru renderer is not using a live multi-frame animation state: {b}")
+if b.get("travel")=="true" and anim not in {"WALK_LEFT","WALK_RIGHT","SEARCH_LEFT","SEARCH_RIGHT"}:
+    raise SystemExit(f"Haru is physically travelling but renderer is not in a locomotion animation: {b}")
 Path(sys.argv[2]).write_text(json.dumps(b,sort_keys=True))
-print(f"natural-play smoke PASS: dx={dx:.1f} start={a} final={b}")
+print(f"natural-play living presentation PASS: dx={dx:.1f} speechCount={b.get('speechCount')} anim={anim} frames={frames} fps={fps:.2f}")
 PY2
 
   adb shell input keyevent KEYCODE_HOME >/dev/null 2>&1 || true
