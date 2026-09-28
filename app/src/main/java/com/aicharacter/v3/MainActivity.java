@@ -55,6 +55,7 @@ public final class MainActivity extends Activity implements GameView.Host,GodSes
   try{audio=new ProceduralAudioEngine();audio.resume();}catch(Throwable e){Log.w(TAG,"Audio init deferred startup failed",e);audio=null;}
  }
  private void refreshPersistentWorldAfterResume(long resumedAt){
+  if(isDebugCameraProbe()||isDebugGodProbe())return;
   if(repository==null||state==null||worldCatchupInFlight)return;
   worldCatchupInFlight=true;
   final WorldRepository r=repository;

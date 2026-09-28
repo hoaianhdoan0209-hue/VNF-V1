@@ -361,8 +361,6 @@ print(f"reopen continuity PASS: createdAt={after.get('createdAt')} simulated {be
 PY3
 }
 
-run_natural_probe
-
 run_cat_social_probe() {
   local social="$OUT/cat-social"
   mkdir -p "$social"
@@ -424,8 +422,6 @@ if not social_change:
 print(f"cat social runtime PASS: dx={dx:.1f} start={a} final={b}")
 PY4
 }
-
-run_cat_social_probe
 
 run_presentation_probes() {
   local present="$OUT/presentation"
@@ -496,5 +492,7 @@ PYGOD
 }
 
 run_presentation_probes
+run_natural_probe
+run_cat_social_probe
 
 ls -lh "$OUT/biomes" "$OUT/haru-poses" "$OUT/cat-poses" "$OUT/natural-play" "$OUT/cat-social" "$OUT/presentation"
