@@ -66,6 +66,15 @@ public final class CatSocialEngineTest {
   assertEquals(.73,x.catSocial.familiarity,.000001);assertEquals(.66,x.catSocial.comfort,.000001);assertEquals(.19,x.catSocial.wariness,.000001);assertEquals("girl",x.catSocial.gazeTarget);assertEquals(555,x.catSocial.frozenTargetX,.001f);
  }
 
+ @Test public void invariantNormalizationPreservesOwnedAwakeSocialTravel(){
+  WorldState s=state(300,480);friendly(s);
+  assertTrue(CatSocialEngine.tick(s,30000L));
+  assertTrue(s.catTravel.active);assertTrue(CatSocialEngine.ownsTravel(s,s.catTravel));
+  StateInvariantChecker.normalize(s,30001L);
+  assertTrue("normalization must not cancel an awake cat's owned social travel",s.catTravel.active);
+  assertTrue(CatSocialEngine.ownsTravel(s,s.catTravel));
+ }
+
  @Test public void sleepNearPreferenceUsesCatStateNotHarusPrivateRelationship(){
   WorldState comfortable=state(500,610),wary=state(500,610);
   comfortable.relationship.comfort=0;comfortable.relationship.trust=0;wary.relationship.comfort=100;wary.relationship.trust=100;
