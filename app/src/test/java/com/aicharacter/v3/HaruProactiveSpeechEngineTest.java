@@ -28,6 +28,23 @@ public final class HaruProactiveSpeechEngineTest {
   assertTrue(s.haruSpeech.pendingSourceEventId.startsWith("intention:observe_lake:"));
  }
 
+ @Test public void ongoingActivePlanCanStillBeAnnouncedAfterReopen(){
+  long now=350000L;WorldState s=state(now);
+  s.currentIntention="observe_lake";s.intentionStartedAt=now-60000L;
+  s.planState=new PlanState();s.planState.status="ACTIVE";s.planState.intentionId="observe_lake";s.planState.createdAt=s.intentionStartedAt;
+  assertTrue(HaruProactiveSpeechEngine.advance(s,now,LifeSimulationKernel.Mode.ACTIVE));
+  assertTrue(s.haruSpeech.pendingText.contains("mặt hồ"));
+  assertTrue(s.haruSpeech.pendingSourceEventId.startsWith("intention:observe_lake:"));
+ }
+
+ @Test public void staleLegacyIntentionDoesNotManufactureSpeech(){
+  long now=360000L;WorldState s=state(now);
+  s.currentIntention="observe_lake";s.intentionStartedAt=now-60000L;
+  s.planState=new PlanState();s.planState.status="IDLE";
+  assertFalse(HaruProactiveSpeechEngine.advance(s,now,LifeSimulationKernel.Mode.ACTIVE));
+  assertFalse(s.haruSpeech.pending());
+ }
+
  @Test public void uncertaintyCanBecomeGroundedProactiveThought(){
   long now=400000L;WorldState s=state(now);s.thoughts.add(new ThoughtState("unknown pattern","recent observation","",.82,.71,now-500));
   assertTrue(HaruProactiveSpeechEngine.advance(s,now,LifeSimulationKernel.Mode.ACTIVE));
