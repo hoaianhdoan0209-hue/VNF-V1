@@ -21,7 +21,8 @@ public final class HaruPixelRenderer {
   x=PixelArtRenderPolicy.snapLogical(x);bodyGround=PixelArtRenderPolicy.snapLogical(bodyGround);
   p.setShader(null);p.setStyle(Paint.Style.FILL);p.setAntiAlias(false);p.setFilterBitmap(false);p.setColorFilter(null);p.setAlpha(255);
   boolean left=v.flipX||v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.SEARCH_LEFT;
-  boolean physicalWalk=(v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT)&&s!=null&&s.bodyRig!=null;\n  int frame=physicalWalk?PixelMotionCadence.frameForPhase(s.bodyRig.stridePhase):((int)Math.floor(anim*Math.max(.1f,v.fps)))&7;
+  boolean physicalWalk=(v.state==GirlAnimationController.State.WALK_LEFT||v.state==GirlAnimationController.State.WALK_RIGHT)&&s!=null&&s.bodyRig!=null;
+  int frame=physicalWalk?PixelMotionCadence.frameForPhase(s.bodyRig.stridePhase):((int)Math.floor(anim*Math.max(.1f,v.fps)))&7;
   float g=bodyGround+bob(v.state,frame);
   c.save();if(left)c.scale(-1f,1f,x,g);
   switch(v.state){
