@@ -53,8 +53,15 @@ public final class HaruProactiveSpeechEngine {
  }
 
  private static Candidate intentionCandidate(WorldState s,long now){
-  if(s.currentIntention==null||s.currentIntention.isEmpty()||s.intentionStartedAt<=0||now<s.intentionStartedAt||now-s.intentionStartedAt>INTENTION_WINDOW_MS)return null;
-  String id=s.currentIntention,src="intention:"+id+":"+s.intentionStartedAt;
+  if(s.currentIntention==null||s.currentIntention.isEmpty()||s.intentionStartedAt<=0||now<s.intentionStartedAt)return null;
+  String id=s.currentIntention;
+  boolean activePlan=s.planState!=null&&s.planState.active()&&id.equals(s.planState.intentionId);
+  boolean activeTravel=s.girlTravel!=null&&s.girlTravel.active;
+  // A living autonomous plan may have started before the current app session.
+  // Keep it eligible once so Haru can make her ongoing intention visible after reopen.
+  // Legacy/stale intention strings still expire quickly and cannot manufacture speech.
+  if(!activePlan&&!activeTravel&&now-s.intentionStartedAt>INTENTION_WINDOW_MS)return null;
+  String src="intention:"+id+":"+s.intentionStartedAt;
   if("find_cat".equals(id))return new Candidate("Mình đi tìm nó một chút.","nhìn về phía những nơi con mèo có thể đã đi qua",src);
   if("observe_lake".equals(id))return new Candidate("Mình muốn ra nhìn mặt hồ một lúc.","ánh mắt hướng về phía hồ",src);
   if("explore_garden".equals(id))return new Candidate("Mình muốn đi dọc lối cỏ xem có gì thay đổi.","chú ý đến khu vườn",src);
