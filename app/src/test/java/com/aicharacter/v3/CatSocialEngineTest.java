@@ -27,6 +27,17 @@ public final class CatSocialEngineTest {
   assertTrue(s.catSocial.comfort>=.34);
  }
 
+ @Test public void defaultCalmCatCanReachVisibleApproachWithinFortyFiveSeconds(){
+  WorldState s=state(500,650);long now=10000L;boolean moved=false;
+  for(int i=0;i<8;i++){moved=CatSocialEngine.tick(s,now);if(moved)break;now+=6000L;}
+  assertTrue("calm social learning should become visibly responsive within 45 seconds",moved);
+  assertEquals("APPROACH",s.catSocial.mode);
+  assertTrue(s.catTravel.active);
+  assertTrue("cat must still learn before approaching",s.catSocial.calmEncounters>=4);
+  assertTrue(s.catSocial.familiarity>.27);
+  assertTrue(s.catSocial.comfort>.27);
+ }
+
  @Test public void fastIntrusionRaisesWarinessAndCanTriggerRetreat(){
   WorldState s=state(500,660);s.catSocial.wariness=.44;s.catSocial.comfort=.24;
   CatSocialEngine.tick(s,10000L);
