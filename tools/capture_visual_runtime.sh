@@ -285,9 +285,37 @@ print(f"natural-play smoke PASS: dx={dx:.1f} start={a} final={b}")
 PY2
 
   adb shell input keyevent KEYCODE_HOME >/dev/null 2>&1 || true
-  sleep 3
-  if ! adb shell run-as "$PKG" test -s files/world/world.json; then
-    echo "World save was not present before reopen." >&2
+  local persisted_ready=0
+  for _ in $(seq 1 25); do
+    if adb exec-out run-as "$PKG" cat files/world/world.json > "$natural/persisted.json" 2>/dev/null; then
+      if python - "$natural/final_state.json" "$natural/persisted.json" <<'PYSAVE'
+import json,sys
+from pathlib import Path
+before=json.loads(Path(sys.argv[1]).read_text())
+saved=json.loads(Path(sys.argv[2]).read_text())
+need=int(float(before.get("simulatedAt","0")))
+have=int(saved.get("lastSimulatedAt",0))
+raise SystemExit(0 if have>=need else 1)
+PYSAVE
+      then
+        persisted_ready=1
+        break
+      fi
+    fi
+    sleep 1
+  done
+  if [[ "$persisted_ready" -ne 1 ]]; then
+    echo "World save did not reach the live causal cursor before reopen." >&2
+    if [[ -s "$natural/persisted.json" ]]; then
+      python - "$natural/final_state.json" "$natural/persisted.json" <<'PYSAVEFAIL' || true
+import json,sys
+from pathlib import Path
+before=json.loads(Path(sys.argv[1]).read_text())
+saved=json.loads(Path(sys.argv[2]).read_text())
+print("live simulatedAt=",before.get("simulatedAt"),"persisted simulatedAt=",saved.get("lastSimulatedAt"),"persisted savedAt=",saved.get("lastSavedAt"))
+PYSAVEFAIL
+    fi
+    dump_runtime_debug
     return 1
   fi
   adb shell am force-stop "$PKG" >/dev/null 2>&1 || true
