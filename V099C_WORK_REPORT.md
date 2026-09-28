@@ -1,8 +1,14 @@
-# VNF V0.99C — Work report
+# HISTORICAL SNAPSHOT — VNF V0.99C Work Report
 
-**Trạng thái: CONTINUATION BASE — CHƯA PASS FINAL.**
+> **ARCHIVED:** This file records an earlier V0.99C development checkpoint. It is not the current VNF status and must not be used as the starting truth for a new chat/session.
+>
+> Current stable is **VNF 1.0.5 / versionCode 122**. Read `VNF_CURRENT_TRUTH.md` and current branch HEAD for the active state.
 
-## Lượt làm hiện tại
+## Historical status at the time
+
+**Trạng thái khi báo cáo này được viết: CONTINUATION BASE — CHƯA PASS FINAL.**
+
+## Lượt làm tại thời điểm đó
 
 - Dùng project V0.99C đã được làm sạch để tiếp tục phát triển.
 - Không tạo V0.99D, không tạo V0.99C.1, không đổi package hoặc persistent schema.
@@ -11,7 +17,7 @@
 - Thêm một mô tả duy nhất về trải nghiệm người chơi: `VNF_PLAYER_EXPERIENCE.md`.
 - Thêm `README.md` ngắn để repo mới không bị hiểu nhầm là V1.0 đã release.
 
-## Điều chưa được tuyên bố PASS
+## Điều chưa được tuyên bố PASS tại checkpoint V0.99C
 
 - WALK / SEARCH / full animation chưa được audit lại trong lượt này.
 - Bốn area chưa được chứng nhận đồng bộ production pixel art.
@@ -19,11 +25,11 @@
 - Regression và save roundtrip chưa được chạy lại trong lượt này.
 - APK chưa được build trong môi trường hiện tại.
 
-## Build path
+## Build path lịch sử
 
-Repository có GitHub Actions dùng Gradle 8.14.1, AGP 8.7.3, Android API 35 và assembleDebug. Vì môi trường local hiện tại không có Android SDK/Gradle đầy đủ, build phải được chứng minh bằng CI hoặc Android-capable environment trước khi gọi BUILD SUCCESS.
+Repository có GitHub Actions dùng Gradle 8.14.1, AGP 8.7.3, Android API 35 và assembleDebug. Ở checkpoint này build phải được chứng minh bằng CI hoặc Android-capable environment trước khi gọi BUILD SUCCESS.
 
-## Next gates
+## Next gates đã ghi tại thời điểm đó
 
 1. Audit/sửa WALK và SEARCH.
 2. Chỉ sau motion PASS mới khóa full animation.
@@ -32,4 +38,4 @@ Repository có GitHub Actions dùng Gradle 8.14.1, AGP 8.7.3, Android API 35 và
 5. Regression + save/reload.
 6. Android build proof và APK artifact.
 
-**Self-verdict: V0.99C CONTINUES. Chưa đủ điều kiện chuyển V1.0.**
+**Historical self-verdict: V0.99C CONTINUES. Chưa đủ điều kiện chuyển V1.0.**
