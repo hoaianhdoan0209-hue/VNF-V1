@@ -28,6 +28,14 @@ public final class HaruProactiveSpeechEngineTest {
   assertTrue(s.haruSpeech.pendingSourceEventId.startsWith("intention:observe_lake:"));
  }
 
+ @Test public void selfChosenAffordanceInquiryIsAnnouncedBeforeApproach(){
+  long now=350000L;WorldState s=state(now);s.currentIntention="affordance_inquiry";s.intentionStartedAt=now-150;
+  assertTrue(HaruProactiveSpeechEngine.advance(s,now,LifeSimulationKernel.Mode.ACTIVE));
+  assertTrue(s.haruSpeech.pendingText.contains("tò mò"));
+  assertTrue(s.haruSpeech.pendingText.contains("lại gần"));
+  assertTrue(s.haruSpeech.pendingSourceEventId.startsWith("intention:affordance_inquiry:"));
+ }
+
  @Test public void uncertaintyCanBecomeGroundedProactiveThought(){
   long now=400000L;WorldState s=state(now);s.thoughts.add(new ThoughtState("unknown pattern","recent observation","",.82,.71,now-500));
   assertTrue(HaruProactiveSpeechEngine.advance(s,now,LifeSimulationKernel.Mode.ACTIVE));
