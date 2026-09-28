@@ -97,6 +97,10 @@ public final class WildlifeManifestationEngineTest {
   assertEquals("WORLD_AFFORDANCE",s.planState.origin);
   assertEquals(id,s.planState.destination);
   assertEquals("affordance_inquiry",s.currentIntention);
+  assertTrue("local affordance inquiry must visibly move Haru toward the creature",s.girlTravel.active);
+  assertEquals("LOCAL",s.girlTravel.travelMode);
+  assertEquals(id,s.girlTravel.targetId);
+  assertTrue(Math.abs(s.girlTravel.segmentEndX-s.haruX)>150f);
  }
 
  @Test public void representativeLifeStateSurvivesDefinitionRehydration()throws Exception{
