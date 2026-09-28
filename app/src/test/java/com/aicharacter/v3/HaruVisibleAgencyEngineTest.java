@@ -20,6 +20,27 @@ public final class HaruVisibleAgencyEngineTest {
   assertEquals("explore_world",s.currentIntention);
  }
 
+ @Test public void stalledHaruInSingleAreaChoosesAndWalksToLocalViewpoint(){
+  WorldState s=WorldState.fresh();s.world=new WorldModel();
+  WorldArea home=area("home_shelter",60,760,"interior,shelter,home,dry,quiet,vegetation");s.world.areas.add(home);
+  s.world.objects.add(new WorldObject("shelter_01","home","home_shelter","","",315,846,80,80,"home,shelter,rest,dry,safe,sleep,food_source,water_source,toilet"));
+  WorldObject plant=new WorldObject("local_flora","flora","home_shelter","","",590,846,40,80,"living_flora,vegetation,landmark");plant.collision=false;s.world.objects.add(plant);
+  s.haruX=315;s.body.energy=96;s.body.sleepiness=4;s.body.pain=0;s.body.health=100;
+  s.digestive.stomachFood=.82;s.digestive.nutrientReserve=.88;s.hydration.hydration=.94;s.hydration.bladderFill=.05;
+  s.personality.curiosity=.92;s.planState=new PlanState();s.girlTravel=new TravelState();s.environment.weather="CLEAR";s.environment.weatherIntensity=.1;
+  StateInvariantChecker.normalize(s,T0);
+  s.intentionStartedAt=T0-20_000L;
+  LifeDecision passive=new LifeDecision(new Intention("quiet_pause",0,"solitude","home_shelter","stay quiet",.20,T0+3600000L));
+  LifeDecision adjusted=HaruVisibleAgencyEngine.adjustChoice(s,passive,T0);
+  assertEquals("explore_world",adjusted.intention.id);
+  assertEquals("local_flora",adjusted.intention.targetId);
+  OfflineLifeEngine.beginDecision(s,adjusted,T0);
+  assertTrue("watchdog recovery must create visible local movement",s.girlTravel.active);
+  assertEquals("LOCAL",s.girlTravel.travelMode);
+  assertEquals("local_flora",s.girlTravel.targetId);
+  assertTrue(Math.abs(s.girlTravel.segmentEndX-s.haruX)>100f);
+ }
+
  @Test public void urgentBodyNeedsAreNeverOverriddenForVisualMotion(){
   WorldState s=state();
   s.hydration.hydration=.22;
